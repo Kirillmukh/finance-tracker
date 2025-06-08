@@ -43,6 +43,10 @@ body {
   cursor: pointer;
 }
 
+#tag-suggestion {
+  display: none;
+}
+
 #transactions {
   list-style: none;
   padding: 0;

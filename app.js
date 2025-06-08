@@ -38,16 +38,6 @@ function readOnlyTransaction(functions) {
   };
 }
 
-// Управление тегами
-document.getElementById("add-tag").addEventListener("click", () => {
-  const tagInput = document.getElementById("tag-input");
-  if (tagInput.value.trim()) {
-    tags.push(tagInput.value.trim());
-    renderTags();
-    tagInput.value = "";
-  }
-});
-
 function renderTags() {
   const container = document.getElementById("tags-container");
   container.innerHTML = tags
@@ -63,8 +53,14 @@ window.removeTag = (tag) => {
   renderTags();
 };
 
+const inputTag = document.getElementById("tag-input");
+
 // Добавление транзакции
 document.getElementById("transaction-form").addEventListener("submit", (e) => {
+  if (inputTag.value.trim()) {
+    document.getElementById("add-tag").dispatchEvent(new Event("click"));
+  }
+
   e.preventDefault();
 
   const transaction = {
@@ -78,14 +74,24 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
   const tx = db.transaction("transactions", "readwrite");
   const store = tx.objectStore("transactions");
   store.add(transaction);
-  
+
   if (!allCategories.has(transaction.category)) {
     allCategories.set(transaction.category, 0);
   }
-  allCategories.set(transaction.category, allCategories.get(transaction.category) + 1);
+  allCategories.set(
+    transaction.category,
+    allCategories.get(transaction.category) + 1
+  );
   saveCategories();
-  tags.forEach((item) => allTags.add(item));
-
+  tags
+    .flat((tags) => tags)
+    .forEach((tag) => {
+      if (!allTags.has(tag)) {
+        allTags.set(tag, 0);
+      }
+      allTags.set(tag, allTags.get(tag) + 1);
+    });
+  saveTags();
   tx.oncomplete = () => {
     readOnlyTransaction([loadTransactions]);
     e.target.reset();
@@ -129,7 +135,6 @@ function updateCharts(transactions) {
   if (existingChart) {
     existingChart.destroy();
   }
-  // document.getElementById("barChart").innerHTML = "";
 
   // Группировка по категориям
   const categories = {};
@@ -215,42 +220,36 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 // Инициализация: показываем главную страницу
 // showPage("home");
 
-function loadAllTags() {
-  if (!localStorage.tags) {
-    localStorage.tags = JSON.stringify(new Set());
+function loadAllTags(transactions) {
+  if (localStorage.tags) {
+    allTags = new Map(Object.entries(JSON.parse(localStorage.tags)));
+    return;
   }
-  allTags = JSON.parse(localStorage.tags);
+
+  allTags = new Map();
+  transactions
+    .flatMap((t) => t.tags)
+    .forEach((t) => {
+      if (!allTags.has(t)) {
+        allTags.set(t, 0);
+      }
+      allTags.set(t, allTags.get(t) + 1);
+    });
+
+  saveTags();
 }
 
 function saveTags() {
-  localStorage.tags = JSON.stringify(allTags);
+  localStorage.tags = JSON.stringify(Object.fromEntries(allTags));
 }
-
-// Обновление списка подсказок
-function updateTagSuggestions() {
-  const datalist = document.getElementById("tag-suggestions");
-  datalist.innerHTML = "";
-  allTags.forEach((tag) => {
-    const option = document.createElement("option");
-    option.value = tag;
-    datalist.appendChild(option);
-  });
-}
-
-// Инициализация при загрузке
-document.addEventListener("DOMContentLoaded", () => {
-  loadAllTags();
-});
 
 document.getElementById("add-tag").addEventListener("click", () => {
   const tagInput = document.getElementById("tag-input");
   const tag = tagInput.value.trim();
 
   if (tag) {
-    tags.add(tag);
-    allTags.add(tag); // Добавляем в общее хранилище
+    tags.push(tag);
     renderTags();
-    updateTagSuggestions();
     tagInput.value = "";
   }
 });
@@ -278,21 +277,21 @@ function saveCategories() {
   localStorage.categories = JSON.stringify(Object.fromEntries(allCategories));
 }
 
-function suggestCategory(input) {
-  function unionStart(source, target) {
-    if (source.length > target.length || source.length == 0) {
+function unionStart(source, target) {
+  if (source.length > target.length || source.length == 0) {
+    return -1;
+  }
+  let i = 0;
+  while (i < source.length && i < target.length) {
+    if (source[i] !== target[i]) {
       return -1;
     }
-    let i = 0;
-    while (i < source.length && i < target.length) {
-      if (source[i] !== target[i]) {
-        return -1;
-      }
-      i++;
-    }
-    return i;
+    i++;
   }
+  return i;
+}
 
+function suggestCategory(input) {
   let unionCount = 0;
   let weight = 0;
   let suggestion = null;
@@ -341,3 +340,50 @@ inputCategory.addEventListener("input", (event) => {
 
 suggestion.addEventListener("click", applySuggestion);
 
+function suggestTag(input) {
+  let unionCount = 0;
+  let weight = 0;
+  let suggestion = null;
+
+  input = input.trim().toLowerCase();
+  allTags.forEach((v, k) => {
+    k = k.toLowerCase();
+    const count = unionStart(input, k);
+    if (count > unionCount || (count === unionCount && v > weight)) {
+      suggestion = k;
+      weight = v;
+      unionCount = count;
+    }
+  });
+
+  return suggestion;
+}
+
+const tagSuggestion = document.getElementById("tag-suggestion");
+
+let suggestedTag = "";
+
+const applyTagSuggestion = function () {
+  inputTag.value = suggestedTag;
+  tagSuggestion.style.display = "none";
+};
+
+inputTag.addEventListener("input", (event) => {
+  const value = event.target.value;
+
+  suggestedTag = suggestTag(value);
+
+  if (!suggestedTag) {
+    tagSuggestion.style.display = "none";
+    return;
+  }
+
+  tagSuggestion.textContent = suggestedTag;
+  tagSuggestion.style.display = "block";
+
+  if (value.endsWith(" ")) {
+    applyTagSuggestion();
+  }
+});
+
+tagSuggestion.addEventListener("click", applyTagSuggestion);
