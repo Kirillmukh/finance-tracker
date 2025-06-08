@@ -2,8 +2,10 @@ let db;
 let allCategories;
 let allTags;
 let tags = [];
+let suggestedCategory = "";
+let suggestedTag = "";
 
-// Инициализация IndexedDB
+// --- db ---
 const request = indexedDB.open("FinanceTrackerDB", 2);
 
 request.onupgradeneeded = (event) => {
@@ -38,69 +40,7 @@ function readOnlyTransaction(functions) {
   };
 }
 
-function renderTags() {
-  const container = document.getElementById("tags-container");
-  container.innerHTML = tags
-    .map(
-      (tag) =>
-        `<span class="tag">${tag} <button onclick="removeTag('${tag}')">×</button></span>`
-    )
-    .join("");
-}
-
-window.removeTag = (tag) => {
-  tags = tags.filter((t) => t !== tag);
-  renderTags();
-};
-
-const inputTag = document.getElementById("tag-input");
-
-// Добавление транзакции
-document.getElementById("transaction-form").addEventListener("submit", (e) => {
-  if (inputTag.value.trim()) {
-    document.getElementById("add-tag").dispatchEvent(new Event("click"));
-  }
-
-  e.preventDefault();
-
-  const transaction = {
-    description: document.getElementById("description").value,
-    amount: +document.getElementById("amount").value,
-    category: document.getElementById("category").value,
-    tags: [...tags],
-    date: new Date().toLocaleDateString(),
-  };
-
-  const tx = db.transaction("transactions", "readwrite");
-  const store = tx.objectStore("transactions");
-  store.add(transaction);
-
-  if (!allCategories.has(transaction.category)) {
-    allCategories.set(transaction.category, 0);
-  }
-  allCategories.set(
-    transaction.category,
-    allCategories.get(transaction.category) + 1
-  );
-  saveCategories();
-  tags
-    .flat((tags) => tags)
-    .forEach((tag) => {
-      if (!allTags.has(tag)) {
-        allTags.set(tag, 0);
-      }
-      allTags.set(tag, allTags.get(tag) + 1);
-    });
-  saveTags();
-  tx.oncomplete = () => {
-    readOnlyTransaction([loadTransactions]);
-    e.target.reset();
-    tags = [];
-    renderTags();
-  };
-});
-
-// Загрузка транзакций и обновление UI
+// --- One Per Request ---
 function loadTransactions(transactions) {
   const list = document.getElementById("transactions");
   const balanceElement = document.getElementById("balance");
@@ -127,7 +67,118 @@ function loadTransactions(transactions) {
   updateCharts(transactions);
 }
 
-// Обновление графиков
+function loadAllCategories(transactions) {
+  if (localStorage.categories) {
+    allCategories = new Map(
+      Object.entries(JSON.parse(localStorage.categories))
+    );
+    return;
+  }
+
+  allCategories = new Map();
+  transactions.forEach((t) => {
+    countMapAdd(allCategories, t.category);
+  });
+
+  saveCategories();
+}
+
+function loadAllTags(transactions) {
+  if (localStorage.tags) {
+    allTags = new Map(Object.entries(JSON.parse(localStorage.tags)));
+    return;
+  }
+
+  allTags = new Map();
+  transactions
+    .flatMap((t) => t.tags)
+    .forEach((t) => {
+      countMapAdd(allTags, t);
+    });
+
+  saveTags();
+}
+
+// --- Input Transaction From ---
+document.getElementById("transaction-form").addEventListener("submit", (e) => {
+  if (tagInput.value.trim()) {
+    document.getElementById("add-tag").dispatchEvent(new Event("click"));
+  }
+
+  e.preventDefault();
+
+  const transaction = {
+    description: document.getElementById("description").value,
+    amount: +document.getElementById("amount").value,
+    category: document.getElementById("category").value,
+    tags: [...tags],
+    date: new Date().toLocaleDateString(),
+  };
+
+  const tx = db.transaction("transactions", "readwrite");
+  const store = tx.objectStore("transactions");
+  store.add(transaction);
+
+  countMapAdd(allCategories, transaction.category);
+  saveCategories();
+  tags
+    .flat((tags) => tags)
+    .forEach((tag) => {
+      countMapAdd(allTags, tag);
+    });
+  saveTags();
+  tx.oncomplete = () => {
+    readOnlyTransaction([loadTransactions]);
+    e.target.reset();
+    tags = [];
+    renderTags();
+  };
+});
+
+// --- Utils ---
+function saveTags() {
+  localStorage.tags = JSON.stringify(Object.fromEntries(allTags));
+}
+
+function saveCategories() {
+  localStorage.categories = JSON.stringify(Object.fromEntries(allCategories));
+}
+
+function unionStart(inputText, src) {
+  if (inputText.length > src.length || inputText.length == 0) {
+    return -1;
+  }
+  let i = 0;
+  while (i < inputText.length && i < src.length) {
+    if (inputText[i] !== src[i]) {
+      return -1;
+    }
+    i++;
+  }
+  return i;
+}
+
+function countMapAdd(map, object) {
+  if (!map.has(object)) {
+    map.set(object, 0);
+  }
+  map.set(object, map.get(object) + 1);
+}
+
+function generateRandomColors(n) {
+    const colors = [];
+    for (let i = 0; i < n; i++) {
+      const color =
+        "#" +
+        Math.floor(Math.random() * 0xffffff)
+          .toString(16)
+          .padStart(6, "0");
+      colors.push(color);
+    }
+    return colors;
+  }
+
+// --- Charts ---
 function updateCharts(transactions) {
   // Удаляем старые графики
   const chartId = "pieChart";
@@ -142,19 +193,6 @@ function updateCharts(transactions) {
     if (!categories[t.category]) categories[t.category] = 0;
     categories[t.category] += t.amount;
   });
-
-  function generateRandomColors(n) {
-    const colors = [];
-    for (let i = 0; i < n; i++) {
-      const color =
-        "#" +
-        Math.floor(Math.random() * 0xffffff)
-          .toString(16)
-          .padStart(6, "0");
-      colors.push(color);
-    }
-    return colors;
-  }
 
   // Круговой график
   new Chart(document.getElementById("pieChart"), {
@@ -192,6 +230,107 @@ function updateCharts(transactions) {
   // );
 }
 
+// --- DOM ---
+const categoryInput = document.getElementById("category-input");
+const categorySuggestionDiv = document.getElementById("category-suggestion");
+categorySuggestionDiv.addEventListener("click", (event) =>
+  applySuggestion(categoryInput, categorySuggestionDiv, suggestedCategory)
+);
+
+const tagInput = document.getElementById("tag-input");
+const tagSuggestionDiv = document.getElementById("tag-suggestion");
+tagSuggestionDiv.addEventListener("click", (event) =>
+  applySuggestion(tagInput, tagSuggestionDiv, suggestedTag)
+);
+
+function applySuggestion(input, div, suggestion) {
+  input.value = suggestion;
+  div.style.display = "none";
+}
+
+categoryInput.addEventListener("input", (event) => {
+  const value = event.target.value;
+
+  suggestedCategory = suggestAutocomplete(allCategories, value);
+
+  if (!suggestedCategory) {
+    categorySuggestionDiv.style.display = "none";
+    return;
+  }
+
+  categorySuggestionDiv.textContent = suggestedCategory;
+  categorySuggestionDiv.style.display = "block";
+
+  if (value.endsWith("  ")) {
+    applySuggestion(categoryInput, categorySuggestionDiv, suggestedCategory);
+  }
+});
+
+tagInput.addEventListener("input", (event) => {
+  const value = event.target.value;
+
+  suggestedTag = suggestAutocomplete(allTags, value);
+
+  if (!suggestedTag) {
+    tagSuggestionDiv.style.display = "none";
+    return;
+  }
+
+  tagSuggestionDiv.textContent = suggestedTag;
+  tagSuggestionDiv.style.display = "block";
+
+  if (value.endsWith("  ")) {
+    applySuggestion(tagInput, tagSuggestionDiv, suggestedTag);
+  }
+});
+
+// --- api with DOM ---
+function renderTags() {
+  const container = document.getElementById("tags-container");
+  container.innerHTML = tags
+    .map(
+      (tag) =>
+        `<span class="tag">${tag} <button onclick="removeTag('${tag}')">×</button></span>`
+    )
+    .join("");
+}
+
+// --- api ---
+function suggestAutocomplete(sourceMap, inputText) {
+  let unionCount = 0;
+  let weight = 0;
+  let suggestion = null;
+
+  inputText = inputText.trim().toLowerCase();
+  sourceMap.forEach((v, k) => {
+    const lower = k.toLowerCase();
+    const count = unionStart(inputText, lower);
+    if (count > unionCount || (count === unionCount && v > weight)) {
+      suggestion = k;
+      weight = v;
+      unionCount = count;
+    }
+  });
+
+  return suggestion;
+}
+
+// -- tags --
+const removeTag = (tag) => {
+  tags = tags.filter((t) => t !== tag);
+  renderTags();
+};
+
+document.getElementById("add-tag").addEventListener("click", () => {
+  const value = tagInput.value.trim();
+  if (value) {
+    tags.push(value);
+    renderTags();
+    tagInput.value = "";
+  }
+});
+
+// --- Pages and nav ---
 // Показываем только активную страницу
 function showPage(pageId) {
   document.querySelectorAll(".page").forEach((page) => {
@@ -219,171 +358,3 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 
 // Инициализация: показываем главную страницу
 // showPage("home");
-
-function loadAllTags(transactions) {
-  if (localStorage.tags) {
-    allTags = new Map(Object.entries(JSON.parse(localStorage.tags)));
-    return;
-  }
-
-  allTags = new Map();
-  transactions
-    .flatMap((t) => t.tags)
-    .forEach((t) => {
-      if (!allTags.has(t)) {
-        allTags.set(t, 0);
-      }
-      allTags.set(t, allTags.get(t) + 1);
-    });
-
-  saveTags();
-}
-
-function saveTags() {
-  localStorage.tags = JSON.stringify(Object.fromEntries(allTags));
-}
-
-document.getElementById("add-tag").addEventListener("click", () => {
-  const tagInput = document.getElementById("tag-input");
-  const tag = tagInput.value.trim();
-
-  if (tag) {
-    tags.push(tag);
-    renderTags();
-    tagInput.value = "";
-  }
-});
-
-function loadAllCategories(transactions) {
-  if (localStorage.categories) {
-    allCategories = new Map(
-      Object.entries(JSON.parse(localStorage.categories))
-    );
-    return;
-  }
-
-  allCategories = new Map();
-  transactions.forEach((t) => {
-    if (!allCategories.has(t.category)) {
-      allCategories.set(t.category, 0);
-    }
-    allCategories.set(t.category, allCategories.get(t.category) + 1);
-  });
-
-  saveCategories();
-}
-
-function saveCategories() {
-  localStorage.categories = JSON.stringify(Object.fromEntries(allCategories));
-}
-
-function unionStart(source, target) {
-  if (source.length > target.length || source.length == 0) {
-    return -1;
-  }
-  let i = 0;
-  while (i < source.length && i < target.length) {
-    if (source[i] !== target[i]) {
-      return -1;
-    }
-    i++;
-  }
-  return i;
-}
-
-function suggestCategory(input) {
-  let unionCount = 0;
-  let weight = 0;
-  let suggestion = null;
-
-  input = input.trim().toLowerCase();
-  allCategories.forEach((v, k) => {
-    const categoryLower = k.toLowerCase();
-    const count = unionStart(input, categoryLower);
-    if (count > unionCount || (count === unionCount && v > weight)) {
-      suggestion = k;
-      weight = v;
-      unionCount = count;
-    }
-  });
-
-  return suggestion;
-}
-
-const inputCategory = document.getElementById("category");
-const suggestion = document.getElementById("suggestion");
-
-let suggestedCategory = "";
-
-const applySuggestion = () => {
-  inputCategory.value = suggestedCategory;
-  suggestion.style.display = "none";
-};
-
-inputCategory.addEventListener("input", (event) => {
-  const value = event.target.value;
-
-  suggestedCategory = suggestCategory(value);
-
-  if (!suggestedCategory) {
-    suggestion.style.display = "none";
-    return;
-  }
-
-  suggestion.textContent = suggestedCategory;
-  suggestion.style.display = "block";
-
-  if (value.endsWith(" ")) {
-    applySuggestion();
-  }
-});
-
-suggestion.addEventListener("click", applySuggestion);
-
-function suggestTag(input) {
-  let unionCount = 0;
-  let weight = 0;
-  let suggestion = null;
-
-  input = input.trim().toLowerCase();
-  allTags.forEach((v, k) => {
-    let tagLower = k.toLowerCase();
-    const count = unionStart(input, tagLower);
-    if (count > unionCount || (count === unionCount && v > weight)) {
-      suggestion = tagLower;
-      weight = v;
-      unionCount = count;
-    }
-  });
-
-  return suggestion;
-}
-
-const tagSuggestion = document.getElementById("tag-suggestion");
-
-let suggestedTag = "";
-
-const applyTagSuggestion = function () {
-  inputTag.value = suggestedTag;
-  tagSuggestion.style.display = "none";
-};
-
-inputTag.addEventListener("input", (event) => {
-  const value = event.target.value;
-
-  suggestedTag = suggestTag(value);
-
-  if (!suggestedTag) {
-    tagSuggestion.style.display = "none";
-    return;
-  }
-
-  tagSuggestion.textContent = suggestedTag;
-  tagSuggestion.style.display = "block";
-
-  if (value.endsWith(" ")) {
-    applyTagSuggestion();
-  }
-});
-
-tagSuggestion.addEventListener("click", applyTagSuggestion);
