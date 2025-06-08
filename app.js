@@ -91,29 +91,29 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
 
 // Загрузка транзакций и обновление UI
 function loadTransactions(transactions) {
-    const list = document.getElementById("transactions");
-    const balanceElement = document.getElementById("balance");
+  const list = document.getElementById("transactions");
+  const balanceElement = document.getElementById("balance");
 
-    list.innerHTML = "";
-    let balance = 0;
+  list.innerHTML = "";
+  let balance = 0;
 
-    transactions.forEach((transaction) => {
-      const li = document.createElement("li");
-      li.className = transaction.type;
-      li.innerHTML = `
+  transactions.forEach((transaction) => {
+    const li = document.createElement("li");
+    li.className = transaction.type;
+    li.innerHTML = `
         <div>
           <strong>${transaction.description}</strong>
           <div>${transaction.category} • ${transaction.tags.join(", ")}</div>
         </div>
         <span>${transaction.amount} ₽</span>
       `;
-      list.appendChild(li);
+    list.appendChild(li);
 
-      balance += transaction.amount;
-    });
+    balance += transaction.amount;
+  });
 
-    balanceElement.textContent = balance;
-    updateCharts(transactions);
+  balanceElement.textContent = balance;
+  updateCharts(transactions);
 }
 
 // Обновление графиков
@@ -208,7 +208,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 });
 
 // Инициализация: показываем главную страницу
-showPage("home");
+// showPage("home");
 
 function loadAllTags() {
   if (!localStorage.tags) {
@@ -252,18 +252,86 @@ document.getElementById("add-tag").addEventListener("click", () => {
 
 function loadAllCategories(transactions) {
   if (localStorage.categories) {
-    allCategories = JSON.parse(localStorage.categories);
+    allCategories = new Map(
+      Object.entries(JSON.parse(localStorage.categories))
+    );
     return;
   }
 
-  allCategories = new Set();
+  allCategories = new Map();
   transactions.forEach((t) => {
-    allCategories.add(t.category);
+    if (!allCategories.has(t.category)) {
+      allCategories.set(t.category, 0);
+    }
+    allCategories.set(t.category, allCategories.get(t.category) + 1);
   });
 
   saveCategories();
 }
 
 function saveCategories() {
-  localStorage.categories = JSON.stringify(allCategories);
+  localStorage.categories = JSON.stringify(Object.fromEntries(allCategories));
 }
+
+function suggestCategory(input) {
+  function unionStart(source, target) {
+    if (source.length > target.length || source.length == 0) {
+      return -1;
+    }
+    let i = 0;
+    while (i < source.length && i < target.length) {
+      if (source[i] !== target[i]) {
+        return -1;
+      }
+      i++;
+    }
+    return i;
+  }
+
+  let unionCount = 0;
+  let weight = 0;
+  let suggestion = null;
+
+  input = input.trim().toLowerCase();
+  allCategories.forEach((v, k) => {
+    k = k.toLowerCase();
+    const count = unionStart(input, k);
+    if (count > unionCount || (count === unionCount && v > weight)) {
+      suggestion = k;
+      weight = v;
+      unionCount = count;
+    }
+  });
+
+  return suggestion;
+}
+
+const inputCategory = document.getElementById("category");
+const suggestion = document.getElementById("suggestion");
+
+let suggestedCategory = "";
+
+const applySuggestion = () => {
+  inputCategory.value = suggestedCategory;
+  suggestion.style.display = "none";
+};
+
+inputCategory.addEventListener("input", (event) => {
+  const value = event.target.value;
+
+  suggestedCategory = suggestCategory(value);
+
+  if (!suggestedCategory) {
+    suggestion.style.display = "none";
+    return;
+  }
+
+  suggestion.textContent = suggestedCategory;
+  suggestion.style.display = "block";
+
+  if (value.endsWith(" ")) {
+    applySuggestion();
+  }
+});
+
+suggestion.addEventListener("click", applySuggestion);

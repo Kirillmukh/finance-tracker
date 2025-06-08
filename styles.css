@@ -21,6 +21,10 @@ body {
   margin-bottom: 20px;
 }
 
+#suggestion {
+  display: none;
+}
+
 .tags-input {
   margin: 10px 0;
 }
@@ -100,7 +104,7 @@ body {
 }
 
 .nav-item.active {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .nav-item .icon {
