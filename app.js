@@ -298,8 +298,8 @@ function suggestCategory(input) {
 
   input = input.trim().toLowerCase();
   allCategories.forEach((v, k) => {
-    k = k.toLowerCase();
-    const count = unionStart(input, k);
+    const categoryLower = k.toLowerCase();
+    const count = unionStart(input, categoryLower);
     if (count > unionCount || (count === unionCount && v > weight)) {
       suggestion = k;
       weight = v;
@@ -347,10 +347,10 @@ function suggestTag(input) {
 
   input = input.trim().toLowerCase();
   allTags.forEach((v, k) => {
-    k = k.toLowerCase();
-    const count = unionStart(input, k);
+    let tagLower = k.toLowerCase();
+    const count = unionStart(input, tagLower);
     if (count > unionCount || (count === unionCount && v > weight)) {
-      suggestion = k;
+      suggestion = tagLower;
       weight = v;
       unionCount = count;
     }
