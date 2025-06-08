@@ -18,10 +18,25 @@ request.onupgradeneeded = (event) => {
 
 request.onsuccess = (event) => {
   db = event.target.result;
-  loadTransactions();
-  loadAllCategories();
-  loadAllTags();
+  readOnlyTransaction([loadTransactions, loadAllCategories, loadAllTags]);
 };
+
+function readOnlyTransaction(functions) {
+  const tx = db.transaction("transactions", "readonly");
+  const store = tx.objectStore("transactions");
+  const request = store.getAll();
+
+  request.onsuccess = () => {
+    const transactions = request.result;
+    functions.forEach((func) => {
+      func.call(this, transactions);
+    });
+  };
+
+  request.onerror = () => {
+    console.error("error occured while open indexed db");
+  };
+}
 
 // Управление тегами
 document.getElementById("add-tag").addEventListener("click", () => {
@@ -67,7 +82,7 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
   tags.forEach((item) => allTags.add(item));
 
   tx.oncomplete = () => {
-    loadTransactions();
+    readOnlyTransaction([loadTransactions]);
     e.target.reset();
     tags = [];
     renderTags();
@@ -75,13 +90,7 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
 });
 
 // Загрузка транзакций и обновление UI
-function loadTransactions() {
-  const tx = db.transaction("transactions", "readonly");
-  const store = tx.objectStore("transactions");
-  const request = store.getAll();
-
-  request.onsuccess = () => {
-    const transactions = request.result;
+function loadTransactions(transactions) {
     const list = document.getElementById("transactions");
     const balanceElement = document.getElementById("balance");
 
@@ -105,13 +114,12 @@ function loadTransactions() {
 
     balanceElement.textContent = balance;
     updateCharts(transactions);
-  };
 }
 
 // Обновление графиков
 function updateCharts(transactions) {
   // Удаляем старые графики
-  const chartId = 'pieChart';
+  const chartId = "pieChart";
   const existingChart = Chart.getChart(chartId);
   if (existingChart) {
     existingChart.destroy();
@@ -137,7 +145,6 @@ function updateCharts(transactions) {
     }
     return colors;
   }
-  
 
   // Круговой график
   new Chart(document.getElementById("pieChart"), {
@@ -243,11 +250,18 @@ document.getElementById("add-tag").addEventListener("click", () => {
   }
 });
 
-function loadAllCategories() {
-  if (!localStorage.categories) {
-    localStorage.categories = JSON.stringify(new Set());
+function loadAllCategories(transactions) {
+  if (localStorage.categories) {
+    allCategories = JSON.parse(localStorage.categories);
+    return;
   }
-  allCategories = JSON.parse(localStorage.categories);
+
+  allCategories = new Set();
+  transactions.forEach((t) => {
+    allCategories.add(t.category);
+  });
+
+  saveCategories();
 }
 
 function saveCategories() {
