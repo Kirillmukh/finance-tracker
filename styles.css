@@ -1,0 +1,139 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f5f5f5;
+}
+
+.app {
+  max-width: 500px;
+  margin: 0 auto;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#transaction-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tags-input {
+  margin: 10px 0;
+}
+
+.tag {
+  display: inline-block;
+  background: #e0e0e0;
+  padding: 5px 10px;
+  margin: 5px;
+  border-radius: 20px;
+}
+
+.tag button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+#transactions {
+  list-style: none;
+  padding: 0;
+}
+
+#transactions li {
+  background: #f9f9f9;
+  padding: 10px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+#transactions li.income {
+  border-left: 4px solid green;
+}
+
+#transactions li.expense {
+  border-left: 4px solid red;
+}
+
+.charts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.chart-container {
+  width: 100%;
+  max-width: 400px;
+  height: 300px;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #555;
+  font-size: 12px;
+  padding: 5px;
+}
+
+.nav-item.active {
+  color: #4CAF50;
+}
+
+.nav-item .icon {
+  font-size: 20px;
+  margin-bottom: 3px;
+}
+
+/* Сдвигаем основной контент, чтобы навбар не перекрывал его */
+.app {
+  padding-bottom: 70px; /* Высота навбара + отступ */
+}
+
+/* Стили для поля ввода с подсказками */
+#tag-input {
+  width: 70%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+datalist {
+  position: absolute;
+  background: white;
+  border: 1px solid #ddd;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* Чипсы тегов */
+.tag {
+  display: inline-block;
+  background: #e0e0e0;
+  padding: 5px 10px;
+  margin: 5px;
+  border-radius: 20px;
+  font-size: 14px;
+}
