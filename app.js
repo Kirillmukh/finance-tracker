@@ -78,7 +78,12 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
   const tx = db.transaction("transactions", "readwrite");
   const store = tx.objectStore("transactions");
   store.add(transaction);
-
+  
+  if (!allCategories.has(transaction.category)) {
+    allCategories.set(transaction.category, 0);
+  }
+  allCategories.set(transaction.category, allCategories.get(transaction.category) + 1);
+  saveCategories();
   tags.forEach((item) => allTags.add(item));
 
   tx.oncomplete = () => {
@@ -335,3 +340,4 @@ inputCategory.addEventListener("input", (event) => {
 });
 
 suggestion.addEventListener("click", applySuggestion);
+
