@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Финансовый трекер</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="manifest" href="manifest.json" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="app">
+      <h1>Мои финансы</h1>
+
+      <form id="transaction-form">
+        <input type="text" id="description" placeholder="Описание" required />
+        <input type="number" id="amount" placeholder="Сумма" required />
+        <input id="category" placeholder="Категория" required />
+
+        <div class="tags-input">
+          <input
+            type="text"
+            id="tag-input"
+            placeholder="Добавить тег"
+            list="tag-suggestions"
+          />
+          <datalist id="tag-suggestions"></datalist>
+          <button type="button" id="add-tag">+</button>
+          <div id="tags-container"></div>
+        </div>
+
+        <button type="submit">Добавить</button>
+      </form>
+
+      <div class="balance">
+        <h2>Баланс: <span id="balance">0</span> ₽</h2>
+      </div>
+
+      <div class="charts">
+        <div class="chart-container">
+          <canvas id="pieChart"></canvas>
+        </div>
+        <!-- <div class="chart-container">
+          <canvas id="barChart"></canvas>
+        </div> -->
+      </div>
+
+      <ul id="transactions"></ul>
+    </div>
+
+    <nav class="bottom-nav">
+      <a href="#" class="nav-item active" data-page="home">
+        <span class="icon">🏠</span>
+        <span class="label">Главная</span>
+      </a>
+      <a href="#" class="nav-item" data-page="stats">
+        <span class="icon">📊</span>
+        <span class="label">Статистика</span>
+      </a>
+      <a href="#" class="nav-item" data-page="categories">
+        <span class="icon">🗂️</span>
+        <span class="label">Категории</span>
+      </a>
+      <a href="#" class="nav-item" data-page="settings">
+        <span class="icon">⚙️</span>
+        <span class="label">Настройки</span>
+      </a>
+    </nav>
+
+    <script src="app.js"></script>
+  </body>
+</html>
