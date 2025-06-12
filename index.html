@@ -27,6 +27,20 @@
 
         <ul id="transactions"></ul>
       </div>
+      <div id="export-page" class="page">
+        <h3>Экспорт / Импорт данных</h3>
+        <div id="export-section">
+          <h4>Экспорт</h4>
+          <button id="export-btn">Экспорт данных</button>
+          <p id="export-status"></p>
+        </div>
+        <div id="import-section">
+          <h4>Импорт</h4>
+          <input id="input-json" type="file" accept=".json" />
+          <button id="import-btn">Импортировать данные</button>
+          <p id="import-status"></p>
+        </div>
+      </div>
       <div id="input-page" class="page">
         <form id="transaction-form">
           <input type="text" id="description" placeholder="Описание" required />
@@ -55,13 +69,13 @@
         <span class="icon">📊</span>
         <span class="label">Статистика</span>
       </a>
-      <a href="#" class="nav-item" data-page="categories">
+      <a href="#" class="nav-item" data-page="export">
         <span class="icon">🗂️</span>
-        <span class="label">Категории</span>
+        <span class="label">Экспорт</span>
       </a>
       <a href="#" class="nav-item" data-page="input">
         <span class="icon">+</span>
-        <span class="label">Настройки</span>
+        <span class="label">Добавить</span>
       </a>
     </nav>
 

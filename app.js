@@ -166,18 +166,14 @@ function countMapAdd(map, object) {
   map.set(object, map.get(object) + 1);
 }
 
-function generateRandomColors(n) {
-    const colors = [];
-    for (let i = 0; i < n; i++) {
-      const color =
-        "#" +
-        Math.floor(Math.random() * 0xffffff)
-          .toString(16)
-          .padStart(6, "0");
-      colors.push(color);
-    }
-    return colors;
-  }
+function formatDate(date) {
+  let dd = date.getDate();
+  if (dd < 10) dd = "0" + dd;
+  let mm = date.getMonth() + 1;
+  if (mm < 10) mm = "0" + mm;
+  const yy = date.getFullYear();
+  return dd + "." + mm + "." + yy;
+}
 
 // --- Charts ---
 function updateCharts(transactions) {
@@ -285,6 +281,60 @@ tagInput.addEventListener("input", (event) => {
   }
 });
 
+// -- export and import data --
+document.getElementById("export-btn").addEventListener("click", () => {
+  readOnlyTransaction([
+    (transactions) => {
+      const json = JSON.stringify(transactions);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${formatDate(new Date())}.json`;
+      a.click();
+    },
+  ]);
+  document.getElementById("export-status").textContent =
+    "Успешно экспортировано!";
+});
+
+document.getElementById("import-btn").addEventListener("click", () => {
+  const jsonInput = document.getElementById("input-json");
+  const file = jsonInput.files[0];
+
+  if (!file) {
+    document.getElementById("import-status").textContent = "Файл не выбран!";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const jsonData = JSON.parse(e.target.result);
+      if (Array.isArray(jsonData)) {
+        const tx = db.transaction("transactions", "readwrite");
+        const store = tx.objectStore("transactions");
+
+        store.clear();
+        jsonData.forEach((transaction) => store.add(transaction));
+
+        tx.oncomplete = () => {
+          readOnlyTransaction([loadTransactions]);
+        };
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  reader.onerror = () => {
+    console.log("Ошибка чтения файла");
+  };
+  reader.readAsText(file);
+
+  document.getElementById("import-status").textContent =
+    "Успешно импортировано!";
+});
+
 // --- api with DOM ---
 function renderTags() {
   const container = document.getElementById("tags-container");
@@ -332,14 +382,12 @@ document.getElementById("add-tag").addEventListener("click", () => {
 });
 
 // --- Pages and nav ---
-// Показываем только активную страницу
 function showPage(pageId) {
   document.querySelectorAll(".page").forEach((page) => {
     page.style.display = "none";
   });
   document.getElementById(`${pageId}-page`).style.display = "block";
 
-  // Обновляем активный элемент в навбаре
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.remove("active");
   });
@@ -348,7 +396,6 @@ function showPage(pageId) {
     .classList.add("active");
 }
 
-// Обработчики кликов для навбара
 document.querySelectorAll(".nav-item").forEach((item) => {
   item.addEventListener("click", (e) => {
     e.preventDefault();
@@ -357,5 +404,4 @@ document.querySelectorAll(".nav-item").forEach((item) => {
   });
 });
 
-// Инициализация: показываем главную страницу
 showPage("home");

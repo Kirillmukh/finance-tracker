@@ -21,7 +21,7 @@ body {
   margin-bottom: 20px;
 }
 
-.suggestion {
+.suggestion .invisible {
   display: none;
 }
 
@@ -136,5 +136,41 @@ body {
   padding: 5px 10px;
   margin: 5px;
   border-radius: 20px;
+  font-size: 14px;
+}
+
+#import-section, #export-section {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  max-width: 500px;
+  margin: 20px auto;
+  margin: 20px 0;
+}
+
+#input-json {
+  display: block;
+  margin: 10px 0;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 100%;
+}
+
+#import-btn, #export-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#import-btn:hover, #export-btn:hover {
+  background: #45a049;
+}
+
+#import-status, #export-status {
+  margin-top: 10px;
   font-size: 14px;
 }
