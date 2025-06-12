@@ -10,38 +10,40 @@
   </head>
   <body>
     <div class="app">
-      <h1>Мои финансы</h1>
-
-      <form id="transaction-form">
-        <input type="text" id="description" placeholder="Описание" required />
-        <input type="number" id="amount" placeholder="Сумма" required />
-        <div class="suggestion" id="category-suggestion"></div>
-        <input id="category-input" placeholder="Категория" required />
-
-        <div class="tags-input">
-          <div class="suggestion" id="tag-suggestion"></div>
-          <input type="text" id="tag-input" placeholder="Добавить тег" />
-          <button type="button" id="add-tag">+</button>
-          <div id="tags-container"></div>
+      <div id="home-page" class="page">
+        <h1>Мои финансы</h1>
+        <div class="balance">
+          <h2>Траты: <span id="balance">0</span> ₽</h2>
         </div>
 
-        <button type="submit">Добавить</button>
-      </form>
-
-      <div class="balance">
-        <h2>Траты: <span id="balance">0</span> ₽</h2>
-      </div>
-
-      <div class="charts">
-        <div class="chart-container">
-          <canvas id="pieChart"></canvas>
+        <div class="charts">
+          <div class="chart-container">
+            <canvas id="pieChart"></canvas>
+          </div>
+          <!-- <div class="chart-container">
+            <canvas id="barChart"></canvas>
+          </div> -->
         </div>
-        <!-- <div class="chart-container">
-          <canvas id="barChart"></canvas>
-        </div> -->
-      </div>
 
-      <ul id="transactions"></ul>
+        <ul id="transactions"></ul>
+      </div>
+      <div id="input-page" class="page">
+        <form id="transaction-form">
+          <input type="text" id="description" placeholder="Описание" required />
+          <input type="number" id="amount" placeholder="Сумма" required />
+          <div class="suggestion" id="category-suggestion"></div>
+          <input id="category-input" placeholder="Категория" required />
+
+          <div class="tags-input">
+            <div class="suggestion" id="tag-suggestion"></div>
+            <input type="text" id="tag-input" placeholder="Добавить тег" />
+            <button type="button" id="add-tag">+</button>
+            <div id="tags-container"></div>
+          </div>
+
+          <button type="submit">Добавить</button>
+        </form>
+      </div>
     </div>
 
     <nav class="bottom-nav">
@@ -57,8 +59,8 @@
         <span class="icon">🗂️</span>
         <span class="label">Категории</span>
       </a>
-      <a href="#" class="nav-item" data-page="settings">
-        <span class="icon">⚙️</span>
+      <a href="#" class="nav-item" data-page="input">
+        <span class="icon">+</span>
         <span class="label">Настройки</span>
       </a>
     </nav>
