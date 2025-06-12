@@ -133,6 +133,7 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
     tags = [];
     renderTags();
   };
+  showPage("home");
 });
 
 // --- Utils ---
@@ -357,4 +358,4 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 });
 
 // Инициализация: показываем главную страницу
-// showPage("home");
+showPage("home");
