@@ -21,7 +21,7 @@ body {
   margin-bottom: 20px;
 }
 
-#suggestion {
+.suggestion {
   display: none;
 }
 
@@ -127,14 +127,6 @@ body {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
-}
-
-datalist {
-  position: absolute;
-  background: white;
-  border: 1px solid #ddd;
-  max-height: 150px;
-  overflow-y: auto;
 }
 
 /* Чипсы тегов */

@@ -110,7 +110,7 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
   const transaction = {
     description: document.getElementById("description").value,
     amount: +document.getElementById("amount").value,
-    category: document.getElementById("category").value,
+    category: document.getElementById("category-input").value,
     tags: [...tags],
     date: new Date().toLocaleDateString(),
   };
