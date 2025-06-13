@@ -4,6 +4,7 @@ let allTags;
 let tags = [];
 let suggestedCategory = "";
 let suggestedTag = "";
+let tagsToRemove = new Set();
 
 // --- db ---
 const request = indexedDB.open("FinanceTrackerDB", 2);
@@ -40,7 +41,7 @@ function readOnlyTransaction(functions) {
   };
 }
 
-// --- One Per Request ---
+// --- Render transactions ---
 function loadTransactions(transactions) {
   const list = document.getElementById("transactions");
   const balanceElement = document.getElementById("balance");
@@ -50,11 +51,131 @@ function loadTransactions(transactions) {
 
   transactions.forEach((transaction) => {
     const li = document.createElement("li");
-    li.className = transaction.type;
+    li.className = "transaction-li";
+    li.onclick = () => {
+      openModal(
+        transaction.description,
+        `
+        <div>
+          <strong>Описание</strong>: <input id="modal-description-input" value = "${transaction.description}"><br>
+          <strong>Категория</strong>: <input id="modal-category-input" value="${transaction.category}">
+          <div><strong>Теги</strong><br>
+            <div id="modal-tags-list">${transaction.tags
+              .map(
+                (tag) =>
+                  `<span class="tag">${tag} <button onclick="tagsToRemove.add('${tag}'); this.parentElement.remove()">×</button></span>`
+              )
+              .join("")}<br>
+            </div>
+            <input id="modal-tag-input" placeholder="Добавить тэг?" />
+            <button id="modal-add-tag">+</button>
+          <div>
+          <strong>Сумма</strong>: <span><input type="number" id="modal-amount-input" value="${
+            transaction.amount
+          }"> ₽</span>
+        </div>
+        <button id="modal-save-btn">Сохранить изменения</button>
+        <button id="modal-delete-btn">Удалить</button>
+        <button id="modal-duplicate-btn">Дублировать</button>
+        `
+      );
+      tagsToRemove.clear();
+
+      document.getElementById("modal-add-tag").addEventListener("click", () => {
+        const inputTag = document.getElementById("modal-tag-input");
+        if (!inputTag.value) {
+          return;
+        }
+        tags.push(inputTag.value);
+
+        document
+          .getElementById("modal-tags-list")
+          .insertAdjacentHTML(
+            "beforeend",
+            `<span class="tag">${inputTag.value} <button onclick="tagsToRemove.add('${inputTag.value}'); this.parentElement.remove()">×</button></span>`
+          );
+        inputTag.value = "";
+      });
+
+      document.getElementById("modal-save-btn").addEventListener("click", () => {
+        transaction.description = document.getElementById("modal-description-input").value;
+
+        if (transaction.category !== document.getElementById("modal-category-input").value) {
+          countMapDec(allCategories, transaction.category);
+          transaction.category = document.getElementById("modal-category-input").value;
+          countMapInc(allCategories, transaction.category);
+          saveCategories();
+        }
+
+        transaction.amount = +document.getElementById("modal-amount-input").value;
+
+        tags.forEach((tag) => {
+          countMapInc(allTags, tag);
+        });
+        transaction.tags
+          .filter((tag) => tagsToRemove.has(tag))
+          .forEach((tag) => {
+            countMapDec(allTags, tag);
+          });
+        saveTags();
+        transaction.tags = transaction.tags.filter((tag) => !tagsToRemove.has(tag));
+        transaction.tags.push(...tags);
+
+        const tx = db.transaction("transactions", "readwrite");
+        const store = tx.objectStore("transactions");
+
+        store.put(transaction);
+
+        tx.oncomplete = () => {
+          readOnlyTransaction([loadTransactions]);
+        };
+        tags.splice(0, tags.length);
+        tagsToRemove.clear();
+        closeModal();
+      });
+
+      document.getElementById("modal-delete-btn").addEventListener("click", () => {
+        const tx = db.transaction("transactions", "readwrite");
+        const store = tx.objectStore("transactions");
+
+        store.delete(transaction.id);
+        countMapDec(allCategories, transaction.category);
+        saveCategories();
+
+        transaction.tags.forEach((tag) => {
+          countMapDec(allTags, tag);
+        });
+        saveTags();
+
+        tx.oncomplete = () => {
+          readOnlyTransaction([loadTransactions]);
+        };
+        tags.splice(0, tags.length);
+        tagsToRemove.clear();
+        closeModal();
+      });
+
+      document.getElementById("modal-duplicate-btn").addEventListener("click", () => {
+        const tx = db.transaction("transactions", "readwrite");
+        const store = tx.objectStore("transactions");
+
+        const toAdd = Object.assign({}, transaction);
+        delete toAdd.id;
+        toAdd.date = new Date();
+        store.add(toAdd);
+
+        tx.oncomplete = () => {
+          readOnlyTransaction([loadTransactions]);
+        };
+        tags.splice(0, tags.length);
+        tagsToRemove.clear();
+        closeModal();
+      });
+    };
     li.innerHTML = `
         <div>
           <strong>${transaction.description}</strong>
-          <div>${transaction.category} • ${transaction.tags.join(", ")}</div>
+          <div>${transaction.category} ${transaction.tags.length !== 0 ? '•' : ''} ${transaction.tags.join(", ")}</div>
         </div>
         <span>${transaction.amount} ₽</span>
       `;
@@ -69,15 +190,13 @@ function loadTransactions(transactions) {
 
 function loadAllCategories(transactions) {
   if (localStorage.categories) {
-    allCategories = new Map(
-      Object.entries(JSON.parse(localStorage.categories))
-    );
+    allCategories = new Map(Object.entries(JSON.parse(localStorage.categories)));
     return;
   }
 
   allCategories = new Map();
   transactions.forEach((t) => {
-    countMapAdd(allCategories, t.category);
+    countMapInc(allCategories, t.category);
   });
 
   saveCategories();
@@ -93,7 +212,7 @@ function loadAllTags(transactions) {
   transactions
     .flatMap((t) => t.tags)
     .forEach((t) => {
-      countMapAdd(allTags, t);
+      countMapInc(allTags, t);
     });
 
   saveTags();
@@ -119,18 +238,18 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
   const store = tx.objectStore("transactions");
   store.add(transaction);
 
-  countMapAdd(allCategories, transaction.category);
+  countMapInc(allCategories, transaction.category);
   saveCategories();
   tags
     .flat((tags) => tags)
     .forEach((tag) => {
-      countMapAdd(allTags, tag);
+      countMapInc(allTags, tag);
     });
   saveTags();
   tx.oncomplete = () => {
     readOnlyTransaction([loadTransactions]);
     e.target.reset();
-    tags = [];
+    tags.splice(0, tags.length);
     renderTags();
   };
   showPage("home");
@@ -159,11 +278,20 @@ function unionStart(inputText, src) {
   return i;
 }
 
-function countMapAdd(map, object) {
+function countMapInc(map, object) {
   if (!map.has(object)) {
-    map.set(object, 0);
+    map.set(object, 1);
+    return;
   }
   map.set(object, map.get(object) + 1);
+}
+
+function countMapDec(map, object) {
+  if (map.get(object) === 1) {
+    map.delete(object);
+    return;
+  }
+  map.set(object, map.get(object) - 1);
 }
 
 function formatDate(date) {
@@ -230,15 +358,13 @@ function updateCharts(transactions) {
 // --- DOM ---
 const categoryInput = document.getElementById("category-input");
 const categorySuggestionDiv = document.getElementById("category-suggestion");
-categorySuggestionDiv.addEventListener("click", (event) =>
+categorySuggestionDiv.addEventListener("click", () =>
   applySuggestion(categoryInput, categorySuggestionDiv, suggestedCategory)
 );
 
 const tagInput = document.getElementById("tag-input");
 const tagSuggestionDiv = document.getElementById("tag-suggestion");
-tagSuggestionDiv.addEventListener("click", (event) =>
-  applySuggestion(tagInput, tagSuggestionDiv, suggestedTag)
-);
+tagSuggestionDiv.addEventListener("click", () => applySuggestion(tagInput, tagSuggestionDiv, suggestedTag));
 
 function applySuggestion(input, div, suggestion) {
   input.value = suggestion;
@@ -294,8 +420,7 @@ document.getElementById("export-btn").addEventListener("click", () => {
       a.click();
     },
   ]);
-  document.getElementById("export-status").textContent =
-    "Успешно экспортировано!";
+  document.getElementById("export-status").textContent = "Успешно экспортировано!";
 });
 
 document.getElementById("import-btn").addEventListener("click", () => {
@@ -327,22 +452,18 @@ document.getElementById("import-btn").addEventListener("click", () => {
     }
   };
   reader.onerror = () => {
-    console.log("Ошибка чтения файла");
+    console.error("Ошибка чтения файла");
   };
   reader.readAsText(file);
 
-  document.getElementById("import-status").textContent =
-    "Успешно импортировано!";
+  document.getElementById("import-status").textContent = "Успешно импортировано!";
 });
 
 // --- api with DOM ---
 function renderTags() {
   const container = document.getElementById("tags-container");
   container.innerHTML = tags
-    .map(
-      (tag) =>
-        `<span class="tag">${tag} <button onclick="removeTag('${tag}')">×</button></span>`
-    )
+    .map((tag) => `<span class="tag">${tag} <button onclick="removeTag('${tag}')">×</button></span>`)
     .join("");
 }
 
@@ -391,9 +512,7 @@ function showPage(pageId) {
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.classList.remove("active");
   });
-  document
-    .querySelector(`.nav-item[data-page="${pageId}"]`)
-    .classList.add("active");
+  document.querySelector(`.nav-item[data-page="${pageId}"]`).classList.add("active");
 }
 
 document.querySelectorAll(".nav-item").forEach((item) => {
@@ -405,3 +524,29 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 });
 
 showPage("home");
+
+// Получаем элементы DOM
+const modal = document.getElementById("modal");
+const closeBtn = document.querySelector(".close-btn");
+
+// Функция открытия модального окна
+function openModal(title, contentHTML) {
+  document.getElementById("modal-title").textContent = title;
+  document.getElementById("modal-body").innerHTML = contentHTML;
+  modal.classList.add("show");
+  document.body.style.overflow = "hidden"; // Блокируем прокрутку страницы
+}
+
+// Функция закрытия
+function closeModal() {
+  modal.classList.remove("show");
+  document.body.style.overflow = "auto"; // Восстанавливаем прокрутку
+}
+
+// Закрытие по клику на крестик
+closeBtn.addEventListener("click", closeModal);
+
+// Закрытие по клику вне окна
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) closeModal();
+});
