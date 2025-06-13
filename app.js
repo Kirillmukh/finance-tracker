@@ -5,6 +5,13 @@ let tags = [];
 let suggestedCategory = "";
 let suggestedTag = "";
 let tagsToRemove = new Set();
+const RATES = new Map(
+  Object.entries({
+    waste: ["плохая", "#f54242"],
+    ok: ["ок", "#42f58a"],
+    good: ["осознанная", "#4287f5"],
+  })
+);
 
 // --- db ---
 const request = indexedDB.open("FinanceTrackerDB", 2);
@@ -58,8 +65,18 @@ function loadTransactions(transactions) {
         `
         <div>
           <strong>Описание</strong>: <input id="modal-description-input" value = "${transaction.description}"><br>
-          <strong>Категория</strong>: <input id="modal-category-input" value="${transaction.category}">
+          <strong>Сумма</strong>: <span><input type="number" id="modal-amount-input" value="${
+            transaction.amount
+          }"> ₽</span><br>
+          <strong>Категория</strong>: <input id="modal-category-input" value="${transaction.category}"><br>
+          <strong>Трата</strong> <select name="rate" id="modal-rate-select">
+            <option value="waste">плохая</option>
+            <option value="ok">ок</option>
+            <option value="good">осознанная</option>
+          </select>
           <div><strong>Теги</strong><br>
+            <input id="modal-tag-input" placeholder="Добавить тэг?" />
+            <button id="modal-add-tag">+</button>
             <div id="modal-tags-list">${transaction.tags
               .map(
                 (tag) =>
@@ -67,24 +84,21 @@ function loadTransactions(transactions) {
               )
               .join("")}
             </div>
-            <input id="modal-tag-input" placeholder="Добавить тэг?" />
-            <button id="modal-add-tag">+</button>
           <div>
-          <strong>Сумма</strong>: <span><input type="number" id="modal-amount-input" value="${
-            transaction.amount
-          }"> ₽</span>
+          
         </div>
         <button id="modal-save-btn">Сохранить изменения</button>
         <button id="modal-delete-btn">Удалить</button>
         <button id="modal-duplicate-btn">Дублировать</button>
         `
       );
+      document.getElementById("modal-rate-select").value = transaction.rate;
       tagsToRemove.clear();
 
       document.getElementById("modal-add-tag").addEventListener("click", () => {
         const inputTag = document.getElementById("modal-tag-input");
         if (!inputTag.value || transaction.tags.includes(inputTag.value)) {
-          inputTag.value = '';
+          inputTag.value = "";
           return;
         }
         tags.push(inputTag.value);
@@ -109,6 +123,7 @@ function loadTransactions(transactions) {
         }
 
         transaction.amount = +document.getElementById("modal-amount-input").value;
+        transaction.rate = document.getElementById("modal-rate-select").value;
 
         tags.forEach((tag) => {
           countMapInc(allTags, tag);
@@ -165,7 +180,7 @@ function loadTransactions(transactions) {
         toAdd.date = new Date();
         countMapInc(allCategories, toAdd.category);
         saveCategories();
-        toAdd.tags.forEach(tag => {
+        toAdd.tags.forEach((tag) => {
           countMapInc(allTags, tag);
         });
         saveTags();
@@ -182,9 +197,12 @@ function loadTransactions(transactions) {
     li.innerHTML = `
         <div>
           <strong>${transaction.description}</strong>
-          <div>${transaction.category} ${transaction.tags.length !== 0 ? '•' : ''} ${transaction.tags.join(", ")}</div>
+          <div>${transaction.category} ${transaction.tags.length !== 0 ? "•" : ""} ${transaction.tags.join(", ")}</div>
         </div>
-        <span>${transaction.amount} ₽</span>
+        <div>
+          <span>${transaction.amount} ₽</span>
+          <div style="text-align: end; color: ${RATES.get(transaction.rate)[1]}">{x}</div>
+        </div>
       `;
     list.appendChild(li);
 
@@ -237,6 +255,7 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
     description: document.getElementById("description").value,
     amount: +document.getElementById("amount").value,
     category: document.getElementById("category-input").value,
+    rate: document.getElementById("rate-select").value,
     tags: [...tags],
     date: new Date().toLocaleDateString(),
   };
