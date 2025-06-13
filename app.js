@@ -65,7 +65,7 @@ function loadTransactions(transactions) {
                 (tag) =>
                   `<span class="tag">${tag} <button onclick="tagsToRemove.add('${tag}'); this.parentElement.remove()">×</button></span>`
               )
-              .join("")}<br>
+              .join("")}
             </div>
             <input id="modal-tag-input" placeholder="Добавить тэг?" />
             <button id="modal-add-tag">+</button>
@@ -83,7 +83,8 @@ function loadTransactions(transactions) {
 
       document.getElementById("modal-add-tag").addEventListener("click", () => {
         const inputTag = document.getElementById("modal-tag-input");
-        if (!inputTag.value) {
+        if (!inputTag.value || transaction.tags.includes(inputTag.value)) {
+          inputTag.value = '';
           return;
         }
         tags.push(inputTag.value);
@@ -162,6 +163,12 @@ function loadTransactions(transactions) {
         const toAdd = Object.assign({}, transaction);
         delete toAdd.id;
         toAdd.date = new Date();
+        countMapInc(allCategories, toAdd.category);
+        saveCategories();
+        toAdd.tags.forEach(tag => {
+          countMapInc(allTags, tag);
+        });
+        saveTags();
         store.add(toAdd);
 
         tx.oncomplete = () => {
