@@ -441,6 +441,8 @@ document.getElementById("import-btn").addEventListener("click", () => {
         const store = tx.objectStore("transactions");
 
         store.clear();
+        delete localStorage.tags;
+        delete localStorage.categories;
         jsonData.forEach((transaction) => store.add(transaction));
 
         tx.oncomplete = () => {
