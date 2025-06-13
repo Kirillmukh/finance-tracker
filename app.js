@@ -12,6 +12,7 @@ const RATES = new Map(
     good: ["осознанная", "#4287f5"],
   })
 );
+let limit = localStorage.limit ? localStorage.limit : "all";
 
 // --- db ---
 const request = indexedDB.open("FinanceTrackerDB", 2);
@@ -19,17 +20,47 @@ const request = indexedDB.open("FinanceTrackerDB", 2);
 request.onupgradeneeded = (event) => {
   db = event.target.result;
   if (!db.objectStoreNames.contains("transactions")) {
-    db.createObjectStore("transactions", {
+    let store = db.createObjectStore("transactions", {
       keyPath: "id",
       autoIncrement: true,
     });
+    store.createIndex("date_idx", "date");
+  } else {
+    const transaction = event.target.transaction;
+    const store = transaction.objectStore("transactions");
+
+    if (!store.indexNames.contains("date_idx")) {
+      store.createIndex("date_idx", "date");
+    }
   }
 };
 
 request.onsuccess = (event) => {
   db = event.target.result;
-  readOnlyTransaction([loadTransactions, loadAllCategories, loadAllTags]);
+  singleLoadTransactionsRender();
+  readOnlyTransaction([loadAllCategories, loadAllTags]);
 };
+
+function readOnlyTransactionByDate(functions, query) {
+  if (!(query instanceof IDBKeyRange)) {
+    return readOnlyTransaction(functions);
+  }
+  const tx = db.transaction("transactions", "readonly");
+  const store = tx.objectStore("transactions");
+  const index = store.index("date_idx");
+  const request = index.getAll(query);
+
+  request.onsuccess = () => {
+    const transactions = request.result;
+    functions.forEach((func) => {
+      func.call(this, transactions);
+    });
+  };
+
+  request.onerror = () => {
+    console.error("error occured while open indexed db");
+  };
+}
 
 function readOnlyTransaction(functions) {
   const tx = db.transaction("transactions", "readonly");
@@ -143,7 +174,7 @@ function loadTransactions(transactions) {
         store.put(transaction);
 
         tx.oncomplete = () => {
-          readOnlyTransaction([loadTransactions]);
+          singleLoadTransactionsRender();
         };
         tags.splice(0, tags.length);
         tagsToRemove.clear();
@@ -164,7 +195,7 @@ function loadTransactions(transactions) {
         saveTags();
 
         tx.oncomplete = () => {
-          readOnlyTransaction([loadTransactions]);
+          singleLoadTransactionsRender();
         };
         tags.splice(0, tags.length);
         tagsToRemove.clear();
@@ -177,7 +208,7 @@ function loadTransactions(transactions) {
 
         const toAdd = Object.assign({}, transaction);
         delete toAdd.id;
-        toAdd.date = new Date();
+        toAdd.date = new Date().getTime();
         countMapInc(allCategories, toAdd.category);
         saveCategories();
         toAdd.tags.forEach((tag) => {
@@ -187,7 +218,7 @@ function loadTransactions(transactions) {
         store.add(toAdd);
 
         tx.oncomplete = () => {
-          readOnlyTransaction([loadTransactions]);
+          singleLoadTransactionsRender();
         };
         tags.splice(0, tags.length);
         tagsToRemove.clear();
@@ -211,6 +242,18 @@ function loadTransactions(transactions) {
 
   balanceElement.textContent = balance;
   updateCharts(transactions);
+}
+
+function singleLoadTransactionsRender() {
+  const period = getDateRange(limit);
+  if (period.start.getTime() === period.end.getTime()) {
+    readOnlyTransaction([loadTransactions]);
+  } else {
+    readOnlyTransactionByDate(
+      [loadTransactions],
+      IDBKeyRange.bound(period.start.getTime(), period.end.getTime(), true, true)
+    );
+  }
 }
 
 function loadAllCategories(transactions) {
@@ -257,7 +300,7 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
     category: document.getElementById("category-input").value,
     rate: document.getElementById("rate-select").value,
     tags: [...tags],
-    date: new Date().toLocaleDateString(),
+    date: new Date().getTime(),
   };
 
   const tx = db.transaction("transactions", "readwrite");
@@ -273,7 +316,7 @@ document.getElementById("transaction-form").addEventListener("submit", (e) => {
     });
   saveTags();
   tx.oncomplete = () => {
-    readOnlyTransaction([loadTransactions]);
+    singleLoadTransactionsRender();
     e.target.reset();
     tags.splice(0, tags.length);
     renderTags();
@@ -327,6 +370,40 @@ function formatDate(date) {
   if (mm < 10) mm = "0" + mm;
   const yy = date.getFullYear();
   return dd + "." + mm + "." + yy;
+}
+
+function getDateRange(period = "day", date = new Date()) {
+  const result = { start: new Date(date), end: new Date(date) };
+
+  switch (period) {
+    case "day":
+      result.start.setHours(0, 0, 0, 0);
+      result.end.setHours(23, 59, 59, 999);
+      break;
+
+    case "week":
+      const day = date.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      result.start.setDate(date.getDate() + diffToMonday);
+      result.start.setHours(0, 0, 0, 0);
+      result.end = new Date(result.start);
+      result.end.setDate(result.start.getDate() + 6);
+      result.end.setHours(23, 59, 59, 999);
+      break;
+
+    case "month":
+      result.start = new Date(date.getFullYear(), date.getMonth(), 1);
+      result.end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      result.end.setHours(23, 59, 59, 999);
+      break;
+
+    case "year":
+      result.start = new Date(date.getFullYear(), 0, 1);
+      result.end = new Date(date.getFullYear(), 11, 31);
+      result.end.setHours(23, 59, 59, 999);
+      break;
+  }
+  return result;
 }
 
 // --- Charts ---
@@ -432,6 +509,15 @@ tagInput.addEventListener("input", (event) => {
     applySuggestion(tagInput, tagSuggestionDiv, suggestedTag);
   }
 });
+const transactionLimitSelect = document.getElementById("transactions-limit");
+transactionLimitSelect.value = limit;
+transactionLimitSelect.addEventListener("change", (event) => {
+  const value = event.target.value;
+  localStorage.limit = value;
+  limit = value;
+
+  singleLoadTransactionsRender();
+});
 
 // -- export and import data --
 document.getElementById("export-btn").addEventListener("click", () => {
@@ -472,7 +558,7 @@ document.getElementById("import-btn").addEventListener("click", () => {
         jsonData.forEach((transaction) => store.add(transaction));
 
         tx.oncomplete = () => {
-          readOnlyTransaction([loadTransactions]);
+          singleLoadTransactionsRender();
         };
       }
     } catch (error) {
