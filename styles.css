@@ -61,14 +61,6 @@ body {
   justify-content: space-between;
 }
 
-#transactions li.income {
-  border-left: 4px solid green;
-}
-
-#transactions li.expense {
-  border-left: 4px solid red;
-}
-
 .charts {
   display: flex;
   flex-wrap: wrap;
