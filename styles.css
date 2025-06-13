@@ -211,3 +211,11 @@ body {
   display: flex;
   animation: fadeIn 0.3s ease;
 }
+
+.flex-container {
+  display: flex;
+}
+
+#transactions-limit {
+  margin-left: auto;
+}
