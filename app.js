@@ -571,6 +571,7 @@ document.getElementById("import-btn").addEventListener("click", () => {
   reader.readAsText(file);
 
   document.getElementById("import-status").textContent = "Успешно импортировано!";
+  readOnlyTransaction([loadAllCategories, loadAllTags]);
 });
 
 // --- api with DOM ---
