@@ -8,11 +8,12 @@ let tagsToRemove = new Set();
 const RATES = new Map(
   Object.entries({
     waste: ["плохая", "#f54242"],
-    ok: ["ок", "#42f58a"],
-    good: ["осознанная", "#4287f5"],
+    ok: ["ок", "#4287f5"],
+    good: ["осознанная", "#42f58a"],
   })
 );
 let limit = localStorage.limit ? localStorage.limit : "all";
+let chartTarget = localStorage.chartTarget ? localStorage.chartTarget : "category";
 
 // --- db ---
 const request = indexedDB.open("FinanceTrackerDB", 2);
@@ -126,7 +127,7 @@ function loadTransactions(transactions) {
         `
       );
       const dateInput = document.getElementById("modal-date-input");
-      const timeInput=  document.getElementById("modal-time-input");
+      const timeInput = document.getElementById("modal-time-input");
       const dateString = formatDate(new Date(transaction.date), true);
       dateInput.value = dateString.split(" ")[0];
       timeInput.value = dateString.split(" ")[1];
@@ -220,7 +221,7 @@ function loadTransactions(transactions) {
         saveTags();
         transaction.tags = transaction.tags.filter((tag) => !tagsToRemove.has(tag));
         transaction.tags.push(...tags);
-        
+
         const year = new Date(transaction.date).getFullYear();
         const day = dateInput.value.split(".")[0];
         const month = dateInput.value.split(".")[1] - 1;
@@ -302,7 +303,21 @@ function loadTransactions(transactions) {
   });
 
   balanceElement.textContent = balance;
-  updateCharts(transactions);
+  const chartObject = groupTransactions(transactions, chartTarget);
+  updateCharts(chartObject);
+  if (chartTarget === "rate") {
+    let colors = [];
+
+    for (const key in chartObject) {
+      colors.push(RATES.get(key)[1]);
+      chartObject[RATES.get(key)[0]] = chartObject[key];
+      delete chartObject[key];
+    }
+    const pieChart = Chart.getChart("pieChart");
+    pieChart.data.labels = Object.keys(chartObject);
+    pieChart.data.datasets[0].backgroundColor = colors;
+    pieChart.update();
+  }
 }
 
 function singleLoadTransactionsRender() {
@@ -472,8 +487,28 @@ function getDateRange(period = "day", date = new Date()) {
   return result;
 }
 
+function groupTransactions(transactions, target) {
+  const result = {};
+  transactions.forEach((t) => {
+    if (Array.isArray(t[target])) {
+      t[target].forEach((tag) => {
+        if (!result[tag]) {
+          result[tag] = 0;
+        }
+        result[tag] += t.amount;
+      });
+    } else {
+      if (!result[t[target]]) {
+        result[t[target]] = 0;
+      }
+      result[t[target]] += t.amount;
+    }
+  });
+  return result;
+}
+
 // --- Charts ---
-function updateCharts(transactions) {
+function updateCharts(object) {
   // Удаляем старые графики
   const chartId = "pieChart";
   const existingChart = Chart.getChart(chartId);
@@ -481,21 +516,14 @@ function updateCharts(transactions) {
     existingChart.destroy();
   }
 
-  // Группировка по категориям
-  const categories = {};
-  transactions.forEach((t) => {
-    if (!categories[t.category]) categories[t.category] = 0;
-    categories[t.category] += t.amount;
-  });
-
   // Круговой график
   new Chart(document.getElementById("pieChart"), {
     type: "pie",
     data: {
-      labels: Object.keys(categories),
+      labels: Object.keys(object),
       datasets: [
         {
-          data: Object.values(categories),
+          data: Object.values(object),
           // backgroundColor: generateRandomColors(Object.getOwnPropertyNames(categories).length)
         },
       ],
@@ -585,6 +613,15 @@ transactionLimitSelect.addEventListener("change", (event) => {
   const value = event.target.value;
   localStorage.limit = value;
   limit = value;
+
+  singleLoadTransactionsRender();
+});
+const chartTargetSelect = document.getElementById("chart-target");
+chartTargetSelect.value = chartTarget;
+chartTargetSelect.addEventListener("change", (event) => {
+  const value = event.target.value;
+  localStorage.chartTarget = value;
+  chartTarget = value;
 
   singleLoadTransactionsRender();
 });
@@ -689,6 +726,7 @@ document.getElementById("add-tag").addEventListener("click", () => {
 
 // --- Pages and nav ---
 function showPage(pageId) {
+  localStorage.page = pageId;
   document.querySelectorAll(".page").forEach((page) => {
     page.style.display = "none";
   });
@@ -708,7 +746,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
   });
 });
 
-showPage("home");
+showPage(localStorage.page ? localStorage.page : "home");
 
 // Получаем элементы DOM
 const modal = document.getElementById("modal");
