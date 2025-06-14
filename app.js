@@ -95,11 +95,11 @@ function loadTransactions(transactions) {
         transaction.description,
         `
         <div>
-          <strong>Описание</strong>: <input id="modal-description-input" value = "${transaction.description}"><br>
-          <strong>Сумма</strong>: <span><input type="number" id="modal-amount-input" value="${
+          <strong>Описание</strong> <input id="modal-description-input" value = "${transaction.description}"><br>
+          <strong>Сумма</strong> <span><input type="number" id="modal-amount-input" value="${
             transaction.amount
           }"> ₽</span><br>
-          <strong>Категория</strong>: <input id="modal-category-input" value="${transaction.category}"><br>
+          <strong>Категория</strong> <input id="modal-category-input" value="${transaction.category}"><br>
           <strong>Трата</strong> <select name="rate" id="modal-rate-select">
             <option value="waste">плохая</option>
             <option value="ok">ок</option>
@@ -116,13 +116,18 @@ function loadTransactions(transactions) {
               .join("")}
             </div>
           <div>
-          
+          <strong>Дата</strong> <input id="modal-date-input"><strong>Время</strong> <input id="modal-time-input">
         </div>
         <button id="modal-save-btn">Сохранить изменения</button>
         <button id="modal-delete-btn">Удалить</button>
         <button id="modal-duplicate-btn">Дублировать</button>
         `
       );
+      const dateInput = document.getElementById("modal-date-input");
+      const timeInput=  document.getElementById("modal-time-input");
+      const dateString = formatDate(new Date(transaction.date), true);
+      dateInput.value = dateString.split(" ")[0];
+      timeInput.value = dateString.split(" ")[1];
       document.getElementById("modal-rate-select").value = transaction.rate;
       tagsToRemove.clear();
 
@@ -167,6 +172,14 @@ function loadTransactions(transactions) {
         saveTags();
         transaction.tags = transaction.tags.filter((tag) => !tagsToRemove.has(tag));
         transaction.tags.push(...tags);
+        
+        const year = new Date(transaction.date).getFullYear();
+        const day = dateInput.value.split(".")[0];
+        const month = dateInput.value.split(".")[1] - 1;
+        const hour = timeInput.value.split(":")[0];
+        const minute = timeInput.value.split(":")[1];
+        const second = new Date(transaction.date).getSeconds();
+        transaction.date = new Date(year, month, day, hour, minute, second).getTime();
 
         const tx = db.transaction("transactions", "readwrite");
         const store = tx.objectStore("transactions");
@@ -363,11 +376,16 @@ function countMapDec(map, object) {
   map.set(object, map.get(object) - 1);
 }
 
-function formatDate(date) {
+function formatDate(date, day = false) {
   let dd = date.getDate();
   if (dd < 10) dd = "0" + dd;
   let mm = date.getMonth() + 1;
   if (mm < 10) mm = "0" + mm;
+  if (day) {
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${dd}.${mm} ${hours}:${minutes}`;
+  }
   const yy = date.getFullYear();
   return dd + "." + mm + "." + yy;
 }
