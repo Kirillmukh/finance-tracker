@@ -112,12 +112,10 @@ body {
   margin-bottom: 3px;
 }
 
-/* Сдвигаем основной контент, чтобы навбар не перекрывал его */
 .app {
-  padding-bottom: 70px; /* Высота навбара + отступ */
+  padding-bottom: 70px;
 }
 
-/* Стили для поля ввода с подсказками */
 #tag-input {
   width: 70%;
   padding: 8px;
@@ -125,7 +123,6 @@ body {
   border-radius: 4px;
 }
 
-/* Чипсы тегов */
 .tag {
   display: inline-block;
   background: #e0e0e0;
@@ -171,9 +168,8 @@ body {
   font-size: 14px;
 }
 
-/* Стили модального окна */
 .modal {
-  display: none; /* Скрыто по умолчанию */
+  display: none;
   position: fixed;
   top: 0;
   left: 0;
@@ -205,7 +201,6 @@ body {
   cursor: pointer;
 }
 
-/* Анимация появления */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

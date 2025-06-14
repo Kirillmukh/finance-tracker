@@ -522,7 +522,6 @@ function groupTransactions(transactions, target) {
   return result;
 }
 
-// --- Charts ---
 function updateCharts(object, type = "pie") {
   const chart = Chart.getChart("chart");
   if (chart) {
@@ -535,7 +534,6 @@ function updateCharts(object, type = "pie") {
       datasets: [
         {
           data: Object.values(object),
-          // backgroundColor: generateRandomColors(Object.getOwnPropertyNames(categories).length)
         },
       ],
     },
@@ -671,6 +669,28 @@ document.getElementById("import-btn").addEventListener("click", () => {
   readOnlyTransaction([loadAllCategories, loadAllTags]);
 });
 
+// -- modal window --
+const modal = document.getElementById("modal");
+const closeBtn = document.querySelector(".close-btn");
+
+function openModal(title, contentHTML) {
+  document.getElementById("modal-title").textContent = title;
+  document.getElementById("modal-body").innerHTML = contentHTML;
+  modal.classList.add("show");
+  document.body.style.overflow = "hidden"; // Блокируем прокрутку страницы
+}
+
+function closeModal() {
+  modal.classList.remove("show");
+  document.body.style.overflow = "auto"; // Восстанавливаем прокрутку
+}
+
+closeBtn.addEventListener("click", closeModal);
+
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) closeModal();
+});
+
 // --- api with DOM ---
 function renderTags() {
   const container = document.getElementById("tags-container");
@@ -739,29 +759,3 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 });
 
 showPage(localStorage.page ? localStorage.page : "home");
-
-// Получаем элементы DOM
-const modal = document.getElementById("modal");
-const closeBtn = document.querySelector(".close-btn");
-
-// Функция открытия модального окна
-function openModal(title, contentHTML) {
-  document.getElementById("modal-title").textContent = title;
-  document.getElementById("modal-body").innerHTML = contentHTML;
-  modal.classList.add("show");
-  document.body.style.overflow = "hidden"; // Блокируем прокрутку страницы
-}
-
-// Функция закрытия
-function closeModal() {
-  modal.classList.remove("show");
-  document.body.style.overflow = "auto"; // Восстанавливаем прокрутку
-}
-
-// Закрытие по клику на крестик
-closeBtn.addEventListener("click", closeModal);
-
-// Закрытие по клику вне окна
-modal.addEventListener("click", (e) => {
-  if (e.target === modal) closeModal();
-});
