@@ -216,6 +216,6 @@ body {
   display: flex;
 }
 
-#transactions-limit {
+#transactions-limit, #chart-target {
   margin-left: auto;
 }

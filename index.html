@@ -16,6 +16,14 @@
           <h2>Траты: <span id="balance">0</span> ₽</h2>
         </div>
 
+        <div class="flex-container">
+          <select name="chart-target" id="chart-target">
+            <option value="category" selected>категория</option>
+            <option value="rate">трата</option>
+            <option value="tags">тег</option>
+          </select>
+        </div>
+
         <div class="charts">
           <div class="chart-container">
             <canvas id="pieChart"></canvas>
