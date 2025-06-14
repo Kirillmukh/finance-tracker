@@ -165,10 +165,10 @@ function loadTransactions(transactions) {
       modalTagInput.addEventListener("input", (event) => {
         const value = event.target.value;
         if (value.endsWith("   ")) {
-          document.getElementById("add-tag").click();
+          document.getElementById("modal-add-tag").click();
         }
 
-        suggestedTag = suggestAutocomplete(allTags, value);
+        suggestedTag = suggestAutocomplete(allTags, value, [...transaction.tags, ...tags]);
         if (!suggestedTag) {
           modalTagSuggestionDiv.style.display = "none";
           return;
@@ -182,17 +182,18 @@ function loadTransactions(transactions) {
         }
       });
       document.getElementById("modal-add-tag").addEventListener("click", () => {
-        if (!modalTagInput.value || transaction.tags.includes(modalTagInput.value)) {
+        const value = modalTagInput.value.trim();
+        if (!value || transaction.tags.includes(value)) {
           modalTagInput.value = "";
           return;
         }
-        tags.push(modalTagInput.value);
+        tags.push(value);
 
         document
           .getElementById("modal-tags-list")
           .insertAdjacentHTML(
             "beforeend",
-            `<span class="tag">${modalTagInput.value} <button onclick="tagsToRemove.add('${modalTagInput.value}'); this.parentElement.remove()">×</button></span>`
+            `<span class="tag">${value} <button onclick="tagsToRemove.add('${value}'); this.parentElement.remove()">×</button></span>`
           );
         modalTagInput.value = "";
       });
@@ -679,19 +680,21 @@ function renderTags() {
 }
 
 // --- api ---
-function suggestAutocomplete(sourceMap, inputText) {
+function suggestAutocomplete(sourceMap, inputText, excludeList = []) {
   let unionCount = 0;
   let weight = 0;
   let suggestion = null;
 
   inputText = inputText.trim().toLowerCase();
   sourceMap.forEach((v, k) => {
-    const lower = k.toLowerCase();
-    const count = unionStart(inputText, lower);
-    if (count > unionCount || (count === unionCount && v > weight)) {
-      suggestion = k;
-      weight = v;
-      unionCount = count;
+    if (!excludeList.includes(k)) {
+      const lower = k.toLowerCase();
+      const count = unionStart(inputText, lower);
+      if (count > unionCount || (count === unionCount && v > weight)) {
+        suggestion = k;
+        weight = v;
+        unionCount = count;
+      }
     }
   });
 
