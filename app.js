@@ -99,6 +99,7 @@ function loadTransactions(transactions) {
           <strong>Сумма</strong> <span><input type="number" id="modal-amount-input" value="${
             transaction.amount
           }"> ₽</span><br>
+          <div class="suggestion" style="display: none" id="modal-category-suggestion"></div>
           <strong>Категория</strong> <input id="modal-category-input" value="${transaction.category}"><br>
           <strong>Трата</strong> <select name="rate" id="modal-rate-select">
             <option value="waste">плохая</option>
@@ -106,6 +107,7 @@ function loadTransactions(transactions) {
             <option value="good">осознанная</option>
           </select>
           <div><strong>Теги</strong><br>
+          <div class="suggestion" style="display: none" id="modal-tag-suggestion"></div>
             <input id="modal-tag-input" placeholder="Добавить тэг?" />
             <button id="modal-add-tag">+</button>
             <div id="modal-tags-list">${transaction.tags
@@ -131,29 +133,75 @@ function loadTransactions(transactions) {
       document.getElementById("modal-rate-select").value = transaction.rate;
       tagsToRemove.clear();
 
-      document.getElementById("modal-add-tag").addEventListener("click", () => {
-        const inputTag = document.getElementById("modal-tag-input");
-        if (!inputTag.value || transaction.tags.includes(inputTag.value)) {
-          inputTag.value = "";
+      const modalCategoryInput = document.getElementById("modal-category-input");
+      const modalCategorySuggestionDiv = document.getElementById("modal-category-suggestion");
+      modalCategorySuggestionDiv.addEventListener("click", () =>
+        applySuggestion(modalCategoryInput, modalCategorySuggestionDiv, suggestedCategory)
+      );
+      modalCategoryInput.addEventListener("input", (event) => {
+        const value = event.target.value;
+
+        suggestedCategory = suggestAutocomplete(allCategories, value);
+
+        if (!suggestedCategory) {
+          modalCategorySuggestionDiv.style.display = "none";
           return;
         }
-        tags.push(inputTag.value);
+
+        modalCategorySuggestionDiv.textContent = suggestedCategory;
+        modalCategorySuggestionDiv.style.display = "block";
+
+        if (value.endsWith("  ")) {
+          applySuggestion(modalCategoryInput, modalCategorySuggestionDiv, suggestedCategory);
+        }
+      });
+
+      const modalTagInput = document.getElementById("modal-tag-input");
+      const modalTagSuggestionDiv = document.getElementById("modal-tag-suggestion");
+      modalTagSuggestionDiv.addEventListener("click", () =>
+        applySuggestion(modalTagInput, modalTagSuggestionDiv, suggestedTag)
+      );
+      modalTagInput.addEventListener("input", (event) => {
+        const value = event.target.value;
+        if (value.endsWith("   ")) {
+          document.getElementById("add-tag").click();
+        }
+
+        suggestedTag = suggestAutocomplete(allTags, value);
+        if (!suggestedTag) {
+          modalTagSuggestionDiv.style.display = "none";
+          return;
+        }
+
+        modalTagSuggestionDiv.textContent = suggestedTag;
+        modalTagSuggestionDiv.style.display = "block";
+
+        if (value.endsWith("  ")) {
+          applySuggestion(modalTagInput, modalTagSuggestionDiv, suggestedTag);
+        }
+      });
+      document.getElementById("modal-add-tag").addEventListener("click", () => {
+        if (!modalTagInput.value || transaction.tags.includes(modalTagInput.value)) {
+          modalTagInput.value = "";
+          return;
+        }
+        tags.push(modalTagInput.value);
 
         document
           .getElementById("modal-tags-list")
           .insertAdjacentHTML(
             "beforeend",
-            `<span class="tag">${inputTag.value} <button onclick="tagsToRemove.add('${inputTag.value}'); this.parentElement.remove()">×</button></span>`
+            `<span class="tag">${modalTagInput.value} <button onclick="tagsToRemove.add('${modalTagInput.value}'); this.parentElement.remove()">×</button></span>`
           );
-        inputTag.value = "";
+        modalTagInput.value = "";
       });
 
       document.getElementById("modal-save-btn").addEventListener("click", () => {
         transaction.description = document.getElementById("modal-description-input").value;
 
-        if (transaction.category !== document.getElementById("modal-category-input").value) {
+        if (transaction.category !== modalCategoryInput.value) {
           countMapDec(allCategories, transaction.category);
-          transaction.category = document.getElementById("modal-category-input").value;
+          transaction.category = modalCategoryInput.value;
           countMapInc(allCategories, transaction.category);
           saveCategories();
         }
@@ -513,11 +561,11 @@ categoryInput.addEventListener("input", (event) => {
 tagInput.addEventListener("input", (event) => {
   const value = event.target.value;
 
-  suggestedTag = suggestAutocomplete(allTags, value);
-
   if (value.endsWith("   ")) {
     document.getElementById("add-tag").click();
   }
+
+  suggestedTag = suggestAutocomplete(allTags, value);
 
   if (!suggestedTag) {
     tagSuggestionDiv.style.display = "none";
