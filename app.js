@@ -304,7 +304,21 @@ function loadTransactions(transactions) {
 
   balanceElement.textContent = balance;
   const chartObject = groupTransactions(transactions, chartTarget);
-  updateCharts(chartObject);
+  if (chartTarget === "tags") {
+    updateCharts(chartObject, "bar");
+    const barChart = Chart.getChart("chart");
+    barChart.data.datasets[0].label = "Сумма транзакций по тегам";
+    barChart.options = {
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+    };
+    barChart.update();
+  } else {
+    updateCharts(chartObject);
+  }
   if (chartTarget === "rate") {
     let colors = [];
 
@@ -313,7 +327,7 @@ function loadTransactions(transactions) {
       chartObject[RATES.get(key)[0]] = chartObject[key];
       delete chartObject[key];
     }
-    const pieChart = Chart.getChart("pieChart");
+    const pieChart = Chart.getChart("chart");
     pieChart.data.labels = Object.keys(chartObject);
     pieChart.data.datasets[0].backgroundColor = colors;
     pieChart.update();
@@ -508,17 +522,13 @@ function groupTransactions(transactions, target) {
 }
 
 // --- Charts ---
-function updateCharts(object) {
-  // Удаляем старые графики
-  const chartId = "pieChart";
-  const existingChart = Chart.getChart(chartId);
-  if (existingChart) {
-    existingChart.destroy();
+function updateCharts(object, type = "pie") {
+  const chart = Chart.getChart("chart");
+  if (chart) {
+    chart.destroy();
   }
-
-  // Круговой график
-  new Chart(document.getElementById("pieChart"), {
-    type: "pie",
+  new Chart(document.getElementById("chart"), {
+    type: type,
     data: {
       labels: Object.keys(object),
       datasets: [
@@ -529,27 +539,6 @@ function updateCharts(object) {
       ],
     },
   });
-
-  // Столбчатый график
-  // new Chart(document.getElementById("barChart"), {
-  //     type: "bar",
-  //     data: {
-  //       labels: Object.keys(categories),
-  //       datasets: [{
-  //         label: "Сумма по категориям",
-  //         data: Object.values(categories),
-  //         backgroundColor: "#4CAF50"
-  //       }]
-  //     },
-  //     options: {
-  //       scales: {
-  //         y: {
-  //           beginAtZero: true
-  //         }
-  //       }
-  //     }
-  //   }
-  // );
 }
 
 // --- DOM ---
