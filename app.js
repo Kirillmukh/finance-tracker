@@ -334,7 +334,7 @@ function saveCategories() {
 }
 
 function unionStart(inputText, src) {
-  if (inputText.length > src.length || inputText.length == 0) {
+  if (inputText.length >= src.length || inputText.length == 0) {
     return -1;
   }
   let i = 0;
@@ -496,6 +496,10 @@ tagInput.addEventListener("input", (event) => {
   const value = event.target.value;
 
   suggestedTag = suggestAutocomplete(allTags, value);
+
+  if (value.endsWith("   ")) {
+    document.getElementById("add-tag").click();
+  }
 
   if (!suggestedTag) {
     tagSuggestionDiv.style.display = "none";
