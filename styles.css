@@ -72,8 +72,12 @@ body {
   display: flex;
   width: 100%;
   max-width: 400px;
-  height: 300px;
+  /* height: 300px; */
   justify-content: center;
+}
+
+.char-container.hide {
+  display: none;
 }
 
 .bottom-nav {
