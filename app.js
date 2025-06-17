@@ -114,16 +114,18 @@ function loadTransactions(transactions) {
             <div id="modal-tags-list">${transaction.tags
               .map(
                 (tag) =>
-                  `<span class="tag">${tag} <button onclick="tagsToRemove.add('${tag}'); this.parentElement.remove()">×</button></span>`
+                  `<span class="tag">${tag} <button class="remove-tag-btn" onclick="tagsToRemove.add('${tag}'); this.parentElement.remove()">×</button></span>`
               )
               .join("")}
             </div>
           <div>
-          <strong>Дата</strong> <input id="modal-date-input"><strong>Время</strong> <input id="modal-time-input">
+          <strong>Дата</strong> <input class="input-time" id="modal-date-input"> <strong>Время</strong> <input class="input-time" id="modal-time-input">
         </div>
-        <button id="modal-save-btn">Сохранить изменения</button>
-        <button id="modal-delete-btn">Удалить</button>
-        <button id="modal-duplicate-btn">Дублировать</button>
+        <div class="column">
+          <button id="modal-save-btn">Сохранить изменения</button>
+          <button id="modal-delete-btn">Удалить</button>
+          <button id="modal-duplicate-btn">Дублировать</button>
+        </div>
         `
       );
       const dateInput = document.getElementById("modal-date-input");
@@ -183,7 +185,7 @@ function loadTransactions(transactions) {
       });
       document.getElementById("modal-add-tag").addEventListener("click", () => {
         const value = modalTagInput.value.trim();
-        if (!value || transaction.tags.includes(value)) {
+        if (!value || transaction.tags.includes(value) || tags.includes(value)) {
           modalTagInput.value = "";
           return;
         }
@@ -193,7 +195,7 @@ function loadTransactions(transactions) {
           .getElementById("modal-tags-list")
           .insertAdjacentHTML(
             "beforeend",
-            `<span class="tag">${value} <button onclick="tagsToRemove.add('${value}'); this.parentElement.remove()">×</button></span>`
+            `<span class="tag">${value} <button class="remove-tag-btn" onclick="tagsToRemove.add('${value}'); this.parentElement.remove()">×</button></span>`
           );
         modalTagInput.value = "";
       });
@@ -540,6 +542,11 @@ function updateCharts(object, type = "pie") {
   });
 }
 
+function capitalize(str) {
+  if (!str) return "";
+  return str[0].toUpperCase() + str.slice(1).toLowerCase();
+}
+
 // --- DOM ---
 const categoryInput = document.getElementById("category-input");
 const categorySuggestionDiv = document.getElementById("category-suggestion");
@@ -674,7 +681,7 @@ const modal = document.getElementById("modal");
 const closeBtn = document.querySelector(".close-btn");
 
 function openModal(title, contentHTML) {
-  document.getElementById("modal-title").textContent = title;
+  document.getElementById("modal-title").textContent = capitalize(title);
   document.getElementById("modal-body").innerHTML = contentHTML;
   modal.classList.add("show");
   document.body.style.overflow = "hidden"; // Блокируем прокрутку страницы
@@ -683,6 +690,7 @@ function openModal(title, contentHTML) {
 function closeModal() {
   modal.classList.remove("show");
   document.body.style.overflow = "auto"; // Восстанавливаем прокрутку
+  tags.splice(0, tags.length);
 }
 
 closeBtn.addEventListener("click", closeModal);
@@ -695,7 +703,7 @@ modal.addEventListener("click", (e) => {
 function renderTags() {
   const container = document.getElementById("tags-container");
   container.innerHTML = tags
-    .map((tag) => `<span class="tag">${tag} <button onclick="removeTag('${tag}')">×</button></span>`)
+    .map((tag) => `<span class="tag">${tag} <button class="remove-tag-btn" onclick="removeTag('${tag}')">×</button></span>`)
     .join("");
 }
 
@@ -729,11 +737,13 @@ const removeTag = (tag) => {
 
 document.getElementById("add-tag").addEventListener("click", () => {
   const value = tagInput.value.trim();
-  if (value) {
-    tags.push(value);
-    renderTags();
+  if (!value || tags.includes(value)) {
     tagInput.value = "";
+    return;
   }
+  tags.push(value);
+  renderTags();
+  tagInput.value = "";
 });
 
 // --- Pages and nav ---
