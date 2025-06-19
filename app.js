@@ -88,6 +88,8 @@ function loadTransactions(transactions) {
   list.innerHTML = "";
   let balance = 0;
 
+  transactions.sort((a, b) => b.date - a.date);
+
   transactions.forEach((transaction) => {
     const li = document.createElement("li");
     li.className = "transaction-li";
