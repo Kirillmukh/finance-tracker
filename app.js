@@ -298,7 +298,7 @@ function loadTransactions(transactions) {
           <div>${transaction.category} ${transaction.tags.length !== 0 ? "•" : ""} ${transaction.tags.join(", ")}</div>
         </div>
         <div>
-          <span>${transaction.amount} ₽</span>
+          <span style="white-space: nowrap">${transaction.amount} ₽</span>
           <div style="text-align: end; color: ${RATES.get(transaction.rate)[1]}">{x}</div>
         </div>
       `;
