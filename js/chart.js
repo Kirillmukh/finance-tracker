@@ -34,6 +34,30 @@ export function updateCharts(object, type = "pie") {
     },
     options: {
       plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              
+              // Calculate total for percentage, excluding hidden items
+              const chart = context.chart;
+              const meta = chart.getDatasetMeta(0);
+              const dataset = context.dataset.data;
+              
+              let total = 0;
+              dataset.forEach((val, index) => {
+                if (!meta.data[index].hidden) {
+                  total += val;
+                }
+              });
+              
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              
+              return `${label}: ${value} ₽ (${percentage}%)`;
+            }
+          }
+        },
         legend: {
           onClick: function(e, legendItem, legend) {
             const index = legendItem.index;
@@ -110,6 +134,17 @@ export function updateChartForTags() {
         beginAtZero: true,
       },
     },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.dataset.label || '';
+            const value = context.parsed.y || 0;
+            return `${label}: ${value} ₽`;
+          }
+        }
+      }
+    }
   };
   barChart.update();
 }
