@@ -152,9 +152,19 @@ export class TransactionManager {
     
     const dateInput = document.getElementById("modal-date-input");
     const timeInput = document.getElementById("modal-time-input");
-    const dateString = formatDate(new Date(transaction.date), true);
-    dateInput.value = dateString.split(" ")[0];
-    timeInput.value = dateString.split(" ")[1];
+    const date = new Date(transaction.date);
+    
+    // Format date as YYYY-MM-DD for date input
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    dateInput.value = `${year}-${month}-${day}`;
+    
+    // Format time as HH:MM for time input
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    timeInput.value = `${hours}:${minutes}`;
+    
     document.getElementById("modal-rate-select").value = transaction.rate;
     this.ui.clearTagsToRemove();
 
@@ -206,12 +216,19 @@ export class TransactionManager {
 
     const dateInput = document.getElementById("modal-date-input");
     const timeInput = document.getElementById("modal-time-input");
-    const year = new Date(transaction.date).getFullYear();
-    const day = dateInput.value.split(".")[0];
-    const month = dateInput.value.split(".")[1] - 1;
-    const hour = timeInput.value.split(":")[0];
-    const minute = timeInput.value.split(":")[1];
+    
+    // Parse date from YYYY-MM-DD format
+    const dateParts = dateInput.value.split("-");
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1;
+    const day = parseInt(dateParts[2]);
+    
+    // Parse time from HH:MM format
+    const timeParts = timeInput.value.split(":");
+    const hour = parseInt(timeParts[0]);
+    const minute = parseInt(timeParts[1]);
     const second = new Date(transaction.date).getSeconds();
+    
     transaction.date = new Date(year, month, day, hour, minute, second).getTime();
 
     this.db.updateTransaction(transaction, () => {

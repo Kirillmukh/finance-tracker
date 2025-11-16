@@ -170,7 +170,8 @@ export class UI {
             .join("")}
           </div>
         <div>
-        <strong>Дата</strong> <input class="input-time" id="modal-date-input"> <strong>Время</strong> <input class="input-time" id="modal-time-input">
+        <strong>Дата</strong> <input type="date" id="modal-date-input"><br>
+        <strong>Время</strong> <input type="time" id="modal-time-input">
       </div>
       <div class="column">
         <button id="modal-save-btn">Сохранить изменения</button>
