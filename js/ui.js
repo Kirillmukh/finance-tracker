@@ -185,6 +185,14 @@ export class UI {
     
     document.getElementById("modal-add-tag").addEventListener("click", () => {
       const value = modalTagInput.value.trim();
+      
+      // If tag is marked for removal, allow re-adding it
+      if (this.tagsToRemove.has(value)) {
+        this.tagsToRemove.delete(value);
+        modalTagInput.value = "";
+        return;
+      }
+      
       if (!value || transaction.tags.includes(value) || this.tags.includes(value)) {
         modalTagInput.value = "";
         return;
