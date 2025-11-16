@@ -25,10 +25,14 @@ export class TransactionManager {
     });
     
     this.singleLoadTransactionsRender();
-    this.db.readOnlyTransaction([
-      (transactions) => this.loadAllCategories(transactions),
-      (transactions) => this.loadAllTags(transactions)
-    ]);
+    
+    // Wait for categories and tags to load before continuing
+    await new Promise((resolve) => {
+      this.db.readOnlyTransaction([
+        (transactions) => this.loadAllCategories(transactions),
+        (transactions) => this.loadAllTags(transactions)
+      ], resolve);
+    });
   }
 
   loadAllCategories(transactions) {

@@ -16,10 +16,10 @@ async function initApp() {
   const transactionManager = new TransactionManager(db, ui, modal, navigation);
   const importExport = new ImportExport(db, transactionManager);
 
-  // Initialize transaction manager
+  // Initialize transaction manager (this now waits for categories and tags to load)
   await transactionManager.init();
 
-  // Setup UI components
+  // Setup UI components - data is now guaranteed to be loaded
   ui.setupCategoryInput(transactionManager.getAllCategories());
   ui.setupTagInput(transactionManager.getAllTags());
 

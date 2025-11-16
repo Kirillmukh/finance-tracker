@@ -37,7 +37,7 @@ export class Database {
     });
   }
 
-  readOnlyTransaction(functions) {
+  readOnlyTransaction(functions, onComplete) {
     const tx = this.db.transaction("transactions", "readonly");
     const store = tx.objectStore("transactions");
     const request = store.getAll();
@@ -52,11 +52,15 @@ export class Database {
     request.onerror = () => {
       console.error("error occured while open indexed db");
     };
+
+    if (onComplete) {
+      tx.oncomplete = onComplete;
+    }
   }
 
-  readOnlyTransactionByDate(functions, query) {
+  readOnlyTransactionByDate(functions, query, onComplete) {
     if (!(query instanceof IDBKeyRange)) {
-      return this.readOnlyTransaction(functions);
+      return this.readOnlyTransaction(functions, onComplete);
     }
     const tx = this.db.transaction("transactions", "readonly");
     const store = tx.objectStore("transactions");
@@ -73,6 +77,10 @@ export class Database {
     request.onerror = () => {
       console.error("error occured while open indexed db");
     };
+
+    if (onComplete) {
+      tx.oncomplete = onComplete;
+    }
   }
 
   addTransaction(transaction, onComplete) {
