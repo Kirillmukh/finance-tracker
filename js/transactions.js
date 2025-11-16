@@ -1,6 +1,6 @@
 // Transactions module - handles transaction operations and rendering
 import { RATES, formatDate, groupTransactions, getDateRange, countMapInc, countMapDec } from './utils.js';
-import { updateCharts, updateChartForRates, updateChartForTags } from './chart.js';
+import { updateCharts, updateChartForRates, updateChartForTags, setLegendClickCallback, getHiddenCategories, clearHiddenCategories } from './chart.js';
 import { Storage } from './storage.js';
 
 export class TransactionManager {
@@ -13,10 +13,17 @@ export class TransactionManager {
     this.allTags = null;
     this.limit = Storage.getLimit();
     this.chartTarget = Storage.getChartTarget();
+    this.currentTransactions = [];
   }
 
   async init() {
     await this.db.init();
+    
+    // Set up legend click callback to update balance
+    setLegendClickCallback(() => {
+      this.updateBalanceWithHiddenCategories();
+    });
+    
     this.singleLoadTransactionsRender();
     this.db.readOnlyTransaction([
       (transactions) => this.loadAllCategories(transactions),
@@ -57,6 +64,7 @@ export class TransactionManager {
   }
 
   loadTransactions(transactions) {
+    this.currentTransactions = transactions;
     const list = document.getElementById("transactions");
     const balanceElement = document.getElementById("balance");
 
@@ -85,6 +93,10 @@ export class TransactionManager {
     });
 
     balanceElement.textContent = balance;
+    
+    // Clear hidden categories when loading new data
+    clearHiddenCategories();
+    
     const chartObject = groupTransactions(transactions, this.chartTarget);
     
     if (this.chartTarget === "tags") {
@@ -97,6 +109,39 @@ export class TransactionManager {
     if (this.chartTarget === "rate") {
       updateChartForRates(chartObject);
     }
+  }
+
+  updateBalanceWithHiddenCategories() {
+    const balanceElement = document.getElementById("balance");
+    const hiddenCategories = getHiddenCategories();
+    
+    let balance = 0;
+    
+    this.currentTransactions.forEach((transaction) => {
+      // Determine which field to check based on chartTarget
+      let shouldInclude = true;
+      
+      if (this.chartTarget === "category") {
+        shouldInclude = !hiddenCategories.has(transaction.category);
+      } else if (this.chartTarget === "rate") {
+        const rateName = RATES.get(transaction.rate)[0];
+        shouldInclude = !hiddenCategories.has(rateName);
+      } else if (this.chartTarget === "tags") {
+        // For tags, include transaction if it has at least one non-hidden tag
+        // or if it has no tags and "Без тегов" is not hidden
+        if (transaction.tags.length === 0) {
+          shouldInclude = !hiddenCategories.has("Без тегов");
+        } else {
+          shouldInclude = transaction.tags.some(tag => !hiddenCategories.has(tag));
+        }
+      }
+      
+      if (shouldInclude) {
+        balance += transaction.amount;
+      }
+    });
+    
+    balanceElement.textContent = balance;
   }
 
   openTransactionModal(transaction) {
