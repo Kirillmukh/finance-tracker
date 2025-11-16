@@ -57,6 +57,29 @@ export function updateCharts(object, type = "pie") {
             if (onLegendClickCallback) {
               onLegendClickCallback();
             }
+          },
+          labels: {
+            generateLabels: function(chart) {
+              const data = chart.data;
+              if (data.labels.length && data.datasets.length) {
+                const meta = chart.getDatasetMeta(0);
+                return data.labels.map((label, i) => {
+                  const style = meta.controller.getStyle(i);
+                  return {
+                    text: label,
+                    fillStyle: style.backgroundColor,
+                    strokeStyle: style.borderColor,
+                    lineWidth: style.borderWidth,
+                    hidden: meta.data[i].hidden,
+                    index: i,
+                    // Add strikethrough when hidden
+                    fontColor: meta.data[i].hidden ? '#999' : '#666',
+                    textDecoration: meta.data[i].hidden ? 'line-through' : ''
+                  };
+                });
+              }
+              return [];
+            }
           }
         }
       }
