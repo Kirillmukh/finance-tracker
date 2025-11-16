@@ -37,7 +37,7 @@ export function formatDate(date, day = false) {
   return dd + "." + mm + "." + yy;
 }
 
-export function getDateRange(period = "day", date = new Date()) {
+export function getDateRange(period = "day", date = new Date(), customStart = null, customEnd = null) {
   const result = { start: new Date(date), end: new Date(date) };
 
   switch (period) {
@@ -66,6 +66,15 @@ export function getDateRange(period = "day", date = new Date()) {
       result.start = new Date(date.getFullYear(), 0, 1);
       result.end = new Date(date.getFullYear(), 11, 31);
       result.end.setHours(23, 59, 59, 999);
+      break;
+
+    case "custom":
+      if (customStart && customEnd) {
+        result.start = new Date(customStart);
+        result.start.setHours(0, 0, 0, 0);
+        result.end = new Date(customEnd);
+        result.end.setHours(23, 59, 59, 999);
+      }
       break;
   }
   return result;

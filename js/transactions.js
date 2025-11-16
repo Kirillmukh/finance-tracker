@@ -264,7 +264,21 @@ export class TransactionManager {
   }
 
   singleLoadTransactionsRender() {
-    const period = getDateRange(this.limit);
+    let customStart = null;
+    let customEnd = null;
+    
+    if (this.limit === "custom") {
+      const startInput = document.getElementById("custom-start-date");
+      const endInput = document.getElementById("custom-end-date");
+      
+      if (startInput && startInput.value) {
+        customStart = startInput.value;
+        // If end date is not specified, use today's date
+        customEnd = endInput && endInput.value ? endInput.value : new Date().toISOString().split('T')[0];
+      }
+    }
+    
+    const period = getDateRange(this.limit, new Date(), customStart, customEnd);
     if (period.start.getTime() === period.end.getTime()) {
       this.db.readOnlyTransaction([(transactions) => this.loadTransactions(transactions)]);
     } else {
@@ -314,13 +328,40 @@ export class TransactionManager {
 
   setupLimitSelect() {
     const transactionLimitSelect = document.getElementById("transactions-limit");
+    const customPeriodInputs = document.getElementById("custom-period-inputs");
+    const startDateInput = document.getElementById("custom-start-date");
+    const endDateInput = document.getElementById("custom-end-date");
+    
     transactionLimitSelect.value = this.limit;
+    
+    // Show/hide custom period inputs based on initial value
+    if (this.limit === "custom") {
+      customPeriodInputs.style.display = "flex";
+    }
+    
     transactionLimitSelect.addEventListener("change", (event) => {
       const value = event.target.value;
       Storage.setLimit(value);
       this.limit = value;
-      this.singleLoadTransactionsRender();
+      
+      // Show/hide custom period inputs
+      if (value === "custom") {
+        customPeriodInputs.style.display = "flex";
+      } else {
+        customPeriodInputs.style.display = "none";
+        this.singleLoadTransactionsRender();
+      }
     });
+    
+    // Add event listeners to date inputs
+    const handleDateChange = () => {
+      if (this.limit === "custom" && startDateInput.value) {
+        this.singleLoadTransactionsRender();
+      }
+    };
+    
+    startDateInput.addEventListener("change", handleDateChange);
+    endDateInput.addEventListener("change", handleDateChange);
   }
 
   setupChartTargetSelect() {

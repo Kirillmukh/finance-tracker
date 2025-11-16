@@ -36,7 +36,12 @@
             <option value="week">week</option>
             <option value="day">day</option>
             <option value="year">year</option>
+            <option value="custom">custom period</option>
           </select>
+        </div>
+        <div id="custom-period-inputs" style="display: none; margin: 10px 0;">
+          <label>Начальная дата: <input type="date" id="custom-start-date" /></label>
+          <label>Конечная дата: <input type="date" id="custom-end-date" /></label>
         </div>
 
         <ul id="transactions"></ul>
