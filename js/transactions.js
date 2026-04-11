@@ -333,6 +333,7 @@ export class TransactionManager {
         e.target.reset();
         this.ui.clearTags();
         this.ui.renderTags();
+        this.ui.initDefaultTag(Storage.getDefaultTag());
       });
 
       countMapInc(this.allCategories, transaction.category);

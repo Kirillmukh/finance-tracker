@@ -113,3 +113,26 @@ describe('Storage — текущая страница', () => {
     expect(Storage.getPage()).toBe('input')
   })
 })
+
+describe('Storage — тег по умолчанию', () => {
+  it('getDefaultTag возвращает пустую строку по умолчанию', () => {
+    expect(Storage.getDefaultTag()).toBe('')
+  })
+
+  it('setDefaultTag/getDefaultTag: сохраняет и возвращает тег', () => {
+    Storage.setDefaultTag('еда')
+    expect(Storage.getDefaultTag()).toBe('еда')
+  })
+
+  it('setDefaultTag с пустой строкой удаляет тег', () => {
+    Storage.setDefaultTag('еда')
+    Storage.setDefaultTag('')
+    expect(Storage.getDefaultTag()).toBe('')
+  })
+
+  it('setDefaultTag с null удаляет тег', () => {
+    Storage.setDefaultTag('еда')
+    Storage.setDefaultTag(null)
+    expect(Storage.getDefaultTag()).toBe('')
+  })
+})

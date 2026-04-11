@@ -160,6 +160,32 @@ describe('UI.createTransactionModalContent', () => {
   })
 })
 
+describe('UI.initDefaultTag', () => {
+  it('добавляет тег первым в список и перерисовывает', () => {
+    ui.initDefaultTag('еда')
+    expect(ui.getTags()[0]).toBe('еда')
+    expect(document.getElementById('tags-container').innerHTML).toContain('еда')
+  })
+
+  it('не добавляет тег если он уже есть в списке', () => {
+    ui.tags.push('еда')
+    ui.initDefaultTag('еда')
+    expect(ui.getTags()).toHaveLength(1)
+  })
+
+  it('ничего не делает при пустой строке', () => {
+    ui.initDefaultTag('')
+    expect(ui.getTags()).toHaveLength(0)
+  })
+
+  it('добавляет тег первым (unshift), не последним', () => {
+    ui.tags.push('транспорт')
+    ui.initDefaultTag('еда')
+    expect(ui.getTags()[0]).toBe('еда')
+    expect(ui.getTags()[1]).toBe('транспорт')
+  })
+})
+
 describe('UI.setupTagInput — взаимодействие пользователя', () => {
   it('при вводе совпадающего текста показывает подсказку', () => {
     const allTags = new Map([['lunch', 5], ['dinner', 3]])

@@ -5,6 +5,7 @@ import { Modal } from './js/modal.js';
 import { Navigation } from './js/navigation.js';
 import { TransactionManager } from './js/transactions.js';
 import { ImportExport } from './js/import-export.js';
+import { Storage } from './js/storage.js';
 
 // Initialize application
 async function initApp() {
@@ -30,6 +31,26 @@ async function initApp() {
 
   // Initialize navigation
   navigation.init();
+
+  // Init default tag on input page open
+  if (Storage.getPage() === 'input') {
+    ui.initDefaultTag(Storage.getDefaultTag());
+  }
+  document.querySelector('.nav-item[data-page="input"]').addEventListener('click', () => {
+    ui.initDefaultTag(Storage.getDefaultTag());
+  });
+
+  // Load saved default tag into settings input
+  document.getElementById('default-tag-input').value = Storage.getDefaultTag();
+
+  // Setup default tag save
+  document.getElementById('default-tag-save-btn').addEventListener('click', () => {
+    const value = document.getElementById('default-tag-input').value.trim();
+    Storage.setDefaultTag(value);
+    const status = document.getElementById('default-tag-status');
+    status.textContent = value ? `Тег "${value}" сохранён` : 'Тег по умолчанию удалён';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+  });
 
   // Expose functions to global scope for onclick handlers
   window.removeTag = (tag) => ui.removeTag(tag);

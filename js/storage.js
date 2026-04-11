@@ -53,4 +53,16 @@ export class Storage {
   static clearTags() {
     delete localStorage.tags;
   }
+
+  static getDefaultTag() {
+    return localStorage.defaultTag || "";
+  }
+
+  static setDefaultTag(tag) {
+    if (tag) {
+      localStorage.defaultTag = tag;
+    } else {
+      delete localStorage.defaultTag;
+    }
+  }
 }

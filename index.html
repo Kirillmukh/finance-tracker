@@ -59,6 +59,14 @@
           <button id="import-btn">Импортировать данные</button>
           <p id="import-status"></p>
         </div>
+        <div id="settings-section">
+          <h4>Настройки</h4>
+          <label>Тег по умолчанию:
+            <input type="text" id="default-tag-input" placeholder="Введите тег" />
+          </label>
+          <button id="default-tag-save-btn">Сохранить</button>
+          <p id="default-tag-status"></p>
+        </div>
       </div>
       <div id="input-page" class="page">
         <form id="transaction-form">
@@ -90,8 +98,8 @@
         <span class="label">Главная</span>
       </a>
       <a href="#" class="nav-item" data-page="export">
-        <span class="icon">🗂️</span>
-        <span class="label">Экспорт</span>
+        <span class="icon">⚙</span>
+        <span class="label">Настройки</span>
       </a>
       <a href="#" class="nav-item" data-page="input">
         <span class="icon">+</span>

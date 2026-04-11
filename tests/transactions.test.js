@@ -10,6 +10,7 @@ vi.mock('../js/storage.js', () => ({
     getChartTarget: vi.fn(() => 'category'),
     setLimit: vi.fn(),
     setChartTarget: vi.fn(),
+    getDefaultTag: vi.fn(() => ''),
   },
 }))
 
@@ -468,6 +469,7 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
       getTags: vi.fn(() => []),
       getTagsToRemove: vi.fn(() => new Set()),
       renderTags: vi.fn(),
+      initDefaultTag: vi.fn(),
     }
     const modal = { open: vi.fn(), close: vi.fn() }
     const navigation = { showPage: vi.fn() }
@@ -504,6 +506,15 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
     mgr.setupTransactionForm()
     document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
     expect(mgr.ui.clearTags).toHaveBeenCalled()
+  })
+
+  it('после submit вызывается initDefaultTag с текущим дефолтным тегом', () => {
+    setupFormDOM()
+    Storage.getDefaultTag.mockReturnValue('еда')
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+    expect(mgr.ui.initDefaultTag).toHaveBeenCalledWith('еда')
   })
 
   it('при наличии текста в поле тега кнопка "+" нажимается автоматически', () => {

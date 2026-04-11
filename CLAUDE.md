@@ -25,7 +25,7 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 | File | Responsibility |
 |------|---------------|
 | `js/db.js` | IndexedDB abstraction (store: `transactions`, index: `date_idx`) |
-| `js/storage.js` | `localStorage` for UI prefs (categories, tags, chart target, current page) |
+| `js/storage.js` | `localStorage` for UI prefs (categories, tags, chart target, current page, default tag) |
 | `js/transactions.js` | Central orchestrator — CRUD, filtering, grouping, period logic |
 | `js/ui.js` | DOM rendering, form management, tag chips, autocomplete display |
 | `js/modal.js` | Modal open/close with injected content |
@@ -41,6 +41,14 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 ```
 
 `rate` values: `"waste"` (плохая), `"ok"` (ок), `"good"` (осознанная).
+
+**Default tag** — a single tag stored in `localStorage.defaultTag` via `Storage.getDefaultTag/setDefaultTag`. It is prepended to `ui.tags` via `UI.initDefaultTag(tag)` on two occasions:
+1. When the user navigates to the input page (click listener on the nav item in `app.js`).
+2. After a successful form submit — inside the `db.addTransaction` callback, after `clearTags`/`renderTags`.
+
+`initDefaultTag` is idempotent: it skips if the tag is already in `ui.tags` or if the tag is an empty string. The user can remove it for an individual transaction by clicking ×; it is restored on the next page visit.
+
+Settings UI lives on the **"Настройки"** page (`#export-page`) alongside export/import controls.
 
 **No framework, no bundler** for the app itself. Chart.js is loaded from CDN. `package.json` exists only for dev tooling (tests).
 

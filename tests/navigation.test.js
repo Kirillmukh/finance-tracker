@@ -18,7 +18,7 @@ function setupDOM() {
     <nav>
       <a class="nav-item active" data-page="home">Главная</a>
       <a class="nav-item" data-page="input">Добавить</a>
-      <a class="nav-item" data-page="export">Экспорт</a>
+      <a class="nav-item" data-page="export">Настройки</a>
     </nav>
   `
 }

@@ -214,6 +214,13 @@ export class UI {
     this.tagsToRemove.add(tag);
   }
 
+  initDefaultTag(tag) {
+    if (tag && !this.tags.includes(tag)) {
+      this.tags.unshift(tag);
+      this.renderTags();
+    }
+  }
+
   clearTags() {
     this.tags.splice(0, this.tags.length);
   }
