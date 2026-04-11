@@ -616,6 +616,100 @@ describe('TransactionManager.setupLimitSelect — выбор периода', ()
     select.dispatchEvent(new Event('change'))
     expect(mgr.singleLoadTransactionsRender).toHaveBeenCalled()
   })
+
+  it('при наличии default tag добавляется опция с его именем', () => {
+    setupLimitDOM()
+    Storage.getDefaultTag.mockReturnValue('еда')
+    const mgr = makeManagerForLimit()
+    mgr.setupLimitSelect()
+    const option = document.getElementById('transactions-limit').querySelector('option[value="default-tag"]')
+    expect(option).not.toBeNull()
+    expect(option.textContent).toBe('еда')
+  })
+
+  it('опция default-tag вставляется перед опцией custom', () => {
+    setupLimitDOM()
+    Storage.getDefaultTag.mockReturnValue('еда')
+    const mgr = makeManagerForLimit()
+    mgr.setupLimitSelect()
+    const options = Array.from(document.getElementById('transactions-limit').options).map(o => o.value)
+    expect(options.indexOf('default-tag')).toBeLessThan(options.indexOf('custom'))
+  })
+
+  it('без default tag опция default-tag не добавляется', () => {
+    setupLimitDOM()
+    Storage.getDefaultTag.mockReturnValue('')
+    const mgr = makeManagerForLimit()
+    mgr.setupLimitSelect()
+    expect(document.getElementById('transactions-limit').querySelector('option[value="default-tag"]')).toBeNull()
+  })
+
+  it('если лимит "default-tag" но тег не задан — сбрасывается на "all"', () => {
+    setupLimitDOM()
+    Storage.getDefaultTag.mockReturnValue('')
+    const mgr = makeManagerForLimit('default-tag')
+    mgr.setupLimitSelect()
+    expect(mgr.limit).toBe('all')
+    expect(Storage.setLimit).toHaveBeenCalledWith('all')
+  })
+})
+
+describe('TransactionManager.singleLoadTransactionsRender — фильтр по default tag', () => {
+  function makeManagerForRender(limit, defaultTag = '') {
+    Storage.getLimit.mockReturnValue(limit)
+    Storage.getDefaultTag.mockReturnValue(defaultTag)
+    const db = {
+      init: vi.fn(() => Promise.resolve()),
+      readOnlyTransaction: vi.fn((callbacks) => { callbacks[0](sampleTransactions) }),
+      readOnlyTransactionByDate: vi.fn(),
+    }
+    const ui = {
+      clearTags: vi.fn(),
+      clearTagsToRemove: vi.fn(),
+      getTags: vi.fn(() => []),
+      getTagsToRemove: vi.fn(() => new Set()),
+    }
+    const mgr = new TransactionManager(db, ui, { open: vi.fn(), close: vi.fn() }, { showPage: vi.fn() })
+    vi.spyOn(mgr, 'loadTransactions').mockImplementation(() => {})
+    return mgr
+  }
+
+  it('при лимите "default-tag" вызывает readOnlyTransaction, а не readOnlyTransactionByDate', () => {
+    const mgr = makeManagerForRender('default-tag', 'lunch')
+    mgr.singleLoadTransactionsRender()
+    expect(mgr.db.readOnlyTransaction).toHaveBeenCalled()
+    expect(mgr.db.readOnlyTransactionByDate).not.toHaveBeenCalled()
+  })
+
+  it('при лимите "default-tag" передаёт в loadTransactions только транзакции с нужным тегом', () => {
+    const mgr = makeManagerForRender('default-tag', 'lunch')
+    mgr.singleLoadTransactionsRender()
+    const [filtered] = mgr.loadTransactions.mock.calls[0]
+    // sampleTransactions: id=1 имеет ['lunch','cafe'], id=2 — ['dinner'], id=3 — []
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0].id).toBe(1)
+  })
+
+  it('при лимите "default-tag" и теге "dinner" возвращает правильную транзакцию', () => {
+    const mgr = makeManagerForRender('default-tag', 'dinner')
+    mgr.singleLoadTransactionsRender()
+    const [filtered] = mgr.loadTransactions.mock.calls[0]
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0].id).toBe(2)
+  })
+
+  it('если тег не задан и лимит "default-tag" — сбрасывает лимит на "all"', () => {
+    const mgr = makeManagerForRender('default-tag', '')
+    mgr.singleLoadTransactionsRender()
+    expect(mgr.limit).toBe('all')
+    expect(Storage.setLimit).toHaveBeenCalledWith('all')
+  })
+
+  it('если тег не задан и лимит "default-tag" — всё равно загружает транзакции (через "all")', () => {
+    const mgr = makeManagerForRender('default-tag', '')
+    mgr.singleLoadTransactionsRender()
+    expect(mgr.db.readOnlyTransaction).toHaveBeenCalled()
+  })
 })
 
 describe('TransactionManager.setupChartTargetSelect — выбор разбивки графика', () => {

@@ -42,11 +42,16 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 
 `rate` values: `"waste"` (плохая), `"ok"` (ок), `"good"` (осознанная).
 
-**Default tag** — a single tag stored in `localStorage.defaultTag` via `Storage.getDefaultTag/setDefaultTag`. It is prepended to `ui.tags` via `UI.initDefaultTag(tag)` on two occasions:
-1. When the user navigates to the input page (click listener on the nav item in `app.js`).
-2. After a successful form submit — inside the `db.addTransaction` callback, after `clearTags`/`renderTags`.
+**Default tag** — a single tag stored in `localStorage.defaultTag` via `Storage.getDefaultTag/setDefaultTag`. It is used in two ways:
 
-`initDefaultTag` is idempotent: it skips if the tag is already in `ui.tags` or if the tag is an empty string. The user can remove it for an individual transaction by clicking ×; it is restored on the next page visit.
+1. **Auto-prepended to new transactions** — added to `ui.tags` via `UI.initDefaultTag(tag)` on two occasions:
+   - When the user navigates to the input page (click listener on the nav item in `app.js`).
+   - After a successful form submit — inside the `db.addTransaction` callback, after `clearTags`/`renderTags`.
+   `initDefaultTag` is idempotent: it skips if the tag is already in `ui.tags` or if the tag is an empty string. The user can remove it for an individual transaction by clicking ×; it is restored on the next page visit.
+
+2. **Period filter** — when a default tag is set, `setupLimitSelect` (in `transactions.js`) dynamically injects an `<option value="default-tag">` into `#transactions-limit` with the tag name as label, inserted before the `custom` option. Selecting it triggers `singleLoadTransactionsRender` to read all transactions and filter to only those whose `tags` array includes the current default tag. If the default tag is later cleared while this option is selected, `singleLoadTransactionsRender` resets `this.limit` to `"all"` and falls through to the normal period logic.
+
+**Period filter select (`#transactions-limit`)** — values: `all` (default), `day`, `week`, `month`, `year`, `default-tag` (dynamic, only present when a default tag is set), `custom`. The `custom` value reveals `#custom-period-inputs` with start/end date inputs. All other non-`custom` values trigger an immediate `singleLoadTransactionsRender`. The selected value is persisted in `localStorage.limit` via `Storage.getLimit/setLimit`.
 
 Settings UI lives on the **"Настройки"** page (`#export-page`) alongside export/import controls.
 

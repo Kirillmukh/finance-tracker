@@ -285,20 +285,32 @@ export class TransactionManager {
   }
 
   singleLoadTransactionsRender() {
+    if (this.limit === "default-tag") {
+      const defaultTag = Storage.getDefaultTag();
+      if (defaultTag) {
+        this.db.readOnlyTransaction([(transactions) => {
+          this.loadTransactions(transactions.filter(t => t.tags && t.tags.includes(defaultTag)));
+        }]);
+        return;
+      }
+      this.limit = "all";
+      Storage.setLimit("all");
+    }
+
     let customStart = null;
     let customEnd = null;
-    
+
     if (this.limit === "custom") {
       const startInput = document.getElementById("custom-start-date");
       const endInput = document.getElementById("custom-end-date");
-      
+
       if (startInput && startInput.value) {
         customStart = startInput.value;
         // If end date is not specified, use today's date
         customEnd = endInput && endInput.value ? endInput.value : new Date().toISOString().split('T')[0];
       }
     }
-    
+
     const period = getDateRange(this.limit, new Date(), customStart, customEnd);
     if (period.start.getTime() === period.end.getTime()) {
       this.db.readOnlyTransaction([(transactions) => this.loadTransactions(transactions)]);
@@ -353,9 +365,21 @@ export class TransactionManager {
     const customPeriodInputs = document.getElementById("custom-period-inputs");
     const startDateInput = document.getElementById("custom-start-date");
     const endDateInput = document.getElementById("custom-end-date");
-    
+
+    const defaultTag = Storage.getDefaultTag();
+    if (defaultTag) {
+      const option = document.createElement("option");
+      option.value = "default-tag";
+      option.textContent = defaultTag;
+      const customOption = transactionLimitSelect.querySelector('option[value="custom"]');
+      transactionLimitSelect.insertBefore(option, customOption);
+    } else if (this.limit === "default-tag") {
+      this.limit = "all";
+      Storage.setLimit("all");
+    }
+
     transactionLimitSelect.value = this.limit;
-    
+
     // Show/hide custom period inputs based on initial value
     if (this.limit === "custom") {
       customPeriodInputs.style.display = "flex";
