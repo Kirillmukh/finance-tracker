@@ -270,6 +270,13 @@ describe('TransactionManager.openTransactionModal — открытие мода�
     mgr.openTransactionModal(transaction)
     expect(document.getElementById('modal-rate-select').value).toBe('ok')
   })
+
+  it('открытие модального окна очищает теги формы (предотвращает дублирование дефолтного тега)', () => {
+    const mgr = makeManagerForModal()
+    mgr.ui.tags.push('дефолт')
+    mgr.openTransactionModal(transaction)
+    expect(mgr.ui.tags).toHaveLength(0)
+  })
 })
 
 describe('TransactionManager.saveTransaction — сохранение изменений', () => {

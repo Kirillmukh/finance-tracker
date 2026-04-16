@@ -170,6 +170,7 @@ export class TransactionManager {
     timeInput.value = `${hours}:${minutes}`;
     
     document.getElementById("modal-rate-select").value = transaction.rate;
+    this.ui.clearTags();
     this.ui.clearTagsToRemove();
 
     this.ui.setupModalAutocomplete(this.allCategories, this.allTags, transaction);
