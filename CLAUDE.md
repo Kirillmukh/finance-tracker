@@ -30,7 +30,7 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 | `js/ui.js` | DOM rendering, form management, tag chips, autocomplete display |
 | `js/modal.js` | Modal open/close with injected content |
 | `js/navigation.js` | Page switching (shows/hides sections, manages nav state) |
-| `js/chart.js` | Chart.js wrapper — pie/bar charts with legend-click filtering |
+| `js/chart.js` | Chart.js wrapper — pie/bar charts, custom HTML legend, 20-color palette |
 | `js/import-export.js` | JSON bulk import/export via File API |
 | `js/autocomplete.js` | Weighted prefix-match suggestions (`suggestAutocomplete()`) |
 | `js/utils.js` | Date formatting, date-range calculation, map helpers, groupBy |
@@ -59,6 +59,17 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 Settings UI lives on the **"Настройки"** page (`#export-page`) alongside export/import controls.
 
 **Transaction list rendering** (`loadTransactions` in `transactions.js`) — each `<li class="transaction-li">` uses a CSS custom property `--rate-color` set inline to the rate's hex color from `RATES`. This drives a colored left border via `border-left: 4px solid var(--rate-color)`. The right column uses class `.transaction-li-right` (`flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end`) to prevent the amount/rate label from wrapping or shifting when descriptions are long. Date group separators are `<li class="date-separator">` inserted between days. Tags are rendered as `<span class="list-tag">` chips. When the list is empty an `<li class="empty-state">` placeholder is shown.
+
+**Chart legend** — Chart.js built-in legend is disabled (`legend: { display: false }`). Instead, `renderCustomLegend(chart)` in `chart.js` builds a `<div id="chart-legend">` with `.legend-item` elements. Clicking an item toggles `meta.data[i].hidden` on the chart and updates `hiddenCategories`. Legend visibility per chart target:
+- `category` (pie) — legend rendered, hidden by default; `#legend-toggle` button toggles it.
+- `rate` (pie) — legend rendered and always visible (only 3 items); `#legend-toggle` hidden.
+- `tags` (bar) — no legend, `#legend-toggle` hidden.
+
+`setLegendToggleVisible(false)` must be called **after** `renderCustomLegend` when the toggle should stay hidden, because `renderCustomLegend` always calls `setLegendToggleVisible(true)` internally.
+
+**Chart controls** — `#chart-target` (Категория/Трата/Тег) and `#transactions-limit` (period) live side-by-side in `.chart-controls` (flex row) above the chart. Do not wrap them in separate `.flex-container` divs.
+
+**Chart size** — `.chart-container` has `max-width: 260px` to keep the pie chart compact.
 
 **No framework, no bundler** for the app itself. Chart.js is loaded from CDN. `package.json` exists only for dev tooling (tests).
 

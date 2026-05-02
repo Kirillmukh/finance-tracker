@@ -16,20 +16,12 @@
           <h2>Траты: <span id="balance">0</span> ₽</h2>
         </div>
 
-        <div class="flex-container">
+        <div class="chart-controls">
           <select name="chart-target" id="chart-target">
             <option value="category" selected>Категория</option>
             <option value="rate">Трата</option>
             <option value="tags">Тег</option>
           </select>
-        </div>
-
-        <div class="charts">
-          <div class="chart-container">
-            <canvas id="chart"></canvas>
-          </div>
-        </div>
-        <div class="flex-container">
           <select name="transactions-limit" id="transactions-limit">
             <option value="all" selected>Всё время</option>
             <option value="month">Месяц</option>
@@ -43,6 +35,14 @@
           <label>Начальная дата: <input type="date" id="custom-start-date" /></label>
           <label>Конечная дата: <input type="date" id="custom-end-date" /></label>
         </div>
+
+        <div class="charts">
+          <div class="chart-container">
+            <canvas id="chart"></canvas>
+          </div>
+        </div>
+        <button id="legend-toggle" type="button" class="legend-toggle-btn">Категории ▾</button>
+        <div id="chart-legend" class="legend-hidden"></div>
 
         <ul id="transactions"></ul>
       </div>

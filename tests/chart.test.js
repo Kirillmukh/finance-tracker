@@ -35,7 +35,7 @@ function setupChartMock(existingChart = null) {
   global.Chart = vi.fn(() => mockChartInstance)
   global.Chart.getChart = vi.fn(() => existingChart)
 
-  document.body.innerHTML = '<canvas id="chart"></canvas>'
+  document.body.innerHTML = '<canvas id="chart"></canvas><div id="chart-legend"></div>'
 }
 
 beforeEach(() => {
@@ -62,29 +62,11 @@ describe('setLegendClickCallback', () => {
   it('сохраняет и вызывает callback', () => {
     const cb = vi.fn()
     setLegendClickCallback(cb)
-
-    // Имитируем вызов legend onClick из Chart.js
-    const legendOnClick = global.Chart.mock.calls.length === 0
-      ? null
-      : global.Chart.mock.calls[0]?.[1]?.options?.plugins?.legend?.onClick
-
-    // Если updateCharts ещё не вызван, убедимся что callback записан
-    // Проверяем через updateCharts
     updateCharts({ Food: 100 }, 'pie')
-    const chartConfig = global.Chart.mock.calls[0][1]
-    const legendClick = chartConfig.options.plugins.legend.onClick
 
-    const mockLegendItem = { index: 0 }
-    const mockLegend = {
-      chart: {
-        data: { labels: ['Food'] },
-        getDatasetMeta: vi.fn(() => ({
-          data: [{ hidden: false }],
-        })),
-        update: vi.fn(),
-      },
-    }
-    legendClick.call(null, null, mockLegendItem, mockLegend)
+    const legendItem = document.querySelector('.legend-item')
+    legendItem.click()
+
     expect(cb).toHaveBeenCalled()
   })
 })
@@ -118,37 +100,19 @@ describe('updateCharts', () => {
 
   it('легенда добавляет категорию в hiddenCategories при скрытии', () => {
     updateCharts({ Food: 100, Transport: 50 })
-    const config = global.Chart.mock.calls[0][1]
-    const legendClick = config.options.plugins.legend.onClick
 
-    const mockChart = {
-      data: { labels: ['Food', 'Transport'] },
-      getDatasetMeta: vi.fn(() => ({
-        data: [{ hidden: false }, { hidden: false }],
-      })),
-      update: vi.fn(),
-    }
-    legendClick.call(null, null, { index: 0 }, { chart: mockChart })
+    const legendItem = document.querySelector('.legend-item')
+    legendItem.click()
 
     expect(getHiddenCategories().has('Food')).toBe(true)
   })
 
   it('легенда удаляет категорию из hiddenCategories при показе', () => {
     updateCharts({ Food: 100 })
-    const config = global.Chart.mock.calls[0][1]
-    const legendClick = config.options.plugins.legend.onClick
 
-    const meta = { data: [{ hidden: true }] }
-    const mockChart = {
-      data: { labels: ['Food'] },
-      getDatasetMeta: vi.fn(() => meta),
-      update: vi.fn(),
-    }
-
-    // Сначала скрываем
-    getHiddenCategories().add('Food')
-    // Потом показываем (hidden было true, переключается в false)
-    legendClick.call(null, null, { index: 0 }, { chart: mockChart })
+    const legendItem = document.querySelector('.legend-item')
+    legendItem.click()
+    legendItem.click()
 
     expect(getHiddenCategories().has('Food')).toBe(false)
   })

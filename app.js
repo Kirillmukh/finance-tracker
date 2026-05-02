@@ -56,6 +56,14 @@ async function initApp() {
   // Rename tag
   setupRenameTagUI(transactionManager, transactionManager.getAllTags());
 
+  // Legend toggle
+  document.getElementById('legend-toggle').addEventListener('click', () => {
+    const legend = document.getElementById('chart-legend');
+    const btn = document.getElementById('legend-toggle');
+    const isHidden = legend.classList.toggle('legend-hidden');
+    btn.textContent = isHidden ? 'Категории ▾' : 'Категории ▴';
+  });
+
   // Expose functions to global scope for onclick handlers
   window.removeTag = (tag) => ui.removeTag(tag);
   window.modalRemoveTag = (tag) => {
