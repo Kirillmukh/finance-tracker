@@ -17,6 +17,19 @@ export class ImportExport {
     document.getElementById("import-btn").addEventListener("click", () => {
       this.importData();
     });
+
+    document.getElementById("input-json").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      const display = document.getElementById("file-name-display");
+      const zone = document.getElementById("file-upload-zone");
+      if (file) {
+        display.textContent = file.name;
+        zone.classList.add("has-file");
+      } else {
+        display.textContent = "";
+        zone.classList.remove("has-file");
+      }
+    });
   }
 
   exportData() {
@@ -70,5 +83,8 @@ export class ImportExport {
     reader.readAsText(file);
 
     document.getElementById("import-status").textContent = "Успешно импортировано!";
+    document.getElementById("file-name-display").textContent = "";
+    document.getElementById("file-upload-zone").classList.remove("has-file");
+    document.getElementById("input-json").value = "";
   }
 }

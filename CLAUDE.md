@@ -62,6 +62,14 @@ Settings UI lives on the **"Настройки"** page (`#export-page`) alongsid
 
 **No framework, no bundler** for the app itself. Chart.js is loaded from CDN. `package.json` exists only for dev tooling (tests).
 
+## CSS / UI conventions
+
+**Form validation** — uses `:user-invalid` (not `:invalid`) so red borders only appear after the user has interacted with a field. `:invalid` fires immediately on page load for empty `required` fields, which looks broken.
+
+**Tag input row** — `#tag-input` and `#add-tag` live inside `.tags-input-row` (a flex container with `align-items: stretch`). This keeps the button the same height as the input. Do not add a separate `#tag-input` CSS block with its own `padding`/`border-radius` — global `input` styles already cover it and overrides will make the field look inconsistent with the rest of the form.
+
+**Custom file upload zone** (`#import-section`) — the native `<input type="file" id="input-json">` is hidden via `display: none`. The visible UI is a `<label for="input-json" class="file-upload-zone">`. Clicking the label triggers the browser's file picker. A `change` listener on `#input-json` (in `import-export.js`) sets `#file-name-display` text and toggles `.has-file` on `#file-upload-zone` to show a highlighted state. Reset happens at the end of `importData()`.
+
 ## Testing
 
 Vitest + jsdom + fake-indexeddb. One test file per module under `tests/`.

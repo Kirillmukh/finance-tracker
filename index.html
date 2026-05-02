@@ -56,29 +56,38 @@
         <div id="import-section">
           <h4>Импорт</h4>
           <input id="input-json" type="file" accept=".json" />
+          <label for="input-json" class="file-upload-zone" id="file-upload-zone">
+            <span class="file-upload-icon">📂</span>
+            <span class="file-upload-text">Выберите файл или перетащите сюда</span>
+            <span class="file-upload-hint">.json</span>
+            <span class="file-name-display" id="file-name-display"></span>
+          </label>
           <button id="import-btn">Импортировать данные</button>
           <p id="import-status"></p>
         </div>
         <div id="settings-section">
           <h4>Настройки</h4>
-          <label>Тег по умолчанию:
+          <label for="default-tag-input">Тег по умолчанию:</label>
+          <div class="rename-tag-field rename-tag-to-row">
             <input type="text" id="default-tag-input" placeholder="Введите тег" />
-          </label>
-          <button id="default-tag-save-btn">Сохранить</button>
+            <button id="default-tag-save-btn">Сохранить</button>
+          </div>
           <p id="default-tag-status"></p>
         </div>
         <div id="rename-tag-section">
           <h4>Переименовать тег</h4>
-          <label>Текущий тег:</label>
-          <div style="position: relative">
+          <label for="rename-tag-from">Текущий тег:</label>
+          <div class="rename-tag-field">
             <input type="text" id="rename-tag-from" placeholder="Введите тег" autocomplete="off" />
             <div id="rename-tag-from-suggestion" class="suggestion" style="display:none"></div>
           </div>
           <div id="rename-tag-stats" style="display:none"></div>
-          <label>Новый тег:</label>
-          <input type="text" id="rename-tag-to" placeholder="Новое название" autocomplete="off" />
+          <label for="rename-tag-to">Новый тег:</label>
+          <div class="rename-tag-field rename-tag-to-row">
+            <input type="text" id="rename-tag-to" placeholder="Новое название" autocomplete="off" />
+            <button id="rename-tag-btn">Переименовать</button>
+          </div>
           <div id="rename-tag-warning" style="display:none"></div>
-          <button id="rename-tag-btn">Переименовать</button>
           <p id="rename-tag-status"></p>
         </div>
       </div>
@@ -96,8 +105,10 @@
 
           <div class="tags-input">
             <div class="suggestion" style="display: none" id="tag-suggestion"></div>
-            <input type="text" id="tag-input" placeholder="Добавить тег" />
-            <button type="button" id="add-tag">+</button>
+            <div class="tags-input-row">
+              <input type="text" id="tag-input" placeholder="Добавить тег" />
+              <button type="button" id="add-tag">+</button>
+            </div>
             <div id="tags-container"></div>
           </div>
 

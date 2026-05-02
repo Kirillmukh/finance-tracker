@@ -1,9 +1,9 @@
 // Utils module - utility functions
 export const RATES = new Map(
   Object.entries({
-    waste: ["плохая", "#f54242"],
-    ok: ["ок", "#4287f5"],
-    good: ["осознанная", "#42f58a"],
+    waste: ["плохая", "#f43f5e"],
+    ok: ["ок", "#f97316"],
+    good: ["осознанная", "#22c55e"],
   })
 );
 

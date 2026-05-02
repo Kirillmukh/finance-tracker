@@ -168,7 +168,7 @@ describe('updateChartForRates', () => {
     global.Chart.getChart = vi.fn(() => mockChartInstance)
     const chartObj = { waste: 100 }
     updateChartForRates(chartObj)
-    expect(mockChartInstance.data.datasets[0].backgroundColor).toContain('#f54242')
+    expect(mockChartInstance.data.datasets[0].backgroundColor).toContain('#f43f5e')
   })
 
   it('вызывает chart.update()', () => {

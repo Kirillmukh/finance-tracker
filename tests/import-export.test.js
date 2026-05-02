@@ -22,6 +22,8 @@ function setupDOM() {
     <button id="export-btn">Экспорт</button>
     <button id="import-btn">Импорт</button>
     <input id="input-json" type="file" />
+    <div id="file-upload-zone"></div>
+    <span id="file-name-display"></span>
     <div id="export-status"></div>
     <div id="import-status"></div>
   `
