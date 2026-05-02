@@ -34,6 +34,7 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 | `js/import-export.js` | JSON bulk import/export via File API |
 | `js/autocomplete.js` | Weighted prefix-match suggestions (`suggestAutocomplete()`) |
 | `js/utils.js` | Date formatting, date-range calculation, map helpers, groupBy |
+| `js/rename-tag.js` | Tag rename UI — `setupRenameTagUI(transactionManager, allTags)` wires the settings form |
 
 **Data model — transaction object:**
 ```js
@@ -52,6 +53,8 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 2. **Period filter** — when a default tag is set, `setupLimitSelect` (in `transactions.js`) dynamically injects an `<option value="default-tag">` into `#transactions-limit` with the tag name as label, inserted before the `custom` option. Selecting it triggers `singleLoadTransactionsRender` to read all transactions and filter to only those whose `tags` array includes the current default tag. If the default tag is later cleared while this option is selected, `singleLoadTransactionsRender` resets `this.limit` to `"all"` and falls through to the normal period logic.
 
 **Period filter select (`#transactions-limit`)** — values: `all` (default), `day`, `week`, `month`, `year`, `default-tag` (dynamic, only present when a default tag is set), `custom`. The `custom` value reveals `#custom-period-inputs` with start/end date inputs. All other non-`custom` values trigger an immediate `singleLoadTransactionsRender`. The selected value is persisted in `localStorage.limit` via `Storage.getLimit/setLimit`.
+
+**Rename tag** — `#rename-tag-section` on the settings page. Two inputs: current tag (with autocomplete from `allTags`) and replacement (no trim, so leading spaces are valid tag names). After typing a valid current tag the UI fetches and shows transaction count + total amount via `TransactionManager.getTagStats()`. A warning appears if the replacement tag already exists (tags will be merged). The rename is performed by `TransactionManager.renameTag(oldTag, newTag, cb)` which updates every matching transaction in IndexedDB one by one, then updates `allTags` in memory and `localStorage`, and calls `singleLoadTransactionsRender`. The UI logic is isolated in `js/rename-tag.js` and called from `app.js` via `setupRenameTagUI(transactionManager, allTags)`.
 
 Settings UI lives on the **"Настройки"** page (`#export-page`) alongside export/import controls.
 
@@ -81,9 +84,14 @@ npm run test:coverage # coverage report
 | `tests/ui.test.js` | `js/ui.js` — DOM with jsdom |
 | `tests/transactions.test.js` | `js/transactions.js` — DB/Chart/Storage mocked |
 | `tests/import-export.test.js` | `js/import-export.js` — FileReader mocked |
+| `tests/rename-tag.test.js` | `js/rename-tag.js` — DOM with jsdom, TransactionManager mocked |
 
 **Key mocking patterns:**
 - `localStorage` — `vi.stubGlobal('localStorage', createLocalStorageMock())` (jsdom Proxy rejects direct property writes)
 - `Chart` global — `global.Chart = vi.fn(...)` (CDN-loaded, not importable)
 - `FileReader` — replaced with synchronous `MockFileReader` that fires via `queueMicrotask`
 - `fake-indexeddb` — `global.indexedDB = new IDBFactory()` per test for isolation
+
+**Rules for tasks**
+- If you don't understand any part of task you always must ask questions and don't generate anything
+- When i tell you that task is fulfilled you should append usefull information to CLAUDE.md

@@ -67,6 +67,20 @@
           <button id="default-tag-save-btn">Сохранить</button>
           <p id="default-tag-status"></p>
         </div>
+        <div id="rename-tag-section">
+          <h4>Переименовать тег</h4>
+          <label>Текущий тег:</label>
+          <div style="position: relative">
+            <input type="text" id="rename-tag-from" placeholder="Введите тег" autocomplete="off" />
+            <div id="rename-tag-from-suggestion" class="suggestion" style="display:none"></div>
+          </div>
+          <div id="rename-tag-stats" style="display:none"></div>
+          <label>Новый тег:</label>
+          <input type="text" id="rename-tag-to" placeholder="Новое название" autocomplete="off" />
+          <div id="rename-tag-warning" style="display:none"></div>
+          <button id="rename-tag-btn">Переименовать</button>
+          <p id="rename-tag-status"></p>
+        </div>
       </div>
       <div id="input-page" class="page">
         <form id="transaction-form">

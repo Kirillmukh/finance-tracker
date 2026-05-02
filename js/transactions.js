@@ -422,6 +422,41 @@ export class TransactionManager {
     });
   }
 
+  getTagStats(tag, callback) {
+    this.db.readOnlyTransaction([(transactions) => {
+      const tagged = transactions.filter(t => t.tags && t.tags.includes(tag));
+      callback(tagged.length, tagged.reduce((sum, t) => sum + t.amount, 0));
+    }]);
+  }
+
+  renameTag(oldTag, newTag, onComplete) {
+    this.db.readOnlyTransaction([(transactions) => {
+      const toUpdate = transactions.filter(t => t.tags && t.tags.includes(oldTag));
+      let remaining = toUpdate.length;
+
+      if (remaining === 0) {
+        onComplete && onComplete();
+        return;
+      }
+
+      toUpdate.forEach(t => {
+        const updated = { ...t, tags: [...new Set(t.tags.map(tag => tag === oldTag ? newTag : tag))] };
+        this.db.updateTransaction(updated, () => {
+          remaining--;
+          if (remaining === 0) {
+            const oldCount = this.allTags.get(oldTag) || 0;
+            this.allTags.delete(oldTag);
+            const existingCount = this.allTags.get(newTag) || 0;
+            this.allTags.set(newTag, existingCount + oldCount);
+            Storage.saveTags(this.allTags);
+            this.singleLoadTransactionsRender();
+            onComplete && onComplete();
+          }
+        });
+      });
+    }]);
+  }
+
   getAllCategories() {
     return this.allCategories;
   }

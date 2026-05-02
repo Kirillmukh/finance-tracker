@@ -719,6 +719,174 @@ describe('TransactionManager.singleLoadTransactionsRender — фильтр по 
   })
 })
 
+describe('TransactionManager.getTagStats — статистика по тегу', () => {
+  const statsTransactions = [
+    { id: 1, description: 'A', amount: 100, category: 'Food', rate: 'ok', tags: ['lunch', 'cafe'], date: 1000 },
+    { id: 2, description: 'B', amount: 200, category: 'Food', rate: 'waste', tags: ['dinner'], date: 2000 },
+    { id: 3, description: 'C', amount: 50, category: 'Transport', rate: 'ok', tags: ['lunch'], date: 3000 },
+    { id: 4, description: 'D', amount: 80, category: 'Food', rate: 'ok', tags: [], date: 4000 },
+  ]
+
+  function makeManagerForStats(txs) {
+    const db = {
+      init: vi.fn(() => Promise.resolve()),
+      readOnlyTransaction: vi.fn((callbacks) => callbacks[0](txs)),
+    }
+    const ui = { clearTags: vi.fn(), clearTagsToRemove: vi.fn(), getTags: vi.fn(() => []), getTagsToRemove: vi.fn(() => new Set()) }
+    return new TransactionManager(db, ui, { open: vi.fn(), close: vi.fn() }, { showPage: vi.fn() })
+  }
+
+  it('возвращает правильное количество транзакций с тегом', () => {
+    const mgr = makeManagerForStats(statsTransactions)
+    let count
+    mgr.getTagStats('lunch', (c) => { count = c })
+    expect(count).toBe(2)
+  })
+
+  it('возвращает правильную сумму транзакций с тегом', () => {
+    const mgr = makeManagerForStats(statsTransactions)
+    let total
+    mgr.getTagStats('lunch', (_, t) => { total = t })
+    expect(total).toBe(150) // 100 + 50
+  })
+
+  it('работает корректно для тега с одной транзакцией', () => {
+    const mgr = makeManagerForStats(statsTransactions)
+    let count, total
+    mgr.getTagStats('dinner', (c, t) => { count = c; total = t })
+    expect(count).toBe(1)
+    expect(total).toBe(200)
+  })
+
+  it('возвращает 0 и 0 для несуществующего тега', () => {
+    const mgr = makeManagerForStats(statsTransactions)
+    let count, total
+    mgr.getTagStats('нет', (c, t) => { count = c; total = t })
+    expect(count).toBe(0)
+    expect(total).toBe(0)
+  })
+
+  it('не учитывает транзакции без совпадающего тега', () => {
+    const mgr = makeManagerForStats(statsTransactions)
+    let count
+    mgr.getTagStats('cafe', (c) => { count = c })
+    expect(count).toBe(1)
+  })
+})
+
+describe('TransactionManager.renameTag — переименование тега', () => {
+  const renameTransactions = [
+    { id: 1, description: 'A', amount: 100, category: 'Food', rate: 'ok', tags: ['lunch', 'cafe'], date: 1000 },
+    { id: 2, description: 'B', amount: 200, category: 'Food', rate: 'waste', tags: ['dinner'], date: 2000 },
+    { id: 3, description: 'C', amount: 50, category: 'Transport', rate: 'ok', tags: ['lunch'], date: 3000 },
+  ]
+
+  function makeManagerForRename(txs) {
+    const db = {
+      init: vi.fn(() => Promise.resolve()),
+      readOnlyTransaction: vi.fn((callbacks) => callbacks[0](txs)),
+      updateTransaction: vi.fn((_tx, cb) => cb && cb()),
+    }
+    const ui = { clearTags: vi.fn(), clearTagsToRemove: vi.fn(), getTags: vi.fn(() => []), getTagsToRemove: vi.fn(() => new Set()) }
+    const mgr = new TransactionManager(db, ui, { open: vi.fn(), close: vi.fn() }, { showPage: vi.fn() })
+    mgr.allTags = new Map([['lunch', 2], ['cafe', 1], ['dinner', 1]])
+    vi.spyOn(mgr, 'singleLoadTransactionsRender').mockImplementation(() => {})
+    return mgr
+  }
+
+  it('вызывает updateTransaction для каждой транзакции с тегом', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    mgr.renameTag('lunch', 'brunch', vi.fn())
+    expect(mgr.db.updateTransaction).toHaveBeenCalledTimes(2)
+  })
+
+  it('не трогает транзакции без переименовываемого тега', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    mgr.renameTag('dinner', 'supper', vi.fn())
+    expect(mgr.db.updateTransaction).toHaveBeenCalledTimes(1)
+    const [updated] = mgr.db.updateTransaction.mock.calls[0]
+    expect(updated.id).toBe(2)
+  })
+
+  it('заменяет старый тег на новый в массиве тегов', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    mgr.renameTag('lunch', 'brunch', vi.fn())
+    const allUpdatedTags = mgr.db.updateTransaction.mock.calls.map(([tx]) => tx.tags)
+    allUpdatedTags.forEach(tags => {
+      expect(tags).toContain('brunch')
+      expect(tags).not.toContain('lunch')
+    })
+  })
+
+  it('сохраняет остальные теги транзакции нетронутыми', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    mgr.renameTag('lunch', 'brunch', vi.fn())
+    const tx1 = mgr.db.updateTransaction.mock.calls.find(([tx]) => tx.id === 1)?.[0]
+    expect(tx1.tags).toContain('cafe')
+  })
+
+  it('удаляет старый тег из allTags', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    mgr.renameTag('lunch', 'brunch', vi.fn())
+    expect(mgr.allTags.has('lunch')).toBe(false)
+  })
+
+  it('добавляет новый тег в allTags с корректным счётчиком', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    mgr.renameTag('lunch', 'brunch', vi.fn())
+    expect(mgr.allTags.get('brunch')).toBe(2)
+  })
+
+  it('при слиянии с существующим тегом суммирует счётчики', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    mgr.renameTag('lunch', 'cafe', vi.fn())
+    expect(mgr.allTags.get('cafe')).toBe(3) // 1 (cafe) + 2 (lunch)
+    expect(mgr.allTags.has('lunch')).toBe(false)
+  })
+
+  it('дедуплицирует теги если транзакция уже содержала новый тег', () => {
+    const txWithBoth = [{ id: 1, description: 'A', amount: 100, category: 'Food', rate: 'ok', tags: ['lunch', 'cafe'], date: 1000 }]
+    const mgr = makeManagerForRename(txWithBoth)
+    mgr.allTags = new Map([['lunch', 1], ['cafe', 1]])
+    mgr.renameTag('lunch', 'cafe', vi.fn())
+    const [updated] = mgr.db.updateTransaction.mock.calls[0]
+    expect(updated.tags.filter(t => t === 'cafe').length).toBe(1)
+  })
+
+  it('сохраняет обновлённые теги в Storage', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    mgr.renameTag('lunch', 'brunch', vi.fn())
+    expect(Storage.saveTags).toHaveBeenCalledWith(mgr.allTags)
+  })
+
+  it('вызывает singleLoadTransactionsRender после всех обновлений', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    mgr.renameTag('lunch', 'brunch', vi.fn())
+    expect(mgr.singleLoadTransactionsRender).toHaveBeenCalledTimes(1)
+  })
+
+  it('вызывает onComplete после завершения всех обновлений', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    const onComplete = vi.fn()
+    mgr.renameTag('lunch', 'brunch', onComplete)
+    expect(onComplete).toHaveBeenCalledTimes(1)
+  })
+
+  it('сразу вызывает onComplete если нет транзакций с указанным тегом', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    const onComplete = vi.fn()
+    mgr.renameTag('несуществующий', 'новый', onComplete)
+    expect(mgr.db.updateTransaction).not.toHaveBeenCalled()
+    expect(onComplete).toHaveBeenCalled()
+  })
+
+  it('не вызывает singleLoadTransactionsRender если нечего обновлять', () => {
+    const mgr = makeManagerForRename(renameTransactions)
+    mgr.renameTag('несуществующий', 'новый', vi.fn())
+    expect(mgr.singleLoadTransactionsRender).not.toHaveBeenCalled()
+  })
+})
+
 describe('TransactionManager.setupChartTargetSelect — выбор разбивки графика', () => {
   function setupChartTargetDOM() {
     document.body.innerHTML = `

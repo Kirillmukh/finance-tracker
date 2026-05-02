@@ -6,6 +6,7 @@ import { Navigation } from './js/navigation.js';
 import { TransactionManager } from './js/transactions.js';
 import { ImportExport } from './js/import-export.js';
 import { Storage } from './js/storage.js';
+import { setupRenameTagUI } from './js/rename-tag.js';
 
 // Initialize application
 async function initApp() {
@@ -51,6 +52,9 @@ async function initApp() {
     status.textContent = value ? `Тег "${value}" сохранён` : 'Тег по умолчанию удалён';
     setTimeout(() => { status.textContent = ''; }, 2000);
   });
+
+  // Rename tag
+  setupRenameTagUI(transactionManager, transactionManager.getAllTags());
 
   // Expose functions to global scope for onclick handlers
   window.removeTag = (tag) => ui.removeTag(tag);

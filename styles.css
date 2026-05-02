@@ -133,6 +133,29 @@ body {
   font-size: 14px;
 }
 
+#rename-tag-section {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+#rename-tag-stats {
+  font-size: 14px;
+  color: #555;
+  margin: 4px 0 8px;
+}
+
+#rename-tag-warning {
+  font-size: 14px;
+  color: #e65100;
+  margin: 4px 0 8px;
+}
+
+#rename-tag-from-suggestion {
+  display: none;
+}
+
 #import-section,
 #export-section {
   background: #f9f9f9;
