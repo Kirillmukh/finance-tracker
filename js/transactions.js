@@ -77,18 +77,64 @@ export class TransactionManager {
 
     transactions.sort((a, b) => b.date - a.date);
 
+    if (transactions.length === 0) {
+      const emptyLi = document.createElement("li");
+      emptyLi.className = "empty-state";
+      emptyLi.innerHTML = `<span class="empty-state-icon">📋</span><span>Записей нет — добавьте первую трату</span>`;
+      list.appendChild(emptyLi);
+    }
+
+    const DAY_NAMES = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+    const MONTH_NAMES = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+
+    const toDateKey = (ts) => {
+      const d = new Date(ts);
+      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    };
+
+    const getSeparatorLabel = (ts) => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today.getTime() - 86400000);
+      const weekAgo = new Date(today.getTime() - 6 * 86400000);
+      const d = new Date(ts);
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const currentYear = now.getFullYear();
+      const shortDate = `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+      const fullDate = `${shortDate} ${d.getFullYear()}`;
+      const dateStr = d.getFullYear() === currentYear ? shortDate : fullDate;
+      if (dayStart.getTime() === today.getTime()) return `Сегодня, ${dateStr}`;
+      if (dayStart.getTime() === yesterday.getTime()) return `Вчера, ${dateStr}`;
+      if (dayStart >= weekAgo) return `${DAY_NAMES[d.getDay()]}, ${dateStr}`;
+      return dateStr;
+    };
+
+    let lastDateKey = null;
+
     transactions.forEach((transaction) => {
+      const dateKey = toDateKey(transaction.date);
+      if (dateKey !== lastDateKey) {
+        lastDateKey = dateKey;
+        const sep = document.createElement("li");
+        sep.className = "date-separator";
+        sep.textContent = getSeparatorLabel(transaction.date);
+        list.appendChild(sep);
+      }
+
+      const tagsHtml = transaction.tags.map(t => `<span class="list-tag">${t}</span>`).join("");
+
       const li = document.createElement("li");
       li.className = "transaction-li";
+      li.style.setProperty("--rate-color", RATES.get(transaction.rate)[1]);
       li.onclick = () => this.openTransactionModal(transaction);
       li.innerHTML = `
         <div>
           <strong>${transaction.description}</strong>
-          <div>${transaction.category} ${transaction.tags.length !== 0 ? "•" : ""} ${transaction.tags.join(", ")}</div>
+          <div>${transaction.category}${transaction.tags.length !== 0 ? " • " : ""}${tagsHtml}</div>
         </div>
-        <div>
+        <div class="transaction-li-right">
           <span style="white-space: nowrap">${transaction.amount} ₽</span>
-          <div style="text-align: end; color: ${RATES.get(transaction.rate)[1]}">{x}</div>
+          <span style="color: ${RATES.get(transaction.rate)[1]}">${RATES.get(transaction.rate)[0]}</span>
         </div>
       `;
       list.appendChild(li);
