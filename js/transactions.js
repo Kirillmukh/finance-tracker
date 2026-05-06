@@ -109,6 +109,12 @@ export class TransactionManager {
       return dateStr;
     };
 
+    const dailySums = new Map();
+    transactions.forEach((t) => {
+      const key = toDateKey(t.date);
+      dailySums.set(key, (dailySums.get(key) || 0) + t.amount);
+    });
+
     let lastDateKey = null;
 
     transactions.forEach((transaction) => {
@@ -117,7 +123,7 @@ export class TransactionManager {
         lastDateKey = dateKey;
         const sep = document.createElement("li");
         sep.className = "date-separator";
-        sep.textContent = getSeparatorLabel(transaction.date);
+        sep.innerHTML = `<span>${getSeparatorLabel(transaction.date)}</span><span class="date-separator-sum">${dailySums.get(dateKey)} ₽</span>`;
         list.appendChild(sep);
       }
 

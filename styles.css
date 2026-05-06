@@ -689,6 +689,15 @@ button:disabled {
   letter-spacing: 0.07em;
   padding: 10px 0 4px;
   list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.date-separator-sum {
+  color: #64748b;
+  letter-spacing: 0.04em;
 }
 
 .list-tag {

@@ -214,6 +214,70 @@ describe('TransactionManager.loadTransactions — DOM рендеринг', () =>
     document.querySelector('.transaction-li').click()
     expect(openModal).toHaveBeenCalled()
   })
+
+  it('добавляет один разделитель когда все транзакции в один день', () => {
+    setupListDOM()
+    const mgr = makeManager()
+    // sampleTransactions: даты 1000, 2000, 3000 — все попадают в 1 января 1970
+    mgr.loadTransactions([...sampleTransactions])
+    expect(document.querySelectorAll('.date-separator').length).toBe(1)
+  })
+
+  it('разделитель содержит сумму всех транзакций за этот день', () => {
+    setupListDOM()
+    const mgr = makeManager()
+    mgr.loadTransactions([...sampleTransactions])
+    const sum = document.querySelector('.date-separator-sum')
+    expect(sum).not.toBeNull()
+    expect(sum.textContent).toBe('350 ₽')
+  })
+
+  it('добавляет отдельный разделитель и сумму для каждого дня', () => {
+    setupListDOM()
+    const mgr = makeManager()
+    const day1 = new Date(2024, 5, 10, 12, 0).getTime()
+    const day2 = new Date(2024, 5, 11, 9, 0).getTime()
+    const day2Later = new Date(2024, 5, 11, 18, 0).getTime()
+    mgr.loadTransactions([
+      { id: 1, description: 'A', amount: 100, category: 'X', rate: 'ok', tags: [], date: day1 },
+      { id: 2, description: 'B', amount: 200, category: 'X', rate: 'ok', tags: [], date: day2 },
+      { id: 3, description: 'C', amount: 50, category: 'X', rate: 'ok', tags: [], date: day2Later },
+    ])
+    const separators = document.querySelectorAll('.date-separator')
+    expect(separators.length).toBe(2)
+    const sums = document.querySelectorAll('.date-separator-sum')
+    // Сортировка от новейшей к старейшей: сначала day2 (200+50=250), потом day1 (100)
+    expect(sums[0].textContent).toBe('250 ₽')
+    expect(sums[1].textContent).toBe('100 ₽')
+  })
+
+  it('сумма разделителя корректна для отрицательных значений', () => {
+    setupListDOM()
+    const mgr = makeManager()
+    const day = new Date(2024, 5, 10, 12, 0).getTime()
+    mgr.loadTransactions([
+      { id: 1, description: 'A', amount: 300, category: 'X', rate: 'ok', tags: [], date: day },
+      { id: 2, description: 'B', amount: -100, category: 'X', rate: 'ok', tags: [], date: day + 1000 },
+    ])
+    const sum = document.querySelector('.date-separator-sum')
+    expect(sum.textContent).toBe('200 ₽')
+  })
+
+  it('пустой массив не создаёт разделителей', () => {
+    setupListDOM()
+    const mgr = makeManager()
+    mgr.loadTransactions([])
+    expect(document.querySelectorAll('.date-separator').length).toBe(0)
+  })
+
+  it('подпись даты и сумма в разделителе — отдельные элементы', () => {
+    setupListDOM()
+    const mgr = makeManager()
+    mgr.loadTransactions([...sampleTransactions])
+    const sep = document.querySelector('.date-separator')
+    expect(sep.children.length).toBe(2)
+    expect(sep.children[1].classList.contains('date-separator-sum')).toBe(true)
+  })
 })
 
 describe('TransactionManager.openTransactionModal — открытие модального окна', () => {
