@@ -25,7 +25,7 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 | File | Responsibility |
 |------|---------------|
 | `js/db.js` | IndexedDB abstraction (store: `transactions`, index: `date_idx`) |
-| `js/storage.js` | `localStorage` for UI prefs (categories, tags, chart target, current page, default tag) |
+| `js/storage.js` | `localStorage` for UI prefs (categories, tags, chart target, current page, default tag, demo mode flag) |
 | `js/transactions.js` | Central orchestrator — CRUD, filtering, grouping, period logic |
 | `js/ui.js` | DOM rendering, form management, tag chips, autocomplete display |
 | `js/modal.js` | Modal open/close with injected content |
@@ -35,6 +35,7 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 | `js/autocomplete.js` | Weighted prefix-match suggestions (`suggestAutocomplete()`); `setupAutocomplete` is exported but not used anywhere — UI modules implement autocomplete inline |
 | `js/utils.js` | Date formatting, date-range calculation, map helpers, groupBy |
 | `js/rename-tag.js` | Tag rename UI — `setupRenameTagUI(transactionManager, allTags)` wires the settings form |
+| `js/demo.js` | Demo mode — `Demo.loadDemoData()` fetches `demo-data.json`, clears DB + tag/category caches, bulk-adds (stripping `id` so autoIncrement assigns fresh ones), sets `demoMode` flag, reloads. `Demo.clearDemoData()` is the inverse. `setupDemoUI(demo)` wires `#demo-banner` + `#demo-clear-btn` and exposes `window.loadDemo` for the empty-state button. |
 
 **Data model — transaction object:**
 ```js
@@ -58,7 +59,9 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 
 Settings UI lives on the **"Настройки"** page (`#export-page`) alongside export/import controls.
 
-**Transaction list rendering** (`loadTransactions` in `transactions.js`) — each `<li class="transaction-li">` uses a CSS custom property `--rate-color` set inline to the rate's hex color from `RATES`. This drives a colored left border via `border-left: 4px solid var(--rate-color)`. The right column uses class `.transaction-li-right` (`flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end`) to prevent the amount/rate label from wrapping or shifting when descriptions are long. Date group separators are `<li class="date-separator">` inserted between days. Tags are rendered as `<span class="list-tag">` chips. When the list is empty an `<li class="empty-state">` placeholder is shown.
+**Transaction list rendering** (`loadTransactions` in `transactions.js`) — each `<li class="transaction-li">` uses a CSS custom property `--rate-color` set inline to the rate's hex color from `RATES`. This drives a colored left border via `border-left: 4px solid var(--rate-color)`. The right column uses class `.transaction-li-right` (`flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end`) to prevent the amount/rate label from wrapping or shifting when descriptions are long. Date group separators are `<li class="date-separator">` inserted between days. Tags are rendered as `<span class="list-tag">` chips. When the list is empty an `<li class="empty-state">` placeholder is shown — and when `Storage.getDemoMode()` is false, the empty state also includes a `#empty-state-demo-btn` whose click handler calls `window.loadDemo()` (set up by `setupDemoUI` in `js/demo.js`).
+
+**Demo mode** — entry: empty-state button (`#empty-state-demo-btn`, only when DB is empty and demo flag is off). Loading: `Demo.loadDemoData()` fetches `./demo-data.json`, calls `clearAllTransactions`, clears the cached `categories`/`tags` keys in `localStorage`, then `bulkAddTransactions` with `id` stripped from each record (the IDB store has `autoIncrement: true` and assigns fresh ids), sets `localStorage.demoMode = "true"`, and re-runs `singleLoadTransactionsRender` + `loadAllCategories` + `loadAllTags` so the in-memory Maps in `TransactionManager` are rebuilt. Active state: `#demo-banner` (top of `#home-page`) is visible whenever `Storage.getDemoMode()` is truthy. The "Очистить" button shows a `confirm()` dialog and on accept calls `Demo.clearDemoData()` — same teardown as load minus the fetch/bulkAdd, with the flag cleared. The flag persists until the user explicitly clears; adding a real transaction while in demo mode does NOT auto-clear it (banner stays).
 
 **Chart legend** — Chart.js built-in legend is disabled (`legend: { display: false }`). Instead, `renderCustomLegend(chart)` in `chart.js` builds a `<div id="chart-legend">` with `.legend-item` elements. Clicking an item toggles `meta.data[i].hidden` on the chart and updates `hiddenCategories`. Legend visibility per chart target:
 - `category` (pie) — legend rendered, hidden by default; `#legend-toggle` button toggles it.
@@ -72,6 +75,30 @@ Settings UI lives on the **"Настройки"** page (`#export-page`) alongsid
 **Chart size** — `.chart-container` has `max-width: 260px` to keep the pie chart compact.
 
 **No framework, no bundler** for the app itself. Chart.js is loaded from CDN. `package.json` exists only for dev tooling (tests).
+
+## PWA
+
+**Icons** — `icons/` directory. Master is `icons/icon.svg` (Heroicons `chart-pie` on indigo `#4f46e5` rounded-square background). PNG variants are generated from the SVGs via `rsvg-convert` (Homebrew `librsvg`):
+
+```sh
+rsvg-convert -w 192 -h 192 icons/icon.svg -o icons/icon-192.png
+rsvg-convert -w 512 -h 512 icons/icon.svg -o icons/icon-512.png
+rsvg-convert -w 512 -h 512 icons/icon-maskable.svg -o icons/icon-maskable-512.png
+rsvg-convert -w 180 -h 180 icons/icon.svg -o icons/apple-touch-icon.png
+rsvg-convert -w 32  -h 32  icons/icon.svg -o icons/favicon-32.png
+```
+
+`icon-maskable.svg` differs from `icon.svg`: it has full-bleed background (no rounded corners) and the chart-pie sits inside the inner ~60% safe zone, per the maskable-icon spec. Regenerate the PNGs after editing either SVG.
+
+**Service worker** — `sw.js` at the project root, registered in `app.js` after `window.load`. Strategy:
+
+- **Install:** precaches the app shell listed in `APP_SHELL` (HTML, CSS, all `js/*.js`, manifest, icons).
+- **Activate:** deletes caches whose name doesn't match the current `CACHE_NAME`, then claims clients.
+- **Fetch:** network-first for `cdn.jsdelivr.net` (Chart.js) with cache fallback for offline; cache-first for everything else, with same-origin successful responses written through to the cache.
+
+**Updating the SW** — bump the `VERSION` constant in `sw.js` whenever any file in `APP_SHELL` changes (or when adding/removing files from the list). The new version creates a new cache name; the old cache is cleaned up on activation. Without bumping, returning users will keep serving stale assets from their existing cache.
+
+**Adding new files to the app shell** — new files under `js/` or new icons must be appended to `APP_SHELL` in `sw.js` AND `VERSION` must be bumped, otherwise they will not be available offline and may not be served at all if a cache-first miss falls through to a failed network fetch.
 
 ## CSS / UI conventions
 
@@ -106,12 +133,14 @@ npm run test:coverage # coverage report
 | `tests/transactions.test.js` | `js/transactions.js` — DB/Chart/Storage mocked |
 | `tests/import-export.test.js` | `js/import-export.js` — FileReader mocked |
 | `tests/rename-tag.test.js` | `js/rename-tag.js` — DOM with jsdom, TransactionManager mocked |
+| `tests/demo.test.js` | `js/demo.js` — `fetch` stubbed via `global.fetch = vi.fn(...)`, Storage mocked, `confirm` spied via `vi.spyOn(window, 'confirm')` |
 
 **Key mocking patterns:**
 - `localStorage` — `vi.stubGlobal('localStorage', createLocalStorageMock())` (jsdom Proxy rejects direct property writes)
 - `Chart` global — `global.Chart = vi.fn(...)` (CDN-loaded, not importable)
 - `FileReader` — replaced with synchronous `MockFileReader` that fires via `queueMicrotask`; set `fileReaderShouldError = true` before the call to simulate `onerror`
 - `fake-indexeddb` — `global.indexedDB = new IDBFactory()` per test for isolation
+- `fetch` — `global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(payload) }))` (used in `demo.test.js`)
 
 **Rules for tasks**
 - If you don't understand any part of task you always must ask questions and don't generate anything

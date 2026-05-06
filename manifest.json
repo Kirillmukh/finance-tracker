@@ -1,9 +1,38 @@
 {
   "name": "Финансовый трекер",
   "short_name": "Finance Tracker",
+  "description": "Трекер осознанных финансов: учёт расходов с оценкой, тегами и графиками. Работает офлайн, данные хранятся локально.",
+  "lang": "ru",
+  "categories": ["finance", "productivity"],
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
-  "scope": "./"
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }
