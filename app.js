@@ -7,6 +7,7 @@ import { TransactionManager } from './js/transactions.js';
 import { ImportExport } from './js/import-export.js';
 import { Storage } from './js/storage.js';
 import { setupRenameTagUI } from './js/rename-tag.js';
+import { Demo, setupDemoUI } from './js/demo.js';
 
 // Initialize application
 async function initApp() {
@@ -17,6 +18,7 @@ async function initApp() {
   const ui = new UI(modal);
   const transactionManager = new TransactionManager(db, ui, modal, navigation);
   const importExport = new ImportExport(db, transactionManager);
+  const demo = new Demo(db, transactionManager);
 
   // Initialize transaction manager (this now waits for categories and tags to load)
   await transactionManager.init();
@@ -55,6 +57,9 @@ async function initApp() {
 
   // Rename tag
   setupRenameTagUI(transactionManager, transactionManager.getAllTags());
+
+  // Demo mode
+  setupDemoUI(demo);
 
   // Legend toggle
   document.getElementById('legend-toggle').addEventListener('click', () => {

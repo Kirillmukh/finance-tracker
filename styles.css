@@ -725,3 +725,45 @@ button:disabled {
 .empty-state-icon {
   font-size: 36px;
 }
+
+.demo-load-btn {
+  margin-top: 8px;
+  background: #4f46e5;
+  color: white;
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+.demo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  color: #78350f;
+  font-size: 14px;
+}
+
+.demo-banner-text {
+  font-weight: 500;
+}
+
+.demo-banner-btn {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 13px;
+  background: #b45309;
+  color: white;
+  box-shadow: none;
+}
+
+.demo-banner-btn:hover {
+  background: #92400e;
+  box-shadow: none;
+  transform: none;
+}

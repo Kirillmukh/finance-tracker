@@ -80,8 +80,15 @@ export class TransactionManager {
     if (transactions.length === 0) {
       const emptyLi = document.createElement("li");
       emptyLi.className = "empty-state";
-      emptyLi.innerHTML = `<span class="empty-state-icon">📋</span><span>Записей нет — добавьте первую трату</span>`;
+      const showDemoBtn = !Storage.getDemoMode();
+      const demoBtnHtml = showDemoBtn ? `<button type="button" id="empty-state-demo-btn" class="demo-load-btn">Посмотреть на демо-данных</button>` : "";
+      emptyLi.innerHTML = `<span class="empty-state-icon">📋</span><span>Записей нет — добавьте первую трату</span>${demoBtnHtml}`;
       list.appendChild(emptyLi);
+      if (showDemoBtn) {
+        document.getElementById("empty-state-demo-btn").addEventListener("click", () => {
+          if (typeof window.loadDemo === "function") window.loadDemo();
+        });
+      }
     }
 
     const DAY_NAMES = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];

@@ -11,6 +11,7 @@ vi.mock('../js/storage.js', () => ({
     setLimit: vi.fn(),
     setChartTarget: vi.fn(),
     getDefaultTag: vi.fn(() => ''),
+    getDemoMode: vi.fn(() => false),
   },
 }))
 
@@ -194,6 +195,34 @@ describe('TransactionManager.loadTransactions — DOM рендеринг', () =>
     mgr.loadTransactions([])
     expect(document.querySelectorAll('.transaction-li').length).toBe(0)
     expect(document.getElementById('balance').textContent).toBe('0')
+  })
+
+  it('при пустом списке и не-демо режиме показывает кнопку загрузки демо', () => {
+    setupListDOM()
+    Storage.getDemoMode.mockReturnValue(false)
+    const mgr = makeManager()
+    mgr.loadTransactions([])
+    expect(document.getElementById('empty-state-demo-btn')).not.toBeNull()
+  })
+
+  it('при пустом списке в демо-режиме не показывает кнопку загрузки демо', () => {
+    setupListDOM()
+    Storage.getDemoMode.mockReturnValue(true)
+    const mgr = makeManager()
+    mgr.loadTransactions([])
+    expect(document.getElementById('empty-state-demo-btn')).toBeNull()
+  })
+
+  it('клик по кнопке демо вызывает window.loadDemo', () => {
+    setupListDOM()
+    Storage.getDemoMode.mockReturnValue(false)
+    const loadDemo = vi.fn()
+    window.loadDemo = loadDemo
+    const mgr = makeManager()
+    mgr.loadTransactions([])
+    document.getElementById('empty-state-demo-btn').click()
+    expect(loadDemo).toHaveBeenCalled()
+    delete window.loadDemo
   })
 
   it('транзакции отсортированы от новейшей к старейшей', () => {

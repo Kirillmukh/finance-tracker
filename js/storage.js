@@ -65,4 +65,16 @@ export class Storage {
       delete localStorage.defaultTag;
     }
   }
+
+  static getDemoMode() {
+    return localStorage.demoMode === "true";
+  }
+
+  static setDemoMode(value) {
+    if (value) {
+      localStorage.demoMode = "true";
+    } else {
+      delete localStorage.demoMode;
+    }
+  }
 }

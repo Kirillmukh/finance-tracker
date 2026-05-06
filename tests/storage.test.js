@@ -136,3 +136,20 @@ describe('Storage — тег по умолчанию', () => {
     expect(Storage.getDefaultTag()).toBe('')
   })
 })
+
+describe('Storage — режим демо', () => {
+  it('getDemoMode возвращает false по умолчанию', () => {
+    expect(Storage.getDemoMode()).toBe(false)
+  })
+
+  it('setDemoMode(true) включает режим', () => {
+    Storage.setDemoMode(true)
+    expect(Storage.getDemoMode()).toBe(true)
+  })
+
+  it('setDemoMode(false) выключает режим', () => {
+    Storage.setDemoMode(true)
+    Storage.setDemoMode(false)
+    expect(Storage.getDemoMode()).toBe(false)
+  })
+})
