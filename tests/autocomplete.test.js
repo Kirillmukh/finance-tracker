@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { suggestAutocomplete } from '../js/autocomplete.js'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { suggestAutocomplete, applySuggestion, setupAutocomplete } from '../js/autocomplete.js'
 
 describe('suggestAutocomplete', () => {
   it('возвращает совпадение по префиксу', () => {
@@ -62,5 +62,74 @@ describe('suggestAutocomplete', () => {
     const map = new Map([['Grocery', 10]])
     // unionStart("Grocery", "Grocery") === -1, значит совпадения нет
     expect(suggestAutocomplete(map, 'Grocery')).toBeNull()
+  })
+})
+
+describe('applySuggestion', () => {
+  it('устанавливает значение поля и скрывает подсказку', () => {
+    const input = document.createElement('input')
+    const div = document.createElement('div')
+    div.style.display = 'block'
+    applySuggestion(input, div, 'Grocery')
+    expect(input.value).toBe('Grocery')
+    expect(div.style.display).toBe('none')
+  })
+})
+
+describe('setupAutocomplete', () => {
+  let input, div
+
+  beforeEach(() => {
+    input = document.createElement('input')
+    div = document.createElement('div')
+    div.style.display = 'none'
+    document.body.appendChild(input)
+    document.body.appendChild(div)
+  })
+
+  afterEach(() => {
+    input.remove()
+    div.remove()
+  })
+
+  it('клик по блоку подсказки применяет результат getSuggestion', () => {
+    const getSuggestion = vi.fn(() => 'Grocery')
+    setupAutocomplete(input, div, new Map([['Grocery', 5]]), getSuggestion)
+    div.click()
+    expect(getSuggestion).toHaveBeenCalled()
+    expect(input.value).toBe('Grocery')
+    expect(div.style.display).toBe('none')
+  })
+
+  it('ввод совпадающего текста показывает подсказку', () => {
+    setupAutocomplete(input, div, new Map([['Grocery', 5]]), () => '')
+    input.value = 'Gr'
+    input.dispatchEvent(new Event('input'))
+    expect(div.style.display).toBe('block')
+    expect(div.textContent).toBe('Grocery')
+  })
+
+  it('ввод несовпадающего текста скрывает подсказку', () => {
+    setupAutocomplete(input, div, new Map([['Grocery', 5]]), () => '')
+    div.style.display = 'block'
+    input.value = 'xyz'
+    input.dispatchEvent(new Event('input'))
+    expect(div.style.display).toBe('none')
+  })
+
+  it('двойной пробел применяет подсказку автоматически', () => {
+    setupAutocomplete(input, div, new Map([['Grocery', 5]]), () => '')
+    input.value = 'Gr  '
+    input.dispatchEvent(new Event('input'))
+    expect(input.value).toBe('Grocery')
+    expect(div.style.display).toBe('none')
+  })
+
+  it('excludeList исключает вариант из подсказок', () => {
+    const map = new Map([['Grocery', 10], ['Grapes', 3]])
+    setupAutocomplete(input, div, map, () => '', ['Grocery'])
+    input.value = 'Gr'
+    input.dispatchEvent(new Event('input'))
+    expect(div.textContent).toBe('Grapes')
   })
 })

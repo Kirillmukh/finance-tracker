@@ -32,7 +32,7 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 | `js/navigation.js` | Page switching (shows/hides sections, manages nav state) |
 | `js/chart.js` | Chart.js wrapper — pie/bar charts, custom HTML legend, 20-color palette |
 | `js/import-export.js` | JSON bulk import/export via File API |
-| `js/autocomplete.js` | Weighted prefix-match suggestions (`suggestAutocomplete()`) |
+| `js/autocomplete.js` | Weighted prefix-match suggestions (`suggestAutocomplete()`); `setupAutocomplete` is exported but not used anywhere — UI modules implement autocomplete inline |
 | `js/utils.js` | Date formatting, date-range calculation, map helpers, groupBy |
 | `js/rename-tag.js` | Tag rename UI — `setupRenameTagUI(transactionManager, allTags)` wires the settings form |
 
@@ -96,7 +96,7 @@ npm run test:coverage # coverage report
 | File | Module tested |
 |------|--------------|
 | `tests/utils.test.js` | `js/utils.js` — pure functions |
-| `tests/autocomplete.test.js` | `js/autocomplete.js` — `suggestAutocomplete` |
+| `tests/autocomplete.test.js` | `js/autocomplete.js` — `suggestAutocomplete`, `applySuggestion`, `setupAutocomplete` |
 | `tests/storage.test.js` | `js/storage.js` — localStorage (stubbed) |
 | `tests/db.test.js` | `js/db.js` — IndexedDB via fake-indexeddb |
 | `tests/modal.test.js` | `js/modal.js` — DOM with jsdom |
@@ -110,7 +110,7 @@ npm run test:coverage # coverage report
 **Key mocking patterns:**
 - `localStorage` — `vi.stubGlobal('localStorage', createLocalStorageMock())` (jsdom Proxy rejects direct property writes)
 - `Chart` global — `global.Chart = vi.fn(...)` (CDN-loaded, not importable)
-- `FileReader` — replaced with synchronous `MockFileReader` that fires via `queueMicrotask`
+- `FileReader` — replaced with synchronous `MockFileReader` that fires via `queueMicrotask`; set `fileReaderShouldError = true` before the call to simulate `onerror`
 - `fake-indexeddb` — `global.indexedDB = new IDBFactory()` per test for isolation
 
 **Rules for tasks**

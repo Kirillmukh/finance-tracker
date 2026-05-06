@@ -1,0 +1,1104 @@
+[
+  {
+    "id": 1,
+    "description": "Продукты Перекрёсток",
+    "amount": 2340,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1762030800000
+  },
+  {
+    "id": 2,
+    "description": "Такси домой",
+    "amount": 480,
+    "category": "Транспорт",
+    "rate": "waste",
+    "tags": [
+      "личное"
+    ],
+    "date": 1762117200000
+  },
+  {
+    "id": 3,
+    "description": "Абонемент в зал",
+    "amount": 3500,
+    "category": "Здоровье",
+    "rate": "good",
+    "tags": [
+      "личное",
+      "спорт"
+    ],
+    "date": 1762203600000
+  },
+  {
+    "id": 4,
+    "description": "Кофе с другом",
+    "amount": 350,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "личное"
+    ],
+    "date": 1762290000000
+  },
+  {
+    "id": 5,
+    "description": "Продукты Пятёрочка",
+    "amount": 1850,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1762462800000
+  },
+  {
+    "id": 6,
+    "description": "Netflix подписка",
+    "amount": 799,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом",
+      "развлечения"
+    ],
+    "date": 1762549200000
+  },
+  {
+    "id": 7,
+    "description": "Книга про архитектуру ПО",
+    "amount": 1200,
+    "category": "Образование",
+    "rate": "good",
+    "tags": [
+      "работа",
+      "развитие"
+    ],
+    "date": 1762635600000
+  },
+  {
+    "id": 8,
+    "description": "Ужин в ресторане",
+    "amount": 3200,
+    "category": "Кафе",
+    "rate": "waste",
+    "tags": [
+      "личное"
+    ],
+    "date": 1762722000000
+  },
+  {
+    "id": 9,
+    "description": "Метро",
+    "amount": 110,
+    "category": "Транспорт",
+    "rate": "good",
+    "tags": [],
+    "date": 1762808400000
+  },
+  {
+    "id": 10,
+    "description": "Аренда квартиры",
+    "amount": 45000,
+    "category": "Жильё",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1762894800000
+  },
+  {
+    "id": 11,
+    "description": "Курс на Stepik",
+    "amount": 2990,
+    "category": "Образование",
+    "rate": "good",
+    "tags": [
+      "работа",
+      "развитие"
+    ],
+    "date": 1762981200000
+  },
+  {
+    "id": 12,
+    "description": "Продукты ВкусВилл",
+    "amount": 2900,
+    "category": "Продукты",
+    "rate": "good",
+    "tags": [
+      "дом"
+    ],
+    "date": 1763067600000
+  },
+  {
+    "id": 13,
+    "description": "Такси в аэропорт",
+    "amount": 1800,
+    "category": "Транспорт",
+    "rate": "ok",
+    "tags": [
+      "путешествие"
+    ],
+    "date": 1763154000000
+  },
+  {
+    "id": 14,
+    "description": "Авиабилеты СПБ-МСК",
+    "amount": 7500,
+    "category": "Путешествия",
+    "rate": "good",
+    "tags": [
+      "путешествие"
+    ],
+    "date": 1763154000000
+  },
+  {
+    "id": 15,
+    "description": "Случайная покупка в магазине",
+    "amount": 1500,
+    "category": "Разное",
+    "rate": "waste",
+    "tags": [],
+    "date": 1763326800000
+  },
+  {
+    "id": 16,
+    "description": "Интернет домашний",
+    "amount": 650,
+    "category": "ЖКХ",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1763413200000
+  },
+  {
+    "id": 17,
+    "description": "Обед на работе",
+    "amount": 420,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "работа"
+    ],
+    "date": 1763499600000
+  },
+  {
+    "id": 18,
+    "description": "Парикмахерская",
+    "amount": 1200,
+    "category": "Уход",
+    "rate": "ok",
+    "tags": [
+      "личное"
+    ],
+    "date": 1763586000000
+  },
+  {
+    "id": 19,
+    "description": "Продукты Магнит",
+    "amount": 1100,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1763758800000
+  },
+  {
+    "id": 20,
+    "description": "Яндекс Плюс",
+    "amount": 399,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1763845200000
+  },
+  {
+    "id": 21,
+    "description": "Новогодние подарки",
+    "amount": 12000,
+    "category": "Разное",
+    "rate": "good",
+    "tags": [
+      "праздник",
+      "семья"
+    ],
+    "date": 1764536400000
+  },
+  {
+    "id": 22,
+    "description": "Продукты Перекрёсток",
+    "amount": 3100,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1764709200000
+  },
+  {
+    "id": 23,
+    "description": "Аренда квартиры",
+    "amount": 45000,
+    "category": "Жильё",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1764882000000
+  },
+  {
+    "id": 24,
+    "description": "Корпоратив",
+    "amount": 2500,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "работа",
+      "праздник"
+    ],
+    "date": 1765054800000
+  },
+  {
+    "id": 25,
+    "description": "Зимняя куртка",
+    "amount": 8900,
+    "category": "Одежда",
+    "rate": "good",
+    "tags": [
+      "личное"
+    ],
+    "date": 1765141200000
+  },
+  {
+    "id": 26,
+    "description": "Такси",
+    "amount": 620,
+    "category": "Транспорт",
+    "rate": "waste",
+    "tags": [],
+    "date": 1765227600000
+  },
+  {
+    "id": 27,
+    "description": "Продукты ВкусВилл",
+    "amount": 3800,
+    "category": "Продукты",
+    "rate": "good",
+    "tags": [
+      "дом"
+    ],
+    "date": 1765400400000
+  },
+  {
+    "id": 28,
+    "description": "Кино",
+    "amount": 600,
+    "category": "Развлечения",
+    "rate": "ok",
+    "tags": [
+      "личное"
+    ],
+    "date": 1765573200000
+  },
+  {
+    "id": 29,
+    "description": "Книги к Новому году",
+    "amount": 2200,
+    "category": "Образование",
+    "rate": "good",
+    "tags": [
+      "развитие"
+    ],
+    "date": 1765659600000
+  },
+  {
+    "id": 30,
+    "description": "Netflix",
+    "amount": 799,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом",
+      "развлечения"
+    ],
+    "date": 1765746000000
+  },
+  {
+    "id": 31,
+    "description": "ЖКХ декабрь",
+    "amount": 4200,
+    "category": "ЖКХ",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1765832400000
+  },
+  {
+    "id": 32,
+    "description": "Новогодний стол продукты",
+    "amount": 8500,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом",
+      "праздник"
+    ],
+    "date": 1766869200000
+  },
+  {
+    "id": 33,
+    "description": "Шампанское и вино",
+    "amount": 3200,
+    "category": "Продукты",
+    "rate": "waste",
+    "tags": [
+      "праздник"
+    ],
+    "date": 1767042000000
+  },
+  {
+    "id": 34,
+    "description": "Обед на работе",
+    "amount": 390,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "работа"
+    ],
+    "date": 1766005200000
+  },
+  {
+    "id": 35,
+    "description": "Аренда квартиры",
+    "amount": 45000,
+    "category": "Жильё",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1767387600000
+  },
+  {
+    "id": 36,
+    "description": "Продукты Пятёрочка",
+    "amount": 1600,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1767560400000
+  },
+  {
+    "id": 37,
+    "description": "Посиделки в баре",
+    "amount": 2800,
+    "category": "Кафе",
+    "rate": "waste",
+    "tags": [
+      "личное"
+    ],
+    "date": 1767646800000
+  },
+  {
+    "id": 38,
+    "description": "Яндекс Плюс",
+    "amount": 399,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1767733200000
+  },
+  {
+    "id": 39,
+    "description": "Курс по Kotlin",
+    "amount": 5900,
+    "category": "Образование",
+    "rate": "good",
+    "tags": [
+      "работа",
+      "развитие"
+    ],
+    "date": 1767819600000
+  },
+  {
+    "id": 40,
+    "description": "Продукты ВкусВилл",
+    "amount": 2100,
+    "category": "Продукты",
+    "rate": "good",
+    "tags": [
+      "дом"
+    ],
+    "date": 1767992400000
+  },
+  {
+    "id": 41,
+    "description": "Метро",
+    "amount": 110,
+    "category": "Транспорт",
+    "rate": "good",
+    "tags": [],
+    "date": 1768078800000
+  },
+  {
+    "id": 42,
+    "description": "Кофе и завтрак",
+    "amount": 480,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "работа"
+    ],
+    "date": 1768165200000
+  },
+  {
+    "id": 43,
+    "description": "Аптека витамины",
+    "amount": 1800,
+    "category": "Здоровье",
+    "rate": "good",
+    "tags": [
+      "личное"
+    ],
+    "date": 1768338000000
+  },
+  {
+    "id": 44,
+    "description": "Продукты Магнит",
+    "amount": 1300,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1768510800000
+  },
+  {
+    "id": 45,
+    "description": "ЖКХ январь",
+    "amount": 4600,
+    "category": "ЖКХ",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1768597200000
+  },
+  {
+    "id": 46,
+    "description": "Netflix",
+    "amount": 799,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом",
+      "развлечения"
+    ],
+    "date": 1768683600000
+  },
+  {
+    "id": 47,
+    "description": "Случайная покупка интернет",
+    "amount": 2300,
+    "category": "Разное",
+    "rate": "waste",
+    "tags": [],
+    "date": 1768770000000
+  },
+  {
+    "id": 48,
+    "description": "Пробежка снаряжение",
+    "amount": 3400,
+    "category": "Здоровье",
+    "rate": "good",
+    "tags": [
+      "спорт",
+      "личное"
+    ],
+    "date": 1768942800000
+  },
+  {
+    "id": 49,
+    "description": "Обед на работе",
+    "amount": 410,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "работа"
+    ],
+    "date": 1769029200000
+  },
+  {
+    "id": 50,
+    "description": "Интернет домашний",
+    "amount": 650,
+    "category": "ЖКХ",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1769115600000
+  },
+  {
+    "id": 51,
+    "description": "Аренда квартиры",
+    "amount": 45000,
+    "category": "Жильё",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1769893200000
+  },
+  {
+    "id": 52,
+    "description": "Продукты Перекрёсток",
+    "amount": 2700,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1770066000000
+  },
+  {
+    "id": 53,
+    "description": "Спортивный зал",
+    "amount": 3500,
+    "category": "Здоровье",
+    "rate": "good",
+    "tags": [
+      "спорт",
+      "личное"
+    ],
+    "date": 1770152400000
+  },
+  {
+    "id": 54,
+    "description": "Кафе с коллегами",
+    "amount": 1100,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "работа"
+    ],
+    "date": 1770238800000
+  },
+  {
+    "id": 55,
+    "description": "Яндекс Плюс",
+    "amount": 399,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1770411600000
+  },
+  {
+    "id": 56,
+    "description": "Подарок на 14 февраля",
+    "amount": 3500,
+    "category": "Разное",
+    "rate": "good",
+    "tags": [
+      "личное",
+      "праздник"
+    ],
+    "date": 1770930000000
+  },
+  {
+    "id": 57,
+    "description": "Ужин ресторан 14 февраля",
+    "amount": 5800,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "личное",
+      "праздник"
+    ],
+    "date": 1771016400000
+  },
+  {
+    "id": 58,
+    "description": "Netflix",
+    "amount": 799,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом",
+      "развлечения"
+    ],
+    "date": 1771102800000
+  },
+  {
+    "id": 59,
+    "description": "Продукты ВкусВилл",
+    "amount": 2400,
+    "category": "Продукты",
+    "rate": "good",
+    "tags": [
+      "дом"
+    ],
+    "date": 1771275600000
+  },
+  {
+    "id": 60,
+    "description": "Такси ночью",
+    "amount": 750,
+    "category": "Транспорт",
+    "rate": "waste",
+    "tags": [],
+    "date": 1771362000000
+  },
+  {
+    "id": 61,
+    "description": "ЖКХ февраль",
+    "amount": 4400,
+    "category": "ЖКХ",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1771448400000
+  },
+  {
+    "id": 62,
+    "description": "Снеки и напитки",
+    "amount": 890,
+    "category": "Продукты",
+    "rate": "waste",
+    "tags": [],
+    "date": 1771534800000
+  },
+  {
+    "id": 63,
+    "description": "Книга по дизайну",
+    "amount": 1600,
+    "category": "Образование",
+    "rate": "good",
+    "tags": [
+      "развитие"
+    ],
+    "date": 1771707600000
+  },
+  {
+    "id": 64,
+    "description": "Конфеты к 23 февраля",
+    "amount": 600,
+    "category": "Разное",
+    "rate": "ok",
+    "tags": [
+      "праздник",
+      "работа"
+    ],
+    "date": 1771794000000
+  },
+  {
+    "id": 65,
+    "description": "Обед на работе",
+    "amount": 430,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "работа"
+    ],
+    "date": 1771966800000
+  },
+  {
+    "id": 66,
+    "description": "Аренда квартиры",
+    "amount": 45000,
+    "category": "Жильё",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1772312400000
+  },
+  {
+    "id": 67,
+    "description": "Цветы к 8 марта",
+    "amount": 2800,
+    "category": "Разное",
+    "rate": "good",
+    "tags": [
+      "праздник"
+    ],
+    "date": 1772830800000
+  },
+  {
+    "id": 68,
+    "description": "Продукты Перекрёсток",
+    "amount": 2200,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1772485200000
+  },
+  {
+    "id": 69,
+    "description": "Яндекс Плюс",
+    "amount": 399,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1772830800000
+  },
+  {
+    "id": 70,
+    "description": "Ужин 8 марта",
+    "amount": 6200,
+    "category": "Кафе",
+    "rate": "good",
+    "tags": [
+      "семья",
+      "праздник"
+    ],
+    "date": 1772917200000
+  },
+  {
+    "id": 71,
+    "description": "Продукты ВкусВилл",
+    "amount": 2900,
+    "category": "Продукты",
+    "rate": "good",
+    "tags": [
+      "дом"
+    ],
+    "date": 1773090000000
+  },
+  {
+    "id": 72,
+    "description": "Netflix",
+    "amount": 799,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом",
+      "развлечения"
+    ],
+    "date": 1773176400000
+  },
+  {
+    "id": 73,
+    "description": "Зубной врач",
+    "amount": 7500,
+    "category": "Здоровье",
+    "rate": "good",
+    "tags": [
+      "личное"
+    ],
+    "date": 1773262800000
+  },
+  {
+    "id": 74,
+    "description": "ЖКХ март",
+    "amount": 4300,
+    "category": "ЖКХ",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1773435600000
+  },
+  {
+    "id": 75,
+    "description": "Кроссовки",
+    "amount": 6800,
+    "category": "Одежда",
+    "rate": "good",
+    "tags": [
+      "спорт",
+      "личное"
+    ],
+    "date": 1773522000000
+  },
+  {
+    "id": 76,
+    "description": "Обед на работе",
+    "amount": 460,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "работа"
+    ],
+    "date": 1773694800000
+  },
+  {
+    "id": 77,
+    "description": "Такси",
+    "amount": 540,
+    "category": "Транспорт",
+    "rate": "waste",
+    "tags": [],
+    "date": 1773781200000
+  },
+  {
+    "id": 78,
+    "description": "Фрукты на рынке",
+    "amount": 700,
+    "category": "Продукты",
+    "rate": "good",
+    "tags": [
+      "дом"
+    ],
+    "date": 1773867600000
+  },
+  {
+    "id": 79,
+    "description": "Конференция по IT",
+    "amount": 9900,
+    "category": "Образование",
+    "rate": "good",
+    "tags": [
+      "работа",
+      "развитие"
+    ],
+    "date": 1773954000000
+  },
+  {
+    "id": 80,
+    "description": "Кофе с другом",
+    "amount": 380,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "личное"
+    ],
+    "date": 1774126800000
+  },
+  {
+    "id": 81,
+    "description": "Продукты Магнит",
+    "amount": 1500,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1774299600000
+  },
+  {
+    "id": 82,
+    "description": "Аренда квартиры",
+    "amount": 45000,
+    "category": "Жильё",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1774990800000
+  },
+  {
+    "id": 83,
+    "description": "Продукты Перекрёсток",
+    "amount": 2500,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1775077200000
+  },
+  {
+    "id": 84,
+    "description": "Яндекс Плюс",
+    "amount": 399,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1775509200000
+  },
+  {
+    "id": 85,
+    "description": "Поход в горы снаряжение",
+    "amount": 12000,
+    "category": "Путешествия",
+    "rate": "good",
+    "tags": [
+      "спорт",
+      "путешествие"
+    ],
+    "date": 1775336400000
+  },
+  {
+    "id": 86,
+    "description": "ЖКХ апрель",
+    "amount": 3900,
+    "category": "ЖКХ",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1775595600000
+  },
+  {
+    "id": 87,
+    "description": "Продукты ВкусВилл",
+    "amount": 3100,
+    "category": "Продукты",
+    "rate": "good",
+    "tags": [
+      "дом"
+    ],
+    "date": 1775682000000
+  },
+  {
+    "id": 88,
+    "description": "Netflix",
+    "amount": 799,
+    "category": "Подписки",
+    "rate": "ok",
+    "tags": [
+      "дом",
+      "развлечения"
+    ],
+    "date": 1775854800000
+  },
+  {
+    "id": 89,
+    "description": "Обед на работе",
+    "amount": 450,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "работа"
+    ],
+    "date": 1776114000000
+  },
+  {
+    "id": 90,
+    "description": "Спортзал апрель",
+    "amount": 3500,
+    "category": "Здоровье",
+    "rate": "good",
+    "tags": [
+      "спорт",
+      "личное"
+    ],
+    "date": 1776200400000
+  },
+  {
+    "id": 91,
+    "description": "Аптека",
+    "amount": 950,
+    "category": "Здоровье",
+    "rate": "ok",
+    "tags": [
+      "личное"
+    ],
+    "date": 1776286800000
+  },
+  {
+    "id": 92,
+    "description": "Лишний алкоголь",
+    "amount": 1400,
+    "category": "Продукты",
+    "rate": "waste",
+    "tags": [],
+    "date": 1776459600000
+  },
+  {
+    "id": 93,
+    "description": "Курс по TypeScript",
+    "amount": 3990,
+    "category": "Образование",
+    "rate": "good",
+    "tags": [
+      "работа",
+      "развитие"
+    ],
+    "date": 1776632400000
+  },
+  {
+    "id": 94,
+    "description": "Кафе с другом",
+    "amount": 720,
+    "category": "Кафе",
+    "rate": "ok",
+    "tags": [
+      "личное"
+    ],
+    "date": 1776718800000
+  },
+  {
+    "id": 95,
+    "description": "Майки и футболки",
+    "amount": 2800,
+    "category": "Одежда",
+    "rate": "ok",
+    "tags": [
+      "личное"
+    ],
+    "date": 1776805200000
+  },
+  {
+    "id": 96,
+    "description": "Такси",
+    "amount": 670,
+    "category": "Транспорт",
+    "rate": "waste",
+    "tags": [],
+    "date": 1776978000000
+  },
+  {
+    "id": 97,
+    "description": "Продукты Пятёрочка",
+    "amount": 1800,
+    "category": "Продукты",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1777064400000
+  },
+  {
+    "id": 98,
+    "description": "Интернет домашний",
+    "amount": 650,
+    "category": "ЖКХ",
+    "rate": "ok",
+    "tags": [
+      "дом"
+    ],
+    "date": 1777150800000
+  },
+  {
+    "id": 99,
+    "description": "Случайная трата интернет-магазин",
+    "amount": 3500,
+    "category": "Разное",
+    "rate": "waste",
+    "tags": [],
+    "date": 1777237200000
+  },
+  {
+    "id": 100,
+    "description": "Книга по продуктивности",
+    "amount": 890,
+    "category": "Образование",
+    "rate": "good",
+    "tags": [
+      "развитие"
+    ],
+    "date": 1777323600000
+  }
+]

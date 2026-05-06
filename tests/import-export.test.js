@@ -3,12 +3,15 @@ import { ImportExport } from '../js/import-export.js'
 
 // Контент который вернёт FileReader в текущем тесте
 let fileReaderContent = '[]'
+let fileReaderShouldError = false
 
-// Синхронный мок FileReader — вызывает onload через микрозадачу
+// Синхронный мок FileReader — вызывает onload или onerror через микрозадачу
 class MockFileReader {
   readAsText(_file) {
     queueMicrotask(() => {
-      if (this.onload) {
+      if (fileReaderShouldError) {
+        if (this.onerror) this.onerror()
+      } else if (this.onload) {
         this.onload({ target: { result: fileReaderContent } })
       }
     })
@@ -66,6 +69,7 @@ beforeEach(() => {
   setupDOM()
   vi.clearAllMocks()
   fileReaderContent = '[]'
+  fileReaderShouldError = false
   URL.createObjectURL = vi.fn(() => 'blob:mock')
   URL.revokeObjectURL = vi.fn()
   db = makeDB()
@@ -168,5 +172,50 @@ describe('ImportExport.importData', () => {
     ie.importData()
     await new Promise((r) => setTimeout(r, 0))
     expect(db.bulkAddTransactions).not.toHaveBeenCalled()
+  })
+
+  it('при невалидном JSON не бросает исключение и не вызывает bulkAdd', async () => {
+    setFile()
+    fileReaderContent = 'not { valid json'
+    expect(() => ie.importData()).not.toThrow()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(db.bulkAddTransactions).not.toHaveBeenCalled()
+  })
+
+  it('при ошибке FileReader не бросает исключение', async () => {
+    setFile()
+    fileReaderShouldError = true
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    expect(() => ie.importData()).not.toThrow()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(consoleSpy).toHaveBeenCalled()
+    consoleSpy.mockRestore()
+  })
+})
+
+describe('ImportExport — обработчик выбора файла', () => {
+  it('при выборе файла отображает имя и добавляет класс has-file', () => {
+    const file = new File(['{}'], 'data.json', { type: 'application/json' })
+    Object.defineProperty(document.getElementById('input-json'), 'files', {
+      value: [file],
+      configurable: true,
+    })
+    document.getElementById('input-json').dispatchEvent(new Event('change'))
+    expect(document.getElementById('file-name-display').textContent).toBe('data.json')
+    expect(document.getElementById('file-upload-zone').classList.contains('has-file')).toBe(true)
+  })
+
+  it('если файл не выбран — очищает отображение и убирает класс has-file', () => {
+    const display = document.getElementById('file-name-display')
+    const zone = document.getElementById('file-upload-zone')
+    display.textContent = 'old.json'
+    zone.classList.add('has-file')
+    Object.defineProperty(document.getElementById('input-json'), 'files', {
+      value: [],
+      configurable: true,
+    })
+    document.getElementById('input-json').dispatchEvent(new Event('change'))
+    expect(display.textContent).toBe('')
+    expect(zone.classList.contains('has-file')).toBe(false)
   })
 })

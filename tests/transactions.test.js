@@ -941,3 +941,17 @@ describe('TransactionManager.setupChartTargetSelect — выбор разбив�
     expect(mgr.singleLoadTransactionsRender).toHaveBeenCalled()
   })
 })
+
+describe('TransactionManager.getAllCategories / getAllTags', () => {
+  it('getAllCategories возвращает allCategories', () => {
+    const mgr = makeManager()
+    mgr.loadAllCategories(sampleTransactions)
+    expect(mgr.getAllCategories()).toBe(mgr.allCategories)
+  })
+
+  it('getAllTags возвращает allTags', () => {
+    const mgr = makeManager()
+    mgr.loadAllTags(sampleTransactions)
+    expect(mgr.getAllTags()).toBe(mgr.allTags)
+  })
+})

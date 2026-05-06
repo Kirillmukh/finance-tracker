@@ -345,3 +345,106 @@ describe('UI.setupModalTagHandling — взаимодействие пользо
     expect(ui.getTagsToRemove().has('lunch')).toBe(false)
   })
 })
+
+describe('UI.setupModalAutocomplete — взаимодействие пользователя', () => {
+  beforeEach(() => {
+    document.body.insertAdjacentHTML('beforeend', `
+      <input id="modal-category-input" />
+      <div id="modal-category-suggestion" style="display: none"></div>
+      <input id="modal-tag-input" />
+      <div id="modal-tag-suggestion" style="display: none"></div>
+      <button id="modal-add-tag">+</button>
+      <div id="modal-tags-list"></div>
+    `)
+  })
+
+  it('ввод совпадающей категории показывает подсказку', () => {
+    ui.setupModalAutocomplete(new Map([['Food', 5]]), new Map(), { tags: [] })
+    const input = document.getElementById('modal-category-input')
+    input.value = 'Fo'
+    input.dispatchEvent(new Event('input'))
+    expect(document.getElementById('modal-category-suggestion').style.display).toBe('block')
+    expect(document.getElementById('modal-category-suggestion').textContent).toBe('Food')
+  })
+
+  it('ввод несовпадающей категории скрывает подсказку', () => {
+    ui.setupModalAutocomplete(new Map([['Food', 5]]), new Map(), { tags: [] })
+    const input = document.getElementById('modal-category-input')
+    input.value = 'xyz'
+    input.dispatchEvent(new Event('input'))
+    expect(document.getElementById('modal-category-suggestion').style.display).toBe('none')
+  })
+
+  it('клик по подсказке категории подставляет значение', () => {
+    ui.setupModalAutocomplete(new Map([['Food', 5]]), new Map(), { tags: [] })
+    const input = document.getElementById('modal-category-input')
+    input.value = 'Fo'
+    input.dispatchEvent(new Event('input'))
+    document.getElementById('modal-category-suggestion').click()
+    expect(input.value).toBe('Food')
+    expect(document.getElementById('modal-category-suggestion').style.display).toBe('none')
+  })
+
+  it('двойной пробел в категории применяет подсказку', () => {
+    ui.setupModalAutocomplete(new Map([['Food', 5]]), new Map(), { tags: [] })
+    const input = document.getElementById('modal-category-input')
+    input.value = 'Fo  '
+    input.dispatchEvent(new Event('input'))
+    expect(input.value).toBe('Food')
+  })
+
+  it('ввод совпадающего тега показывает подсказку', () => {
+    ui.setupModalAutocomplete(new Map(), new Map([['lunch', 3]]), { tags: [] })
+    const input = document.getElementById('modal-tag-input')
+    input.value = 'lu'
+    input.dispatchEvent(new Event('input'))
+    expect(document.getElementById('modal-tag-suggestion').style.display).toBe('block')
+    expect(document.getElementById('modal-tag-suggestion').textContent).toBe('lunch')
+  })
+
+  it('ввод несовпадающего тега скрывает подсказку', () => {
+    ui.setupModalAutocomplete(new Map(), new Map([['lunch', 3]]), { tags: [] })
+    const input = document.getElementById('modal-tag-input')
+    input.value = 'xyz'
+    input.dispatchEvent(new Event('input'))
+    expect(document.getElementById('modal-tag-suggestion').style.display).toBe('none')
+  })
+
+  it('клик по подсказке тега подставляет значение', () => {
+    ui.setupModalAutocomplete(new Map(), new Map([['lunch', 3]]), { tags: [] })
+    const input = document.getElementById('modal-tag-input')
+    input.value = 'lu'
+    input.dispatchEvent(new Event('input'))
+    document.getElementById('modal-tag-suggestion').click()
+    expect(input.value).toBe('lunch')
+    expect(document.getElementById('modal-tag-suggestion').style.display).toBe('none')
+  })
+
+  it('двойной пробел в теге применяет подсказку', () => {
+    ui.setupModalAutocomplete(new Map(), new Map([['lunch', 3]]), { tags: [] })
+    const input = document.getElementById('modal-tag-input')
+    input.value = 'lu  '
+    input.dispatchEvent(new Event('input'))
+    expect(input.value).toBe('lunch')
+  })
+
+  it('тройной пробел в теге нажимает кнопку modal-add-tag', () => {
+    ui.setupModalAutocomplete(new Map(), new Map(), { tags: [] })
+    const addTagBtn = document.getElementById('modal-add-tag')
+    const clickSpy = vi.fn()
+    addTagBtn.addEventListener('click', clickSpy)
+    const input = document.getElementById('modal-tag-input')
+    input.value = 'snack   '
+    input.dispatchEvent(new Event('input'))
+    expect(clickSpy).toHaveBeenCalled()
+  })
+
+  it('теги из transaction.tags исключены из подсказок тега', () => {
+    const allTags = new Map([['existing', 3], ['other', 2]])
+    ui.setupModalAutocomplete(new Map(), allTags, { tags: ['existing'] })
+    const input = document.getElementById('modal-tag-input')
+    input.value = 'ex'
+    input.dispatchEvent(new Event('input'))
+    expect(document.getElementById('modal-tag-suggestion').style.display).toBe('none')
+  })
+})
