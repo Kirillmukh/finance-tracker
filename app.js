@@ -61,6 +61,18 @@ async function initApp() {
   // Demo mode
   setupDemoUI(demo);
 
+  // ?demo=1 entry point from landing — load demo data via window.loadDemo
+  // (which also updates the banner), then strip the query so a refresh
+  // doesn't re-trigger it.
+  const params = new URLSearchParams(location.search);
+  if (params.get('demo') === '1') {
+    history.replaceState(null, '', location.pathname);
+    if (!demo.isDemo()) window.loadDemo();
+  }
+
+  // Mark this visitor as returning so future visits skip landing.html
+  try { localStorage.setItem('hasVisited', '1'); } catch (_) {}
+
   // Legend toggle
   document.getElementById('legend-toggle').addEventListener('click', () => {
     const legend = document.getElementById('chart-legend');

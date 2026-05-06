@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      try {
+        if (!localStorage.getItem('hasVisited') && localStorage.length === 0 && !location.search) {
+          location.replace('landing.html');
+        }
+      } catch (_) {}
+    </script>
     <meta name="description" content="Трекер осознанных финансов: учёт расходов с оценкой, тегами и графиками. Работает офлайн, данные хранятся локально." />
     <meta name="theme-color" content="#4f46e5" />
     <title>Финансовый трекер</title>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Трекер осознанных финансов: учёт расходов с оценкой, тегами и графиками. Работает офлайн, данные хранятся локально." />
+    <meta name="theme-color" content="#4f46e5" />
+    <title>Трекер осознанных финансов</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      body {
+        font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+        margin: 0;
+        background: #f8fafc;
+        color: #0f172a;
+        line-height: 1.5;
+      }
+      .landing {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px 60px;
+      }
+      .hero { text-align: center; padding: 20px 0 40px; }
+      .logo { width: 72px; height: 72px; margin-bottom: 16px; }
+      .hero h1 {
+        font-size: clamp(28px, 5vw, 40px);
+        margin: 0 0 12px;
+        color: #0f172a;
+        font-weight: 700;
+      }
+      .tagline {
+        font-size: clamp(16px, 2.5vw, 18px);
+        color: #475569;
+        max-width: 560px;
+        margin: 0 auto 28px;
+      }
+      .cta-row {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .cta {
+        font: inherit;
+        font-weight: 600;
+        font-size: 16px;
+        padding: 14px 28px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+      }
+      .cta-primary {
+        background: #4f46e5;
+        color: white;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+      }
+      .cta-primary:hover {
+        background: #4338ca;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+      }
+      .cta-secondary {
+        background: white;
+        color: #4f46e5;
+        border: 1px solid #c7d2fe;
+      }
+      .cta-secondary:hover {
+        background: #eef2ff;
+        border-color: #a5b4fc;
+      }
+
+      .features {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 28px;
+        margin: 40px 0;
+      }
+      .features ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+      .features li {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .feature-title {
+        font-weight: 600;
+        color: #4f46e5;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .feature-icon { font-size: 20px; }
+      .feature-text { color: #475569; font-size: 14px; }
+
+      .screenshots { margin: 40px 0; }
+      .screenshots h2 {
+        text-align: center;
+        font-size: 22px;
+        margin: 0 0 24px;
+        color: #0f172a;
+      }
+      .shots {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+      figure {
+        margin: 0;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      figure svg { width: 100%; height: auto; max-width: 220px; }
+      figcaption {
+        font-size: 14px;
+        color: #475569;
+        text-align: center;
+        font-weight: 500;
+      }
+
+      .landing-footer {
+        text-align: center;
+        margin-top: 40px;
+        padding-top: 24px;
+        border-top: 1px solid #e2e8f0;
+        color: #94a3b8;
+        font-size: 14px;
+      }
+      .landing-footer a { color: #4f46e5; text-decoration: none; }
+      .landing-footer a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <main class="landing">
+      <section class="hero">
+        <img class="logo" src="icons/icon.svg" alt="" />
+        <h1>Трекер осознанных финансов</h1>
+        <p class="tagline">
+          Учёт расходов с оценкой осознанности — без регистрации, всё хранится локально в вашем браузере.
+        </p>
+        <div class="cta-row">
+          <button class="cta cta-primary" id="cta-demo" type="button">Попробовать демо</button>
+          <button class="cta cta-secondary" id="cta-fresh" type="button">Начать с нуля</button>
+        </div>
+      </section>
+
+      <section class="features">
+        <ul>
+          <li>
+            <span class="feature-title"><span class="feature-icon">🎯</span>Оценка трат</span>
+            <span class="feature-text">Каждый расход помечается как осознанная, ок или плохая трата. Видите свои паттерны.</span>
+          </li>
+          <li>
+            <span class="feature-title"><span class="feature-icon">🔒</span>Без регистрации</span>
+            <span class="feature-text">Никаких аккаунтов и серверов. Данные хранятся в браузере и не отправляются никуда.</span>
+          </li>
+          <li>
+            <span class="feature-title"><span class="feature-icon">📱</span>PWA-приложение</span>
+            <span class="feature-text">Устанавливается на телефон, работает офлайн. Импорт-экспорт через JSON.</span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="screenshots">
+        <h2>Как это выглядит</h2>
+        <div class="shots">
+          <figure>
+            <!-- TODO: заменить на реальный скриншот графика категорий -->
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="100" cy="100" r="80" fill="#e2e8f0" />
+              <path d="M100 100 L100 20 A80 80 0 0 1 175.5 125.5 Z" fill="#4f46e5" />
+              <path d="M100 100 L175.5 125.5 A80 80 0 0 1 100 180 Z" fill="#818cf8" />
+              <path d="M100 100 L100 180 A80 80 0 0 1 24.5 125.5 Z" fill="#a78bfa" />
+              <path d="M100 100 L24.5 125.5 A80 80 0 0 1 56 33 Z" fill="#c7d2fe" />
+              <circle cx="100" cy="100" r="32" fill="white" />
+            </svg>
+            <figcaption>График по категориям, тегам и оценкам</figcaption>
+          </figure>
+          <figure>
+            <!-- TODO: заменить на реальный скриншот списка транзакций -->
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="10" y="20" width="180" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0" />
+              <rect x="10" y="20" width="4" height="40" fill="#22c55e" />
+              <rect x="22" y="30" width="80" height="8" rx="2" fill="#94a3b8" />
+              <rect x="22" y="44" width="50" height="6" rx="2" fill="#cbd5e1" />
+              <rect x="140" y="32" width="40" height="10" rx="2" fill="#0f172a" />
+              <rect x="10" y="70" width="180" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0" />
+              <rect x="10" y="70" width="4" height="40" fill="#facc15" />
+              <rect x="22" y="80" width="100" height="8" rx="2" fill="#94a3b8" />
+              <rect x="22" y="94" width="60" height="6" rx="2" fill="#cbd5e1" />
+              <rect x="140" y="82" width="40" height="10" rx="2" fill="#0f172a" />
+              <rect x="10" y="120" width="180" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0" />
+              <rect x="10" y="120" width="4" height="40" fill="#ef4444" />
+              <rect x="22" y="130" width="70" height="8" rx="2" fill="#94a3b8" />
+              <rect x="22" y="144" width="55" height="6" rx="2" fill="#cbd5e1" />
+              <rect x="140" y="132" width="40" height="10" rx="2" fill="#0f172a" />
+            </svg>
+            <figcaption>Список с цветовой оценкой осознанности</figcaption>
+          </figure>
+          <figure>
+            <!-- TODO: заменить на реальный скриншот тегов и фильтров -->
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="10" y="20" width="180" height="36" rx="8" fill="white" stroke="#cbd5e1" />
+              <rect x="22" y="34" width="80" height="8" rx="2" fill="#94a3b8" />
+              <path d="M170 36 l6 6 l6 -6" stroke="#64748b" stroke-width="2" fill="none" />
+              <rect x="10" y="78" width="58" height="22" rx="11" fill="#e0e7ff" />
+              <rect x="22" y="86" width="34" height="6" rx="2" fill="#4338ca" />
+              <rect x="74" y="78" width="46" height="22" rx="11" fill="#e0e7ff" />
+              <rect x="84" y="86" width="26" height="6" rx="2" fill="#4338ca" />
+              <rect x="126" y="78" width="64" height="22" rx="11" fill="#e0e7ff" />
+              <rect x="138" y="86" width="40" height="6" rx="2" fill="#4338ca" />
+              <rect x="10" y="116" width="74" height="22" rx="11" fill="#fef3c7" />
+              <rect x="22" y="124" width="50" height="6" rx="2" fill="#b45309" />
+              <rect x="90" y="116" width="58" height="22" rx="11" fill="#dcfce7" />
+              <rect x="102" y="124" width="34" height="6" rx="2" fill="#15803d" />
+              <rect x="10" y="158" width="180" height="20" rx="6" fill="#f1f5f9" />
+              <rect x="22" y="164" width="120" height="8" rx="2" fill="#cbd5e1" />
+            </svg>
+            <figcaption>Теги и фильтры по периоду</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <footer class="landing-footer">
+        <p>Открытый исходный код · <a href="https://github.com/Kirillmukh/finance-tracker" rel="noopener">GitHub</a></p>
+      </footer>
+    </main>
+
+    <script>
+      function go(url) {
+        try { localStorage.setItem('hasVisited', '1'); } catch (_) {}
+        location.assign(url);
+      }
+
+      function lsHasEntries(key) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) return false;
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0;
+        } catch (_) { return false; }
+      }
+
+      function countTransactions() {
+        return new Promise((resolve) => {
+          let req;
+          try { req = indexedDB.open('FinanceTrackerDB'); }
+          catch (_) { return resolve(0); }
+          req.onerror = () => resolve(0);
+          req.onsuccess = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains('transactions')) {
+              db.close();
+              return resolve(0);
+            }
+            try {
+              const tx = db.transaction('transactions', 'readonly');
+              const c = tx.objectStore('transactions').count();
+              c.onsuccess = () => { db.close(); resolve(c.result); };
+              c.onerror = () => { db.close(); resolve(0); };
+            } catch (_) { db.close(); resolve(0); }
+          };
+        });
+      }
+
+      async function hasExistingData() {
+        if (lsHasEntries('tags') || lsHasEntries('categories')) return true;
+        return (await countTransactions()) > 0;
+      }
+
+      document.getElementById('cta-demo').addEventListener('click', async () => {
+        if (await hasExistingData() && !confirm('Загрузка демо очистит существующие данные. Продолжить?')) return;
+        go('index.html?demo=1');
+      });
+      document.getElementById('cta-fresh').addEventListener('click', () => {
+        go('index.html');
+      });
+    </script>
+  </body>
+</html>

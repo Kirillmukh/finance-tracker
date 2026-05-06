@@ -100,6 +100,27 @@ rsvg-convert -w 32  -h 32  icons/icon.svg -o icons/favicon-32.png
 
 **Adding new files to the app shell** — new files under `js/` or new icons must be appended to `APP_SHELL` in `sw.js` AND `VERSION` must be bumped, otherwise they will not be available offline and may not be served at all if a cache-first miss falls through to a failed network fetch.
 
+**Dev iteration on shell files** — when editing any file in `APP_SHELL` and reloading, you will see the OLD cached version because the fetch handler is cache-first. Either bump `VERSION` for every change (annoying), or in DevTools → Application → Service Workers enable **«Update on reload»** for the duration of the session, or click **Unregister** to drop the SW entirely. Plain Cmd+Shift+R does NOT bypass the SW cache.
+
+## Landing page
+
+**Standalone `landing.html`** — separate static page for first-time visitors. Hero, features list, 3 inline-SVG screenshot placeholders (marked `<!-- TODO -->` for replacement with real screenshots), and two CTAs:
+- **«Попробовать демо»** → `index.html?demo=1`. Shows `confirm()` warning only if real data exists: parses `localStorage.tags` / `localStorage.categories` and accepts only objects with at least one key (an empty `{}` written by `Storage.saveTags(new Map())` does NOT count); also opens `FinanceTrackerDB` (no version → never triggers upgrade, returns 0 if the `transactions` store is missing) and counts the `transactions` store. UI prefs alone (chartTarget, currentPage, etc.) do NOT trigger the warning.
+- **«Начать с нуля»** → `index.html`.
+
+Both CTAs set `localStorage.hasVisited = '1'` before navigating. Self-contained: no module imports, all CSS inline in `<style>`. Linked to `manifest.json` so installing the PWA from landing produces the same installable app as from index.
+
+**First-visit redirect** — inline `<script>` in `index.html` `<head>` (placed before the stylesheet to prevent flash) redirects to `landing.html` when ALL of these hold:
+- `localStorage.hasVisited` is missing
+- `localStorage.length === 0` — proxy for "no app data ever stored", protects existing users from being sent to landing on deploy
+- `location.search` is empty — intentional entry like `?demo=1` skips the redirect
+
+The flag is read/written via raw `localStorage` (NOT through the `Storage` module) because this script runs before any imports. For the same reason, `landing.html` sets the flag directly. `app.js` also sets `hasVisited='1'` unconditionally at the end of `initApp` so any user who reaches the app once is permanently marked.
+
+**`?demo=1` entry point** — handled in `app.js` after `setupDemoUI(demo)`: if `URLSearchParams.get('demo') === '1'`, calls `window.loadDemo()` (which loads + updates banner) and strips the query via `history.replaceState` so a refresh doesn't re-trigger. Uses `window.loadDemo` (not `demo.loadDemoData()` directly) because the global wrapper from `setupDemoUI` also updates the banner visibility.
+
+`landing.html` is in `APP_SHELL` (`sw.js`) — bump `VERSION` when editing it.
+
 ## CSS / UI conventions
 
 **Form validation** — uses `:user-invalid` (not `:invalid`) so red borders only appear after the user has interacted with a field. `:invalid` fires immediately on page load for empty `required` fields, which looks broken.

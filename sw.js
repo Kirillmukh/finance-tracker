@@ -1,10 +1,11 @@
 // Bump VERSION whenever app shell files change to invalidate clients' caches.
-const VERSION = 'v1';
+const VERSION = 'v3';
 const CACHE_NAME = `finance-tracker-${VERSION}`;
 
 const APP_SHELL = [
   './',
   './index.html',
+  './landing.html',
   './styles.css',
   './manifest.json',
   './app.js',
