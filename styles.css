@@ -284,6 +284,13 @@ body {
 #export-status {
   margin-top: 10px;
   font-size: 14px;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+#import-status.error,
+#export-status.error {
+  color: #c0392b;
 }
 
 .modal {
