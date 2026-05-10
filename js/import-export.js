@@ -35,7 +35,7 @@ export class ImportExport {
   exportData() {
     this.db.readOnlyTransaction([
       (transactions) => {
-        const json = JSON.stringify(transactions);
+        const json = JSON.stringify({ transactions });
         const blob = new Blob([json], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -60,15 +60,19 @@ export class ImportExport {
     reader.onload = (e) => {
       try {
         const jsonData = JSON.parse(e.target.result);
-        if (Array.isArray(jsonData)) {
+        // Поддерживаем два формата: новый { transactions: [...] } и старый [...]
+        const transactions = Array.isArray(jsonData)
+          ? jsonData
+          : (jsonData && Array.isArray(jsonData.transactions) ? jsonData.transactions : null);
+        if (transactions) {
           this.db.clearAllTransactions(() => {
             Storage.clearTags();
             Storage.clearCategories();
-            this.db.bulkAddTransactions(jsonData, () => {
+            this.db.bulkAddTransactions(transactions, () => {
               this.transactionManager.singleLoadTransactionsRender();
               this.db.readOnlyTransaction([
-                (transactions) => this.transactionManager.loadAllCategories(transactions),
-                (transactions) => this.transactionManager.loadAllTags(transactions)
+                (txs) => this.transactionManager.loadAllCategories(txs),
+                (txs) => this.transactionManager.loadAllTags(txs)
               ]);
             });
           });

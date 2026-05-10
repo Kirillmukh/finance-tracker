@@ -1,6 +1,25 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ImportExport } from '../js/import-export.js'
 
+// jsdom localStorage Proxy не всегда корректно обрабатывает delete — стабим простым моком
+function createLocalStorageMock() {
+  const store = {}
+  return new Proxy(store, {
+    get(target, prop) {
+      if (prop === 'removeItem') return (k) => { delete target[k] }
+      return Object.prototype.hasOwnProperty.call(target, prop) ? target[prop] : undefined
+    },
+    set(target, prop, value) {
+      target[prop] = value
+      return true
+    },
+    deleteProperty(target, prop) {
+      delete target[prop]
+      return true
+    },
+  })
+}
+
 // Контент который вернёт FileReader в текущем тесте
 let fileReaderContent = '[]'
 let fileReaderShouldError = false
@@ -66,6 +85,7 @@ function setFile() {
 let db, manager, ie
 
 beforeEach(() => {
+  vi.stubGlobal('localStorage', createLocalStorageMock())
   setupDOM()
   vi.clearAllMocks()
   fileReaderContent = '[]'
@@ -117,6 +137,23 @@ describe('ImportExport.exportData', () => {
     ie.exportData()
     expect(downloadName).toMatch(/^\d{2}\.\d{2}\.\d{4}\.json$/)
   })
+
+  it('экспортирует JSON в формате { transactions: [...] }', () => {
+    const txs = [{ id: 1, description: 'X', amount: 10, category: 'A', rate: 'ok', tags: [], date: 1 }]
+    db = makeDB(txs)
+    manager = makeTransactionManager()
+    ie = new ImportExport(db, manager)
+    let captured = null
+    const origBlob = global.Blob
+    global.Blob = vi.fn(function (parts) {
+      captured = parts[0]
+      return new origBlob(parts)
+    })
+    ie.exportData()
+    global.Blob = origBlob
+    const parsed = JSON.parse(captured)
+    expect(parsed).toEqual({ transactions: txs })
+  })
 })
 
 describe('ImportExport.importData', () => {
@@ -166,9 +203,39 @@ describe('ImportExport.importData', () => {
     expect(manager.singleLoadTransactionsRender).toHaveBeenCalled()
   })
 
-  it('не вызывает bulkAdd если JSON не является массивом', async () => {
+  it('не вызывает bulkAdd если JSON не массив и не объект с transactions', async () => {
     setFile()
     fileReaderContent = JSON.stringify({ invalid: true })
+    ie.importData()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(db.bulkAddTransactions).not.toHaveBeenCalled()
+  })
+
+  it('импортирует новый формат { transactions: [...] }', async () => {
+    setFile()
+    const tx = { description: 'New', amount: 50, category: 'A', rate: 'ok', tags: [], date: 1 }
+    fileReaderContent = JSON.stringify({ transactions: [tx] })
+    ie.importData()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(db.bulkAddTransactions).toHaveBeenCalled()
+    const [txs] = db.bulkAddTransactions.mock.calls[0]
+    expect(txs).toEqual([tx])
+  })
+
+  it('обратная совместимость: импортирует старый формат [...] без обёртки', async () => {
+    setFile()
+    const tx = { description: 'Old', amount: 50, category: 'A', rate: 'ok', tags: [], date: 1 }
+    fileReaderContent = JSON.stringify([tx])
+    ie.importData()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(db.bulkAddTransactions).toHaveBeenCalled()
+    const [txs] = db.bulkAddTransactions.mock.calls[0]
+    expect(txs).toEqual([tx])
+  })
+
+  it('не вызывает bulkAdd если transactions внутри объекта не массив', async () => {
+    setFile()
+    fileReaderContent = JSON.stringify({ transactions: { foo: 1 } })
     ie.importData()
     await new Promise((r) => setTimeout(r, 0))
     expect(db.bulkAddTransactions).not.toHaveBeenCalled()

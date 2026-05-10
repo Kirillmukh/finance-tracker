@@ -17,8 +17,12 @@ export class Demo {
         if (!response.ok) throw new Error('Failed to fetch demo data');
         return response.json();
       })
-      .then((transactions) => {
-        if (!Array.isArray(transactions)) throw new Error('Demo data is not an array');
+      .then((data) => {
+        // Поддерживаем оба формата: { transactions: [...] } и старый [...]
+        const transactions = Array.isArray(data)
+          ? data
+          : (data && Array.isArray(data.transactions) ? data.transactions : null);
+        if (!transactions) throw new Error('Demo data has no transactions array');
         return new Promise((resolve) => {
           this.db.clearAllTransactions(() => {
             Storage.clearTags();

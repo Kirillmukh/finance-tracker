@@ -128,12 +128,26 @@ describe('Demo.loadDemoData', () => {
     await expect(demo.loadDemoData()).rejects.toThrow()
   })
 
-  it('бросает ошибку, если ответ не массив', async () => {
+  it('бросает ошибку, если в ответе нет массива transactions', async () => {
     global.fetch = vi.fn(() =>
       Promise.resolve({ ok: true, json: () => Promise.resolve({ invalid: true }) })
     )
     const demo = new Demo(makeDB(), makeManager())
     await expect(demo.loadDemoData()).rejects.toThrow()
+  })
+
+  it('принимает новый формат { transactions: [...] }', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve({ transactions: sampleDemo }) })
+    )
+    const db = makeDB()
+    const demo = new Demo(db, makeManager())
+    await demo.loadDemoData()
+    expect(db.bulkAddTransactions).toHaveBeenCalled()
+    const [added] = db.bulkAddTransactions.mock.calls[0]
+    expect(added).toHaveLength(2)
+    expect(added[0].description).toBe('A')
+    added.forEach((t) => expect(t).not.toHaveProperty('id'))
   })
 })
 
