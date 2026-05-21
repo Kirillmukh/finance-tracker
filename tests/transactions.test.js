@@ -744,6 +744,44 @@ describe('TransactionManager.setupLimitSelect — выбор периода', ()
     expect(document.getElementById('transactions-limit').querySelector('option[value="default-tag"]')).toBeNull()
   })
 
+  it('выбор "custom" заполняет поле конечной даты сегодняшним числом если оно пустое', () => {
+    setupLimitDOM()
+    const mgr = makeManagerForLimit()
+    mgr.setupLimitSelect()
+    const select = document.getElementById('transactions-limit')
+    select.value = 'custom'
+    select.dispatchEvent(new Event('change'))
+    const today = new Date().toISOString().split('T')[0]
+    expect(document.getElementById('custom-end-date').value).toBe(today)
+  })
+
+  it('выбор "custom" не перезаписывает конечную дату если она уже задана', () => {
+    setupLimitDOM()
+    document.getElementById('custom-end-date').value = '2024-01-15'
+    const mgr = makeManagerForLimit()
+    mgr.setupLimitSelect()
+    const select = document.getElementById('transactions-limit')
+    select.value = 'custom'
+    select.dispatchEvent(new Event('change'))
+    expect(document.getElementById('custom-end-date').value).toBe('2024-01-15')
+  })
+
+  it('при начальном значении "custom" и пустой конечной дате — заполняет сегодняшней датой', () => {
+    setupLimitDOM()
+    const mgr = makeManagerForLimit('custom')
+    mgr.setupLimitSelect()
+    const today = new Date().toISOString().split('T')[0]
+    expect(document.getElementById('custom-end-date').value).toBe(today)
+  })
+
+  it('при начальном значении "custom" и уже заполненной конечной дате — не меняет её', () => {
+    setupLimitDOM()
+    document.getElementById('custom-end-date').value = '2024-06-01'
+    const mgr = makeManagerForLimit('custom')
+    mgr.setupLimitSelect()
+    expect(document.getElementById('custom-end-date').value).toBe('2024-06-01')
+  })
+
   it('если лимит "default-tag" но тег не задан — сбрасывается на "all"', () => {
     setupLimitDOM()
     Storage.getDefaultTag.mockReturnValue('')

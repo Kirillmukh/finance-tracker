@@ -443,6 +443,9 @@ export class TransactionManager {
     // Show/hide custom period inputs based on initial value
     if (this.limit === "custom") {
       customPeriodInputs.style.display = "flex";
+      if (!endDateInput.value) {
+        endDateInput.value = new Date().toISOString().split('T')[0];
+      }
     }
     
     transactionLimitSelect.addEventListener("change", (event) => {
@@ -453,6 +456,9 @@ export class TransactionManager {
       // Show/hide custom period inputs
       if (value === "custom") {
         customPeriodInputs.style.display = "flex";
+        if (!endDateInput.value) {
+          endDateInput.value = new Date().toISOString().split('T')[0];
+        }
       } else {
         customPeriodInputs.style.display = "none";
         this.singleLoadTransactionsRender();
