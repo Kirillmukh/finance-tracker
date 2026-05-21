@@ -660,6 +660,7 @@ button:disabled {
 
 #custom-period-inputs input[type="date"] {
   width: 100%;
+  box-sizing: border-box;
 }
 
 .transaction-li {
