@@ -154,9 +154,9 @@ export class UI {
         <div class="suggestion" style="display: none" id="modal-category-suggestion"></div>
         <strong>Категория</strong> <input id="modal-category-input" value="${transaction.category}"><br>
         <strong>Трата</strong> <select name="rate" id="modal-rate-select">
-          <option value="waste">плохая</option>
-          <option value="ok">ок</option>
-          <option value="good">осознанная</option>
+          <option value="waste">Плохая</option>
+          <option value="ok">Ок</option>
+          <option value="good">Осознанная</option>
         </select>
         <div><strong>Теги</strong><br>
         <div class="suggestion" style="display: none" id="modal-tag-suggestion"></div>

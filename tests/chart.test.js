@@ -123,9 +123,9 @@ describe('updateChartForRates', () => {
     global.Chart.getChart = vi.fn(() => mockChartInstance)
     const chartObj = { waste: 100, ok: 200, good: 50 }
     updateChartForRates(chartObj)
-    expect(mockChartInstance.data.labels).toContain('плохая')
-    expect(mockChartInstance.data.labels).toContain('ок')
-    expect(mockChartInstance.data.labels).toContain('осознанная')
+    expect(mockChartInstance.data.labels).toContain('Плохая')
+    expect(mockChartInstance.data.labels).toContain('Ок')
+    expect(mockChartInstance.data.labels).toContain('Осознанная')
   })
 
   it('устанавливает цвета соответствующие рейтингу', () => {

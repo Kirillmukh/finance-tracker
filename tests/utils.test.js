@@ -25,6 +25,12 @@ describe('RATES', () => {
       expect(typeof value[1]).toBe('string') // цвет
     })
   })
+
+  it('метки начинаются с заглавной буквы', () => {
+    expect(RATES.get('waste')[0]).toBe('Плохая')
+    expect(RATES.get('ok')[0]).toBe('Ок')
+    expect(RATES.get('good')[0]).toBe('Осознанная')
+  })
 })
 
 describe('countMapInc', () => {

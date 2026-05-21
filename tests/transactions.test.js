@@ -135,8 +135,8 @@ describe('TransactionManager.updateBalanceWithHiddenCategories', () => {
     const mgr = makeManager()
     mgr.currentTransactions = sampleTransactions
     mgr.chartTarget = 'rate'
-    // RATES.get('waste')[0] === 'плохая'
-    getHiddenCategories.mockReturnValue(new Set(['плохая']))
+    // RATES.get('waste')[0] === 'Плохая'
+    getHiddenCategories.mockReturnValue(new Set(['Плохая']))
     mgr.updateBalanceWithHiddenCategories()
     // Исключаем waste=200, остаётся ok=100+50=150
     expect(document.getElementById('balance').textContent).toBe('150')
@@ -389,9 +389,9 @@ describe('TransactionManager.saveTransaction — сохранение измен
       <input id="modal-amount-input" type="number" value="${tx.amount}">
       <input id="modal-category-input" value="${tx.category}">
       <select id="modal-rate-select">
-        <option value="waste">плохая</option>
-        <option value="ok" selected>ок</option>
-        <option value="good">осознанная</option>
+        <option value="waste">Плохая</option>
+        <option value="ok" selected>Ок</option>
+        <option value="good">Осознанная</option>
       </select>
       <input type="date" id="modal-date-input" value="2024-03-15">
       <input type="time" id="modal-time-input" value="10:30">
