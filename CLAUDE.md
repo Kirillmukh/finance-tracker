@@ -25,7 +25,7 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 | File | Responsibility |
 |------|---------------|
 | `js/db.js` | IndexedDB abstraction (store: `transactions`, index: `date_idx`) |
-| `js/storage.js` | `localStorage` for UI prefs (categories, tags, chart target, current page, default tag, demo mode flag) |
+| `js/storage.js` | `localStorage` for UI prefs (categories, tags, chart target, current page, default tag, demo mode flag, theme) |
 | `js/transactions.js` | Central orchestrator — CRUD, filtering, grouping, period logic |
 | `js/ui.js` | DOM rendering, form management, tag chips, autocomplete display |
 | `js/modal.js` | Modal open/close with injected content |
@@ -58,6 +58,8 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 **Rename tag** — `#rename-tag-section` on the settings page. Two inputs: current tag (with autocomplete from `allTags`) and replacement (no trim, so leading spaces are valid tag names). After typing a valid current tag the UI fetches and shows transaction count + total amount via `TransactionManager.getTagStats()`. A warning appears if the replacement tag already exists (tags will be merged). The rename is performed by `TransactionManager.renameTag(oldTag, newTag, cb)` which updates every matching transaction in IndexedDB one by one, then updates `allTags` in memory and `localStorage`, and calls `singleLoadTransactionsRender`. The UI logic is isolated in `js/rename-tag.js` and called from `app.js` via `setupRenameTagUI(transactionManager, allTags)`.
 
 Settings UI lives on the **"Настройки"** page (`#export-page`) alongside export/import controls.
+
+**Dark theme** — three-way selector (`#theme-select` in `#settings-section`): `system` (default), `light`, `dark`. The choice is persisted via `Storage.getTheme/setTheme` (`localStorage.theme`). Switching sets `data-theme="dark"` / `data-theme="light"` on `<html>`, or removes the attribute for `system`. An inline `<script>` in `<head>` (before the stylesheet) reads `localStorage.theme` and pre-applies the attribute to avoid flash of wrong theme on load. The CSS uses `:root` custom properties for all colors; they are overridden in `html[data-theme="dark"]` and in `@media (prefers-color-scheme: dark) { html:not([data-theme="light"]) }` — the latter handles the "system" option when the OS is in dark mode.
 
 **Transaction list rendering** (`loadTransactions` in `transactions.js`) — each `<li class="transaction-li">` uses a CSS custom property `--rate-color` set inline to the rate's hex color from `RATES`. This drives a colored left border via `border-left: 4px solid var(--rate-color)`. The right column uses class `.transaction-li-right` (`flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end`) to prevent the amount/rate label from wrapping or shifting when descriptions are long. Date group separators are `<li class="date-separator">` inserted between days. Tags are rendered as `<span class="list-tag">` chips. When the list is empty an `<li class="empty-state">` placeholder is shown — and when `Storage.getDemoMode()` is false, the empty state also includes a `#empty-state-demo-btn` whose click handler calls `window.loadDemo()` (set up by `setupDemoUI` in `js/demo.js`).
 

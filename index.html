@@ -9,6 +9,10 @@
           location.replace('landing.html');
         }
       } catch (_) {}
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+      } catch (_) {}
     </script>
     <meta name="description" content="Трекер осознанных финансов: учёт расходов с оценкой, тегами и графиками. Работает офлайн, данные хранятся локально." />
     <meta name="theme-color" content="#4f46e5" />
@@ -83,6 +87,12 @@
         </div>
         <div id="settings-section">
           <h4>Настройки</h4>
+          <label for="theme-select">Тема оформления:</label>
+          <select id="theme-select">
+            <option value="system">Системная</option>
+            <option value="light">Светлая</option>
+            <option value="dark">Тёмная</option>
+          </select>
           <label for="default-tag-input">Тег по умолчанию:</label>
           <div class="rename-tag-field rename-tag-to-row">
             <input type="text" id="default-tag-input" placeholder="Введите тег" />

@@ -43,6 +43,19 @@ async function initApp() {
     ui.initDefaultTag(Storage.getDefaultTag());
   });
 
+  // Theme selector
+  const themeSelect = document.getElementById('theme-select');
+  themeSelect.value = Storage.getTheme();
+  themeSelect.addEventListener('change', () => {
+    const theme = themeSelect.value;
+    Storage.setTheme(theme);
+    if (theme === 'light' || theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', theme);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  });
+
   // Load saved default tag into settings input
   document.getElementById('default-tag-input').value = Storage.getDefaultTag();
 

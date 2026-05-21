@@ -137,6 +137,24 @@ describe('Storage — тег по умолчанию', () => {
   })
 })
 
+describe('Storage — тема', () => {
+  it('getTheme возвращает "system" по умолчанию', () => {
+    expect(Storage.getTheme()).toBe('system')
+  })
+
+  it('setTheme/getTheme: сохраняет и возвращает значение', () => {
+    Storage.setTheme('dark')
+    expect(Storage.getTheme()).toBe('dark')
+  })
+
+  it('поддерживает все допустимые значения темы', () => {
+    for (const val of ['system', 'light', 'dark']) {
+      Storage.setTheme(val)
+      expect(Storage.getTheme()).toBe(val)
+    }
+  })
+})
+
 describe('Storage — режим демо', () => {
   it('getDemoMode возвращает false по умолчанию', () => {
     expect(Storage.getDemoMode()).toBe(false)

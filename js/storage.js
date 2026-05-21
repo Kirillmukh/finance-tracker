@@ -77,4 +77,12 @@ export class Storage {
       delete localStorage.demoMode;
     }
   }
+
+  static getTheme() {
+    return localStorage.theme || "system";
+  }
+
+  static setTheme(theme) {
+    localStorage.theme = theme;
+  }
 }
