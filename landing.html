@@ -10,13 +10,67 @@
     <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <script>
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+      } catch (_) {}
+    </script>
     <style>
       *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --lnd-bg: #f8fafc;
+        --lnd-card: #ffffff;
+        --lnd-text: #0f172a;
+        --lnd-text-sub: #475569;
+        --lnd-text-step: #334155;
+        --lnd-text-muted: #94a3b8;
+        --lnd-border: #e2e8f0;
+        --lnd-btn-sec-bg: #ffffff;
+        --lnd-btn-sec-border: #c7d2fe;
+        --lnd-btn-sec-hover: #eef2ff;
+        --lnd-btn-sec-hover-border: #a5b4fc;
+        --lnd-toggle-bg: #ffffff;
+      }
+
+      html[data-theme="dark"] {
+        --lnd-bg: #0f172a;
+        --lnd-card: #1e293b;
+        --lnd-text: #e2e8f0;
+        --lnd-text-sub: #94a3b8;
+        --lnd-text-step: #cbd5e1;
+        --lnd-text-muted: #64748b;
+        --lnd-border: #334155;
+        --lnd-btn-sec-bg: #1e293b;
+        --lnd-btn-sec-border: #3730a3;
+        --lnd-btn-sec-hover: #1e1b4b;
+        --lnd-btn-sec-hover-border: #4338ca;
+        --lnd-toggle-bg: #1e293b;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        html:not([data-theme="light"]) {
+          --lnd-bg: #0f172a;
+          --lnd-card: #1e293b;
+          --lnd-text: #e2e8f0;
+          --lnd-text-sub: #94a3b8;
+          --lnd-text-step: #cbd5e1;
+          --lnd-text-muted: #64748b;
+          --lnd-border: #334155;
+          --lnd-btn-sec-bg: #1e293b;
+          --lnd-btn-sec-border: #3730a3;
+          --lnd-btn-sec-hover: #1e1b4b;
+          --lnd-btn-sec-hover-border: #4338ca;
+          --lnd-toggle-bg: #1e293b;
+        }
+      }
+
       body {
         font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
         margin: 0;
-        background: #f8fafc;
-        color: #0f172a;
+        background: var(--lnd-bg);
+        color: var(--lnd-text);
         line-height: 1.5;
       }
       .landing {
@@ -29,12 +83,12 @@
       .hero h1 {
         font-size: clamp(28px, 5vw, 40px);
         margin: 0 0 12px;
-        color: #0f172a;
+        color: var(--lnd-text);
         font-weight: 700;
       }
       .tagline {
         font-size: clamp(16px, 2.5vw, 18px);
-        color: #475569;
+        color: var(--lnd-text-sub);
         max-width: 560px;
         margin: 0 auto 28px;
       }
@@ -65,18 +119,18 @@
         box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
       }
       .cta-secondary {
-        background: white;
+        background: var(--lnd-btn-sec-bg);
         color: #4f46e5;
-        border: 1px solid #c7d2fe;
+        border: 1px solid var(--lnd-btn-sec-border);
       }
       .cta-secondary:hover {
-        background: #eef2ff;
-        border-color: #a5b4fc;
+        background: var(--lnd-btn-sec-hover);
+        border-color: var(--lnd-btn-sec-hover-border);
       }
 
       .features {
-        background: white;
-        border: 1px solid #e2e8f0;
+        background: var(--lnd-card);
+        border: 1px solid var(--lnd-border);
         border-radius: 12px;
         padding: 28px;
         margin: 40px 0;
@@ -102,11 +156,11 @@
         gap: 8px;
       }
       .feature-icon { font-size: 20px; }
-      .feature-text { color: #475569; font-size: 14px; }
+      .feature-text { color: var(--lnd-text-sub); font-size: 14px; }
 
       .install-ios {
-        background: white;
-        border: 1px solid #e2e8f0;
+        background: var(--lnd-card);
+        border: 1px solid var(--lnd-border);
         border-radius: 12px;
         padding: 28px;
         margin: 40px 0;
@@ -115,11 +169,11 @@
         text-align: center;
         font-size: 22px;
         margin: 0 0 8px;
-        color: #0f172a;
+        color: var(--lnd-text);
       }
       .install-intro {
         text-align: center;
-        color: #475569;
+        color: var(--lnd-text-sub);
         margin: 0 auto 24px;
         font-size: 15px;
         max-width: 520px;
@@ -152,11 +206,11 @@
         justify-content: center;
       }
       .step-text {
-        color: #334155;
+        color: var(--lnd-text-step);
         font-size: 15px;
         padding-top: 3px;
       }
-      .step-text strong { color: #0f172a; }
+      .step-text strong { color: var(--lnd-text); }
       .inline-icon {
         width: 18px;
         height: 18px;
@@ -169,7 +223,7 @@
         text-align: center;
         font-size: 22px;
         margin: 0 0 24px;
-        color: #0f172a;
+        color: var(--lnd-text);
       }
       .shots {
         display: grid;
@@ -178,8 +232,8 @@
       }
       figure {
         margin: 0;
-        background: white;
-        border: 1px solid #e2e8f0;
+        background: var(--lnd-card);
+        border: 1px solid var(--lnd-border);
         border-radius: 12px;
         padding: 16px;
         display: flex;
@@ -190,7 +244,7 @@
       figure svg { width: 100%; height: auto; max-width: 220px; }
       figcaption {
         font-size: 14px;
-        color: #475569;
+        color: var(--lnd-text-sub);
         text-align: center;
         font-weight: 500;
       }
@@ -199,15 +253,46 @@
         text-align: center;
         margin-top: 40px;
         padding-top: 24px;
-        border-top: 1px solid #e2e8f0;
-        color: #94a3b8;
+        border-top: 1px solid var(--lnd-border);
+        color: var(--lnd-text-muted);
         font-size: 14px;
       }
       .landing-footer a { color: #4f46e5; text-decoration: none; }
       .landing-footer a:hover { text-decoration: underline; }
+
+      .theme-toggle {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--lnd-border);
+        background: var(--lnd-toggle-bg);
+        color: var(--lnd-text-sub);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+        z-index: 100;
+      }
+      .theme-toggle:hover {
+        background: var(--lnd-bg);
+        color: var(--lnd-text);
+        border-color: var(--lnd-text-muted);
+      }
+      .theme-toggle svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
     </style>
   </head>
   <body>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Переключить тему"></button>
+
     <main class="landing">
       <section class="hero">
         <img class="logo" src="icons/icon.svg" alt="" />
@@ -387,6 +472,51 @@
       document.getElementById('cta-fresh').addEventListener('click', () => {
         go('index.html');
       });
+
+      // Theme toggle
+      (function () {
+        var moonIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+        var sunIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+
+        function getEffective() {
+          try {
+            var t = localStorage.getItem('theme');
+            if (t === 'dark') return 'dark';
+            if (t === 'light') return 'light';
+          } catch (_) {}
+          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function updateBtn() {
+          var btn = document.getElementById('theme-toggle');
+          if (!btn) return;
+          if (getEffective() === 'dark') {
+            btn.innerHTML = sunIcon;
+            btn.setAttribute('aria-label', 'Светлая тема');
+            btn.title = 'Светлая тема';
+          } else {
+            btn.innerHTML = moonIcon;
+            btn.setAttribute('aria-label', 'Тёмная тема');
+            btn.title = 'Тёмная тема';
+          }
+        }
+
+        function applyTheme(theme) {
+          if (theme === 'dark' || theme === 'light') {
+            document.documentElement.setAttribute('data-theme', theme);
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
+          try { localStorage.setItem('theme', theme); } catch (_) {}
+          updateBtn();
+        }
+
+        document.getElementById('theme-toggle').addEventListener('click', function () {
+          applyTheme(getEffective() === 'dark' ? 'light' : 'dark');
+        });
+
+        updateBtn();
+      })();
     </script>
   </body>
 </html>

@@ -113,7 +113,7 @@ rsvg-convert -w 32  -h 32  icons/icon.svg -o icons/favicon-32.png
 
 ## Landing page
 
-**Standalone `landing.html`** — separate static page for first-time visitors. Hero, features list, 3 inline-SVG screenshot placeholders (marked `<!-- TODO -->` for replacement with real screenshots), and two CTAs:
+**Standalone `landing.html`** — separate static page for first-time visitors. Self-contained: all CSS inline in `<style>`, no module imports. Hero, features list, 3 inline-SVG screenshot placeholders (marked `<!-- TODO -->` for replacement with real screenshots), and two CTAs:
 - **«Попробовать демо»** → `index.html?demo=1`. Shows `confirm()` warning only if real data exists: parses `localStorage.tags` / `localStorage.categories` and accepts only objects with at least one key (an empty `{}` written by `Storage.saveTags(new Map())` does NOT count); also opens `FinanceTrackerDB` (no version → never triggers upgrade, returns 0 if the `transactions` store is missing) and counts the `transactions` store. UI prefs alone (chartTarget, currentPage, etc.) do NOT trigger the warning.
 - **«Начать с нуля»** → `index.html`.
 
@@ -127,6 +127,12 @@ Both CTAs set `localStorage.hasVisited = '1'` before navigating. Self-contained:
 The flag is read/written via raw `localStorage` (NOT through the `Storage` module) because this script runs before any imports. For the same reason, `landing.html` sets the flag directly. `app.js` also sets `hasVisited='1'` unconditionally at the end of `initApp` so any user who reaches the app once is permanently marked.
 
 **`?demo=1` entry point** — handled in `app.js` after `setupDemoUI(demo)`: if `URLSearchParams.get('demo') === '1'`, calls `window.loadDemo()` (which loads + updates banner) and strips the query via `history.replaceState` so a refresh doesn't re-trigger. Uses `window.loadDemo` (not `demo.loadDemoData()` directly) because the global wrapper from `setupDemoUI` also updates the banner visibility.
+
+**Dark theme on landing** — the landing page shares the same `localStorage.theme` key (`dark` / `light` / anything else = system) as the main app, so theme preference syncs automatically between pages. Implementation details:
+- An inline `<script>` in `<head>` (before `<style>`) reads `localStorage.theme` and pre-applies `data-theme` on `<html>` to prevent flash.
+- All colors in `<style>` use CSS custom properties (`--lnd-*`), overridden in `html[data-theme="dark"]` and `@media (prefers-color-scheme: dark) { html:not([data-theme="light"]) }`.
+- A `position: fixed` toggle button (`#theme-toggle`, top-right corner) shows a sun icon when dark (click → light) and a moon icon when light (click → dark). The IIFE at the end of `<body>` wires it up via `applyTheme()` / `getEffective()` helpers.
+- `getEffective()` returns the stored theme if `'dark'`/`'light'`; otherwise falls back to `window.matchMedia('(prefers-color-scheme: dark)')`.
 
 `landing.html` is in `APP_SHELL` (`sw.js`) — bump `VERSION` when editing it.
 
@@ -166,6 +172,7 @@ npm run test:coverage # coverage report
 | `tests/import-export.test.js` | `js/import-export.js` — FileReader mocked, `localStorage` stubbed via `vi.stubGlobal` (the import flow calls `Storage.clearTags`/`clearCategories`, which use `delete localStorage.tags` — jsdom's native Proxy throws "Cannot convert undefined or null to object" on this in some environments). `Blob` is replaced with a `vi.fn` wrapper in the export-format test to capture the serialized payload. Validation coverage lives in two nested `describe` blocks: **«валидация импорта (полное покрытие)»** uses table-driven `it.each` on `JSON.parse` failures, root-document shape errors, and per-field bad/good values; **«текст причины ошибки»** asserts the exact Russian string returned by `validateTransaction` for every branch (missing field, wrong type per field, bad `rate`, bad `tags[i]` with index). Helper `importPayload(payload)` does `setFile()` + sets `fileReaderContent` + `ie.importData()` + `await flush()` — use it for any new import test instead of duplicating the dance. |
 | `tests/rename-tag.test.js` | `js/rename-tag.js` — DOM with jsdom, TransactionManager mocked |
 | `tests/demo.test.js` | `js/demo.js` — `fetch` stubbed via `global.fetch = vi.fn(...)`, Storage mocked, `confirm` spied via `vi.spyOn(window, 'confirm')` |
+| `tests/landing-theme.test.js` | inline theme logic from `landing.html` — `localStorage` stubbed via `vi.stubGlobal`, `matchMedia` stubbed via `vi.stubGlobal`. Tests cover: pre-application script (sets/skips `data-theme` based on stored value), `getEffective()` (localStorage priority then matchMedia fallback), `applyTheme()` (sets attribute + saves to localStorage), `updateBtn()` (correct icon and `aria-label` per effective theme), toggle click (dark↔light). Logic is replicated inline in the test file since `landing.html` has no importable module. |
 
 **Key mocking patterns:**
 - `localStorage` — `vi.stubGlobal('localStorage', createLocalStorageMock())` (jsdom Proxy rejects direct property writes)
