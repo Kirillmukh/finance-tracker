@@ -113,6 +113,10 @@ describe('app.js — кнопка сохранения тега по умолч�
     select.value = 'all'
     document.getElementById('default-tag-input').value = ''
     vi.clearAllMocks()
+
+    let _savedTag = ''
+    Storage.setDefaultTag.mockImplementation(v => { _savedTag = v })
+    Storage.getDefaultTag.mockImplementation(() => _savedTag)
   })
 
   it('добавляет опцию "default-tag" в select при сохранении нового тега', () => {
@@ -187,6 +191,25 @@ describe('app.js — кнопка сохранения тега по умолч�
     input.value = ''
     btn.click()
 
+    expect(mockTransactionManager.singleLoadTransactionsRender).not.toHaveBeenCalled()
+  })
+
+  it('не трогает select если введённый тег совпадает с уже сохранённым', () => {
+    const input = document.getElementById('default-tag-input')
+    const btn = document.getElementById('default-tag-save-btn')
+    const select = document.getElementById('transactions-limit')
+
+    const option = document.createElement('option')
+    option.value = 'default-tag'
+    option.textContent = 'обед'
+    select.insertBefore(option, select.querySelector('option[value="custom"]'))
+    select.value = 'default-tag'
+
+    Storage.getDefaultTag.mockReturnValueOnce('обед')
+    input.value = 'обед'
+    btn.click()
+
+    expect(select.value).toBe('default-tag')
     expect(mockTransactionManager.singleLoadTransactionsRender).not.toHaveBeenCalled()
   })
 })

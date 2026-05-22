@@ -77,22 +77,25 @@ async function initApp() {
   // Setup default tag save
   document.getElementById('default-tag-save-btn').addEventListener('click', () => {
     const value = document.getElementById('default-tag-input').value.trim();
+    const oldValue = Storage.getDefaultTag();
     Storage.setDefaultTag(value);
 
-    const limitSelect = document.getElementById('transactions-limit');
-    const existing = limitSelect.querySelector('option[value="default-tag"]');
-    const wasDefaultTagSelected = limitSelect.value === 'default-tag';
-    if (existing) existing.remove();
-    if (value) {
-      const option = document.createElement('option');
-      option.value = 'default-tag';
-      option.textContent = value;
-      limitSelect.insertBefore(option, limitSelect.querySelector('option[value="custom"]'));
-    } else if (wasDefaultTagSelected) {
-      limitSelect.value = 'all';
-      Storage.setLimit('all');
-      transactionManager.limit = 'all';
-      transactionManager.singleLoadTransactionsRender();
+    if (value !== oldValue) {
+      const limitSelect = document.getElementById('transactions-limit');
+      const existing = limitSelect.querySelector('option[value="default-tag"]');
+      const wasDefaultTagSelected = limitSelect.value === 'default-tag';
+      if (existing) existing.remove();
+      if (value) {
+        const option = document.createElement('option');
+        option.value = 'default-tag';
+        option.textContent = value;
+        limitSelect.insertBefore(option, limitSelect.querySelector('option[value="custom"]'));
+      } else if (wasDefaultTagSelected) {
+        limitSelect.value = 'all';
+        Storage.setLimit('all');
+        transactionManager.limit = 'all';
+        transactionManager.singleLoadTransactionsRender();
+      }
     }
 
     const status = document.getElementById('default-tag-status');
