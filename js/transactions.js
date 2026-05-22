@@ -406,6 +406,8 @@ export class TransactionManager {
         this.ui.clearTags();
         this.ui.renderTags();
         this.ui.initDefaultTag(Storage.getDefaultTag());
+        const defaultRate = Storage.getDefaultRate();
+        if (defaultRate) document.getElementById('rate-select').value = defaultRate;
       });
 
       countMapInc(this.allCategories, transaction.category);

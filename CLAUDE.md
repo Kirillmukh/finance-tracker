@@ -25,7 +25,7 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 | File | Responsibility |
 |------|---------------|
 | `js/db.js` | IndexedDB abstraction (store: `transactions`, index: `date_idx`) |
-| `js/storage.js` | `localStorage` for UI prefs (categories, tags, chart target, current page, default tag, demo mode flag, theme) |
+| `js/storage.js` | `localStorage` for UI prefs (categories, tags, chart target, current page, default tag, default rate, demo mode flag, theme) |
 | `js/transactions.js` | Central orchestrator — CRUD, filtering, grouping, period logic |
 | `js/ui.js` | DOM rendering, form management, tag chips, autocomplete display |
 | `js/modal.js` | Modal open/close with injected content |
@@ -52,6 +52,13 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
    `initDefaultTag` is idempotent: it skips if the tag is already in `ui.tags` or if the tag is an empty string. The user can remove it for an individual transaction by clicking ×; it is restored on the next page visit.
 
 2. **Period filter** — when a default tag is set, `setupLimitSelect` (in `transactions.js`) dynamically injects an `<option value="default-tag">` into `#transactions-limit` with the tag name as label, inserted before the `custom` option. Selecting it triggers `singleLoadTransactionsRender` to read all transactions and filter to only those whose `tags` array includes the current default tag. If the default tag is later cleared while this option is selected, `singleLoadTransactionsRender` resets `this.limit` to `"all"` and falls through to the normal period logic.
+
+**Default rate** — a single rate stored in `localStorage.defaultRate` via `Storage.getDefaultRate/setDefaultRate`. Empty string means "not set". It is applied in two places:
+
+1. **Pre-selected on the input page** — `applyDefaultRate()` in `app.js` sets `#rate-select` value when the user navigates to the input page (nav click listener) or when the app loads with `page === 'input'`. If no default is set, the HTML default (`ok`) is used.
+2. **Restored after form submit** — in the `db.addTransaction` callback (after `e.target.reset()`), `#rate-select` is set back to the default rate if one is configured.
+
+Configured via `#default-rate-select` in `#settings-section` — a `<select>` that auto-saves on `change` (no save button, like the theme selector). Options: `""` (Не задано — falls back to «Ок»), `waste`, `ok`, `good`.
 
 **Period filter select (`#transactions-limit`)** — values: `all` (default), `day`, `week`, `month`, `year`, `default-tag` (dynamic, only present when a default tag is set), `custom`. The `custom` value reveals `#custom-period-inputs` with start/end date inputs. All other non-`custom` values trigger an immediate `singleLoadTransactionsRender`. The selected value is persisted in `localStorage.limit` via `Storage.getLimit/setLimit`.
 

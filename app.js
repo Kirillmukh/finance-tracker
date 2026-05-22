@@ -35,12 +35,27 @@ async function initApp() {
   // Initialize navigation
   navigation.init();
 
+  // Default rate selector
+  const defaultRateSelect = document.getElementById('default-rate-select');
+  defaultRateSelect.value = Storage.getDefaultRate();
+  defaultRateSelect.addEventListener('change', () => {
+    Storage.setDefaultRate(defaultRateSelect.value);
+  });
+
+  // Apply default rate to form
+  const applyDefaultRate = () => {
+    const rate = Storage.getDefaultRate();
+    document.getElementById('rate-select').value = rate || 'ok';
+  };
+
   // Init default tag on input page open
   if (Storage.getPage() === 'input') {
     ui.initDefaultTag(Storage.getDefaultTag());
+    applyDefaultRate();
   }
   document.querySelector('.nav-item[data-page="input"]').addEventListener('click', () => {
     ui.initDefaultTag(Storage.getDefaultTag());
+    applyDefaultRate();
   });
 
   // Theme selector

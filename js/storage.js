@@ -66,6 +66,18 @@ export class Storage {
     }
   }
 
+  static getDefaultRate() {
+    return localStorage.defaultRate || "";
+  }
+
+  static setDefaultRate(rate) {
+    if (rate) {
+      localStorage.defaultRate = rate;
+    } else {
+      delete localStorage.defaultRate;
+    }
+  }
+
   static getDemoMode() {
     return localStorage.demoMode === "true";
   }

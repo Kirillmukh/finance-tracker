@@ -11,6 +11,7 @@ vi.mock('../js/storage.js', () => ({
     setLimit: vi.fn(),
     setChartTarget: vi.fn(),
     getDefaultTag: vi.fn(() => ''),
+    getDefaultRate: vi.fn(() => ''),
     getDemoMode: vi.fn(() => false),
   },
 }))
@@ -549,7 +550,11 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
         <input id="description" value="Кофе">
         <input id="amount" type="number" value="150">
         <input id="category-input" value="Food">
-        <select id="rate-select"><option value="ok" selected>ок</option></select>
+        <select id="rate-select">
+          <option value="waste">Плохая</option>
+          <option value="ok" selected>Ок</option>
+          <option value="good">Осознанная</option>
+        </select>
         <div id="tags-container"></div>
         <input id="tag-input" value="">
         <div id="tag-suggestion" style="display: none"></div>
@@ -615,6 +620,26 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
     mgr.setupTransactionForm()
     document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
     expect(mgr.ui.initDefaultTag).toHaveBeenCalledWith('еда')
+  })
+
+  it('после submit с defaultRate восстанавливает rate-select в значение по умолчанию', () => {
+    setupFormDOM()
+    Storage.getDefaultRate.mockReturnValue('waste')
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('rate-select').value = 'good'
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+    expect(document.getElementById('rate-select').value).toBe('waste')
+  })
+
+  it('после submit без defaultRate rate-select возвращается к значению "ok"', () => {
+    setupFormDOM()
+    Storage.getDefaultRate.mockReturnValue('')
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('rate-select').value = 'good'
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+    expect(document.getElementById('rate-select').value).toBe('ok')
   })
 
   it('при наличии текста в поле тега кнопка "+" нажимается автоматически', () => {

@@ -137,6 +137,36 @@ describe('Storage — тег по умолчанию', () => {
   })
 })
 
+describe('Storage — rate по умолчанию', () => {
+  it('getDefaultRate возвращает пустую строку по умолчанию', () => {
+    expect(Storage.getDefaultRate()).toBe('')
+  })
+
+  it('setDefaultRate/getDefaultRate: сохраняет и возвращает rate', () => {
+    Storage.setDefaultRate('waste')
+    expect(Storage.getDefaultRate()).toBe('waste')
+  })
+
+  it('setDefaultRate с пустой строкой удаляет rate', () => {
+    Storage.setDefaultRate('ok')
+    Storage.setDefaultRate('')
+    expect(Storage.getDefaultRate()).toBe('')
+  })
+
+  it('setDefaultRate с null удаляет rate', () => {
+    Storage.setDefaultRate('good')
+    Storage.setDefaultRate(null)
+    expect(Storage.getDefaultRate()).toBe('')
+  })
+
+  it('поддерживает все допустимые значения rate', () => {
+    for (const val of ['waste', 'ok', 'good']) {
+      Storage.setDefaultRate(val)
+      expect(Storage.getDefaultRate()).toBe(val)
+    }
+  })
+})
+
 describe('Storage — тема', () => {
   it('getTheme возвращает "system" по умолчанию', () => {
     expect(Storage.getTheme()).toBe('system')
