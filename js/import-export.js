@@ -78,7 +78,12 @@ export class ImportExport {
   exportData() {
     this.db.readOnlyTransaction([
       (transactions) => {
-        const json = JSON.stringify({ transactions });
+        const settings = {
+          defaultTag: Storage.getDefaultTag(),
+          defaultRate: Storage.getDefaultRate(),
+          theme: Storage.getTheme(),
+        };
+        const json = JSON.stringify({ transactions, settings });
         const blob = new Blob([json], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -120,12 +125,13 @@ export class ImportExport {
         return;
       }
 
-      // Поддерживаем два формата: новый { transactions: [...] } и старый [...]
-      const transactions = Array.isArray(jsonData)
-        ? jsonData
-        : (jsonData && Array.isArray(jsonData.transactions) ? jsonData.transactions : null);
-
-      if (!transactions) {
+      let transactions, settings;
+      if (Array.isArray(jsonData)) {
+        transactions = jsonData;
+      } else if (jsonData && typeof jsonData === 'object' && Array.isArray(jsonData.transactions)) {
+        transactions = jsonData.transactions;
+        settings = jsonData.settings;
+      } else {
         setError("Ошибка: неверный формат файла");
         return;
       }
@@ -141,6 +147,45 @@ export class ImportExport {
       this.db.clearAllTransactions(() => {
         Storage.clearTags();
         Storage.clearCategories();
+
+        if (settings && typeof settings === 'object' && !Array.isArray(settings)) {
+          if (typeof settings.defaultTag === 'string') {
+            Storage.setDefaultTag(settings.defaultTag);
+            const tagInput = document.getElementById('default-tag-input');
+            if (tagInput) tagInput.value = settings.defaultTag;
+            const limitSelect = document.getElementById('transactions-limit');
+            if (limitSelect) {
+              const existing = limitSelect.querySelector('option[value="default-tag"]');
+              const wasSelected = limitSelect.value === 'default-tag';
+              if (existing) existing.remove();
+              if (settings.defaultTag) {
+                const opt = document.createElement('option');
+                opt.value = 'default-tag';
+                opt.textContent = settings.defaultTag;
+                limitSelect.insertBefore(opt, limitSelect.querySelector('option[value="custom"]'));
+              } else if (wasSelected) {
+                limitSelect.value = 'all';
+                Storage.setLimit('all');
+              }
+            }
+          }
+          if (settings.defaultRate === '' || ['waste', 'ok', 'good'].includes(settings.defaultRate)) {
+            Storage.setDefaultRate(settings.defaultRate);
+            const rateSelect = document.getElementById('default-rate-select');
+            if (rateSelect) rateSelect.value = settings.defaultRate;
+          }
+          if (['system', 'light', 'dark'].includes(settings.theme)) {
+            Storage.setTheme(settings.theme);
+            if (settings.theme === 'light' || settings.theme === 'dark') {
+              document.documentElement.setAttribute('data-theme', settings.theme);
+            } else {
+              document.documentElement.removeAttribute('data-theme');
+            }
+            const themeSelect = document.getElementById('theme-select');
+            if (themeSelect) themeSelect.value = settings.theme;
+          }
+        }
+
         this.db.bulkAddTransactions(transactions, () => {
           this.transactionManager.singleLoadTransactionsRender();
           this.db.readOnlyTransaction([

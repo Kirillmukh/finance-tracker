@@ -48,6 +48,22 @@ function setupDOM() {
     <span id="file-name-display"></span>
     <div id="export-status"></div>
     <div id="import-status"></div>
+    <select id="theme-select">
+      <option value="system">system</option>
+      <option value="light">light</option>
+      <option value="dark">dark</option>
+    </select>
+    <select id="default-rate-select">
+      <option value=""></option>
+      <option value="waste">waste</option>
+      <option value="ok">ok</option>
+      <option value="good">good</option>
+    </select>
+    <input id="default-tag-input" type="text" />
+    <select id="transactions-limit">
+      <option value="all">all</option>
+      <option value="custom">custom</option>
+    </select>
   `
 }
 
@@ -138,7 +154,7 @@ describe('ImportExport.exportData', () => {
     expect(downloadName).toMatch(/^\d{2}\.\d{2}\.\d{4}\.json$/)
   })
 
-  it('экспортирует JSON в формате { transactions: [...] }', () => {
+  it('экспортирует JSON в формате { transactions: [...], settings: {...} }', () => {
     const txs = [{ id: 1, description: 'X', amount: 10, category: 'A', rate: 'ok', tags: [], date: 1 }]
     db = makeDB(txs)
     manager = makeTransactionManager()
@@ -152,14 +168,36 @@ describe('ImportExport.exportData', () => {
     ie.exportData()
     global.Blob = origBlob
     const parsed = JSON.parse(captured)
-    expect(parsed).toEqual({ transactions: txs })
+    expect(parsed).toMatchObject({ transactions: txs })
+    expect(parsed.settings).toEqual({ defaultTag: '', defaultRate: '', theme: 'system' })
+  })
+
+  it('экспортирует settings с текущими значениями из localStorage', () => {
+    localStorage.defaultTag = 'work'
+    localStorage.defaultRate = 'good'
+    localStorage.theme = 'dark'
+    db = makeDB([])
+    manager = makeTransactionManager()
+    ie = new ImportExport(db, manager)
+    let captured = null
+    const origBlob = global.Blob
+    global.Blob = vi.fn(function (parts) {
+      captured = parts[0]
+      return new origBlob(parts)
+    })
+    ie.exportData()
+    global.Blob = origBlob
+    const parsed = JSON.parse(captured)
+    expect(parsed.settings).toEqual({ defaultTag: 'work', defaultRate: 'good', theme: 'dark' })
   })
 })
 
 describe('ImportExport.importData', () => {
-  const validJSON = JSON.stringify([
-    { description: 'Imported', amount: 300, category: 'Food', rate: 'ok', tags: [], date: 1000 },
-  ])
+  const validJSON = JSON.stringify({
+    transactions: [
+      { description: 'Imported', amount: 300, category: 'Food', rate: 'ok', tags: [], date: 1000 },
+    ],
+  })
 
   it('показывает сообщение если файл не выбран', () => {
     Object.defineProperty(document.getElementById('input-json'), 'files', {
@@ -286,10 +324,12 @@ describe('ImportExport.importData', () => {
 
   it('при некорректной транзакции показывает её позицию и причину, не вызывает bulkAdd', async () => {
     setFile()
-    fileReaderContent = JSON.stringify([
-      { description: 'OK', amount: 100, category: 'A', rate: 'ok', tags: [], date: 1 },
-      { description: 'Bad', amount: 'NaN', category: 'A', rate: 'ok', tags: [], date: 2 },
-    ])
+    fileReaderContent = JSON.stringify({
+      transactions: [
+        { description: 'OK', amount: 100, category: 'A', rate: 'ok', tags: [], date: 1 },
+        { description: 'Bad', amount: 'NaN', category: 'A', rate: 'ok', tags: [], date: 2 },
+      ],
+    })
     ie.importData()
     await new Promise((r) => setTimeout(r, 0))
     const status = document.getElementById('import-status')
@@ -302,9 +342,11 @@ describe('ImportExport.importData', () => {
 
   it('отвергает транзакцию с некорректным rate', async () => {
     setFile()
-    fileReaderContent = JSON.stringify([
-      { description: 'X', amount: 1, category: 'A', rate: 'unknown', tags: [], date: 1 },
-    ])
+    fileReaderContent = JSON.stringify({
+      transactions: [
+        { description: 'X', amount: 1, category: 'A', rate: 'unknown', tags: [], date: 1 },
+      ],
+    })
     ie.importData()
     await new Promise((r) => setTimeout(r, 0))
     expect(db.bulkAddTransactions).not.toHaveBeenCalled()
@@ -312,9 +354,11 @@ describe('ImportExport.importData', () => {
 
   it('отвергает транзакцию с tags, не являющимися массивом', async () => {
     setFile()
-    fileReaderContent = JSON.stringify([
-      { description: 'X', amount: 1, category: 'A', rate: 'ok', tags: 'foo', date: 1 },
-    ])
+    fileReaderContent = JSON.stringify({
+      transactions: [
+        { description: 'X', amount: 1, category: 'A', rate: 'ok', tags: 'foo', date: 1 },
+      ],
+    })
     ie.importData()
     await new Promise((r) => setTimeout(r, 0))
     expect(db.bulkAddTransactions).not.toHaveBeenCalled()
@@ -322,9 +366,11 @@ describe('ImportExport.importData', () => {
 
   it('отвергает транзакцию с отсутствующим полем date', async () => {
     setFile()
-    fileReaderContent = JSON.stringify([
-      { description: 'X', amount: 1, category: 'A', rate: 'ok', tags: [] },
-    ])
+    fileReaderContent = JSON.stringify({
+      transactions: [
+        { description: 'X', amount: 1, category: 'A', rate: 'ok', tags: [] },
+      ],
+    })
     ie.importData()
     await new Promise((r) => setTimeout(r, 0))
     expect(db.bulkAddTransactions).not.toHaveBeenCalled()
@@ -332,7 +378,7 @@ describe('ImportExport.importData', () => {
 
   it('пустой массив транзакций считается валидным', async () => {
     setFile()
-    fileReaderContent = JSON.stringify([])
+    fileReaderContent = JSON.stringify({ transactions: [] })
     ie.importData()
     await new Promise((r) => setTimeout(r, 0))
     expect(db.bulkAddTransactions).toHaveBeenCalled()
@@ -662,6 +708,114 @@ describe('ImportExport.importData', () => {
       it('Unicode в description — успех', async () => {
         await importPayload([validTx({ description: 'Кофе ☕' })])
         expect(db.bulkAddTransactions).toHaveBeenCalled()
+      })
+    })
+
+    describe('импорт settings', () => {
+      it('settings отсутствует — localStorage не изменяется, импорт успешен', async () => {
+        await importPayload({ transactions: [] })
+        expect(localStorage.defaultTag).toBeUndefined()
+        expect(localStorage.defaultRate).toBeUndefined()
+        expect(document.getElementById('import-status').textContent).toBe('Успешно импортировано!')
+      })
+
+      it('settings с defaultTag сохраняет тег в localStorage и обновляет UI', async () => {
+        await importPayload({ transactions: [], settings: { defaultTag: 'work' } })
+        expect(localStorage.defaultTag).toBe('work')
+        expect(document.getElementById('default-tag-input').value).toBe('work')
+        const opt = document.querySelector('#transactions-limit option[value="default-tag"]')
+        expect(opt).not.toBeNull()
+        expect(opt.textContent).toBe('work')
+      })
+
+      it('settings с пустым defaultTag убирает опцию default-tag из #transactions-limit', async () => {
+        const limitSelect = document.getElementById('transactions-limit')
+        const opt = document.createElement('option')
+        opt.value = 'default-tag'
+        opt.textContent = 'old'
+        limitSelect.insertBefore(opt, limitSelect.querySelector('option[value="custom"]'))
+        await importPayload({ transactions: [], settings: { defaultTag: '' } })
+        expect(document.querySelector('#transactions-limit option[value="default-tag"]')).toBeNull()
+      })
+
+      it('settings с пустым defaultTag при активном default-tag сбрасывает лимит на all', async () => {
+        const limitSelect = document.getElementById('transactions-limit')
+        const opt = document.createElement('option')
+        opt.value = 'default-tag'
+        opt.textContent = 'old'
+        limitSelect.insertBefore(opt, limitSelect.querySelector('option[value="custom"]'))
+        limitSelect.value = 'default-tag'
+        await importPayload({ transactions: [], settings: { defaultTag: '' } })
+        expect(limitSelect.value).toBe('all')
+      })
+
+      it('settings с defaultRate сохраняет rate в localStorage и обновляет #default-rate-select', async () => {
+        await importPayload({ transactions: [], settings: { defaultRate: 'good' } })
+        expect(localStorage.defaultRate).toBe('good')
+        expect(document.getElementById('default-rate-select').value).toBe('good')
+      })
+
+      it('settings с defaultRate="" удаляет rate из localStorage', async () => {
+        localStorage.defaultRate = 'waste'
+        await importPayload({ transactions: [], settings: { defaultRate: '' } })
+        expect(localStorage.defaultRate).toBeUndefined()
+      })
+
+      it('settings с theme="dark" сохраняет тему, ставит data-theme и обновляет #theme-select', async () => {
+        await importPayload({ transactions: [], settings: { theme: 'dark' } })
+        expect(localStorage.theme).toBe('dark')
+        expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+        expect(document.getElementById('theme-select').value).toBe('dark')
+      })
+
+      it('settings с theme="light" ставит data-theme="light" и обновляет #theme-select', async () => {
+        await importPayload({ transactions: [], settings: { theme: 'light' } })
+        expect(document.documentElement.getAttribute('data-theme')).toBe('light')
+        expect(document.getElementById('theme-select').value).toBe('light')
+      })
+
+      it('settings с theme="system" убирает data-theme с html и обновляет #theme-select', async () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        await importPayload({ transactions: [], settings: { theme: 'system' } })
+        expect(document.documentElement.hasAttribute('data-theme')).toBe(false)
+        expect(document.getElementById('theme-select').value).toBe('system')
+      })
+
+      it('settings с неизвестным theme игнорируется', async () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        await importPayload({ transactions: [], settings: { theme: 'custom' } })
+        expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+      })
+
+      it('settings с неизвестным defaultRate игнорируется', async () => {
+        await importPayload({ transactions: [], settings: { defaultRate: 'unknown' } })
+        expect(localStorage.defaultRate).toBeUndefined()
+      })
+
+      it('settings с defaultTag не строкой игнорируется', async () => {
+        await importPayload({ transactions: [], settings: { defaultTag: 123 } })
+        expect(localStorage.defaultTag).toBeUndefined()
+      })
+
+      it('settings не объект — игнорируется, импорт не прерывается', async () => {
+        await importPayload({ transactions: [], settings: 'invalid' })
+        expect(db.bulkAddTransactions).toHaveBeenCalled()
+        expect(document.getElementById('import-status').textContent).toBe('Успешно импортировано!')
+      })
+
+      it('settings массив — игнорируется, импорт не прерывается', async () => {
+        await importPayload({ transactions: [], settings: ['dark'] })
+        expect(db.bulkAddTransactions).toHaveBeenCalled()
+      })
+
+      it('все три поля settings применяются вместе', async () => {
+        await importPayload({
+          transactions: [],
+          settings: { defaultTag: 'home', defaultRate: 'waste', theme: 'dark' },
+        })
+        expect(localStorage.defaultTag).toBe('home')
+        expect(localStorage.defaultRate).toBe('waste')
+        expect(localStorage.theme).toBe('dark')
       })
     })
 
