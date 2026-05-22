@@ -53,6 +53,8 @@ Deployment to GitHub Pages is automated via `.github/workflows/deploy.yml` on pu
 
 2. **Period filter** — when a default tag is set, `setupLimitSelect` (in `transactions.js`) dynamically injects an `<option value="default-tag">` into `#transactions-limit` with the tag name as label, inserted before the `custom` option. Selecting it triggers `singleLoadTransactionsRender` to read all transactions and filter to only those whose `tags` array includes the current default tag. If the default tag is later cleared while this option is selected, `singleLoadTransactionsRender` resets `this.limit` to `"all"` and falls through to the normal period logic.
 
+**Live update of `#transactions-limit`** — the `#default-tag-save-btn` click handler in `app.js` also updates the `#transactions-limit` select immediately without page reload: saves the current `limitSelect.value === 'default-tag'` state **before** removing the old option (removing a selected option changes `.value`, so the check must happen first), then adds/removes the option. If the tag was cleared while `default-tag` was the active selection, the select resets to `all` and `singleLoadTransactionsRender` is called.
+
 **Default rate** — a single rate stored in `localStorage.defaultRate` via `Storage.getDefaultRate/setDefaultRate`. Empty string means "not set". It is applied in two places:
 
 1. **Pre-selected on the input page** — `applyDefaultRate()` in `app.js` sets `#rate-select` value when the user navigates to the input page (nav click listener) or when the app loads with `page === 'input'`. If no default is set, the HTML default (`ok`) is used.
@@ -173,6 +175,7 @@ npm run test:coverage # coverage report
 | `tests/rename-tag.test.js` | `js/rename-tag.js` — DOM with jsdom, TransactionManager mocked |
 | `tests/demo.test.js` | `js/demo.js` — `fetch` stubbed via `global.fetch = vi.fn(...)`, Storage mocked, `confirm` spied via `vi.spyOn(window, 'confirm')` |
 | `tests/landing-theme.test.js` | inline theme logic from `landing.html` — `localStorage` stubbed via `vi.stubGlobal`, `matchMedia` stubbed via `vi.stubGlobal`. Tests cover: pre-application script (sets/skips `data-theme` based on stored value), `getEffective()` (localStorage priority then matchMedia fallback), `applyTheme()` (sets attribute + saves to localStorage), `updateBtn()` (correct icon and `aria-label` per effective theme), toggle click (dark↔light). Logic is replicated inline in the test file since `landing.html` has no importable module. |
+| `tests/app.test.js` | `app.js` entry point — all module imports mocked via `vi.mock`, minimal DOM set up in `beforeAll`, `app.js` imported dynamically once (triggers `initApp()`), then `await new Promise(resolve => setTimeout(resolve, 0))` flushes the async init. Tests cover `#default-tag-save-btn` behavior: adds/replaces/removes `option[value="default-tag"]` in `#transactions-limit` and resets the select + calls `singleLoadTransactionsRender` when the active `default-tag` selection is cleared. |
 
 **Key mocking patterns:**
 - `localStorage` — `vi.stubGlobal('localStorage', createLocalStorageMock())` (jsdom Proxy rejects direct property writes)

@@ -78,6 +78,23 @@ async function initApp() {
   document.getElementById('default-tag-save-btn').addEventListener('click', () => {
     const value = document.getElementById('default-tag-input').value.trim();
     Storage.setDefaultTag(value);
+
+    const limitSelect = document.getElementById('transactions-limit');
+    const existing = limitSelect.querySelector('option[value="default-tag"]');
+    const wasDefaultTagSelected = limitSelect.value === 'default-tag';
+    if (existing) existing.remove();
+    if (value) {
+      const option = document.createElement('option');
+      option.value = 'default-tag';
+      option.textContent = value;
+      limitSelect.insertBefore(option, limitSelect.querySelector('option[value="custom"]'));
+    } else if (wasDefaultTagSelected) {
+      limitSelect.value = 'all';
+      Storage.setLimit('all');
+      transactionManager.limit = 'all';
+      transactionManager.singleLoadTransactionsRender();
+    }
+
     const status = document.getElementById('default-tag-status');
     status.textContent = value ? `Тег "${value}" сохранён` : 'Тег по умолчанию удалён';
     setTimeout(() => { status.textContent = ''; }, 2000);
