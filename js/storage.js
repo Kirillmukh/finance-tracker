@@ -67,7 +67,7 @@ export class Storage {
   }
 
   static getDefaultRate() {
-    return localStorage.defaultRate || "";
+    return localStorage.defaultRate || "ok";
   }
 
   static setDefaultRate(rate) {

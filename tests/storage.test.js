@@ -138,8 +138,8 @@ describe('Storage — тег по умолчанию', () => {
 })
 
 describe('Storage — rate по умолчанию', () => {
-  it('getDefaultRate возвращает пустую строку по умолчанию', () => {
-    expect(Storage.getDefaultRate()).toBe('')
+  it("getDefaultRate возвращает 'ok' по умолчанию", () => {
+    expect(Storage.getDefaultRate()).toBe('ok')
   })
 
   it('setDefaultRate/getDefaultRate: сохраняет и возвращает rate', () => {
@@ -147,16 +147,16 @@ describe('Storage — rate по умолчанию', () => {
     expect(Storage.getDefaultRate()).toBe('waste')
   })
 
-  it('setDefaultRate с пустой строкой удаляет rate', () => {
+  it("setDefaultRate с пустой строкой удаляет rate (возвращается 'ok')", () => {
     Storage.setDefaultRate('ok')
     Storage.setDefaultRate('')
-    expect(Storage.getDefaultRate()).toBe('')
+    expect(Storage.getDefaultRate()).toBe('ok')
   })
 
-  it('setDefaultRate с null удаляет rate', () => {
+  it("setDefaultRate с null удаляет rate (возвращается 'ok')", () => {
     Storage.setDefaultRate('good')
     Storage.setDefaultRate(null)
-    expect(Storage.getDefaultRate()).toBe('')
+    expect(Storage.getDefaultRate()).toBe('ok')
   })
 
   it('поддерживает все допустимые значения rate', () => {

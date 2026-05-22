@@ -54,9 +54,8 @@ function setupDOM() {
       <option value="dark">dark</option>
     </select>
     <select id="default-rate-select">
-      <option value=""></option>
       <option value="waste">waste</option>
-      <option value="ok">ok</option>
+      <option value="ok" selected>ok</option>
       <option value="good">good</option>
     </select>
     <input id="default-tag-input" type="text" />
@@ -169,7 +168,7 @@ describe('ImportExport.exportData', () => {
     global.Blob = origBlob
     const parsed = JSON.parse(captured)
     expect(parsed).toMatchObject({ transactions: txs })
-    expect(parsed.settings).toEqual({ defaultTag: '', defaultRate: '', theme: 'system' })
+    expect(parsed.settings).toEqual({ defaultTag: '', defaultRate: 'ok', theme: 'system' })
   })
 
   it('экспортирует settings с текущими значениями из localStorage', () => {
@@ -755,10 +754,10 @@ describe('ImportExport.importData', () => {
         expect(document.getElementById('default-rate-select').value).toBe('good')
       })
 
-      it('settings с defaultRate="" удаляет rate из localStorage', async () => {
+      it('settings с defaultRate="" игнорируется', async () => {
         localStorage.defaultRate = 'waste'
         await importPayload({ transactions: [], settings: { defaultRate: '' } })
-        expect(localStorage.defaultRate).toBeUndefined()
+        expect(localStorage.defaultRate).toBe('waste')
       })
 
       it('settings с theme="dark" сохраняет тему, ставит data-theme и обновляет #theme-select', async () => {

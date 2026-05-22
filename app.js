@@ -44,8 +44,7 @@ async function initApp() {
 
   // Apply default rate to form
   const applyDefaultRate = () => {
-    const rate = Storage.getDefaultRate();
-    document.getElementById('rate-select').value = rate || 'ok';
+    document.getElementById('rate-select').value = Storage.getDefaultRate();
   };
 
   // Init default tag on input page open

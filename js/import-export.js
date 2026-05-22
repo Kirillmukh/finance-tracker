@@ -169,7 +169,7 @@ export class ImportExport {
               }
             }
           }
-          if (settings.defaultRate === '' || ['waste', 'ok', 'good'].includes(settings.defaultRate)) {
+          if (['waste', 'ok', 'good'].includes(settings.defaultRate)) {
             Storage.setDefaultRate(settings.defaultRate);
             const rateSelect = document.getElementById('default-rate-select');
             if (rateSelect) rateSelect.value = settings.defaultRate;
