@@ -86,7 +86,7 @@ function setupDOM() {
     </select>
     <input id="default-tag-input" />
     <button id="default-tag-save-btn">Сохранить</button>
-    <span id="default-tag-status"></span>
+    <p id="default-tag-status" style="display:none"></p>
     <select id="transactions-limit">
       <option value="all">Все</option>
       <option value="day">День</option>
@@ -188,5 +188,66 @@ describe('app.js — кнопка сохранения тега по умолч�
     btn.click()
 
     expect(mockTransactionManager.singleLoadTransactionsRender).not.toHaveBeenCalled()
+  })
+})
+
+describe('app.js — #default-tag-status отображение', () => {
+  beforeAll(async () => {
+    setupDOM()
+    vi.resetModules()
+    await import('../app.js')
+    await new Promise(resolve => setTimeout(resolve, 0))
+  })
+
+  beforeEach(() => {
+    const select = document.getElementById('transactions-limit')
+    select.querySelector('option[value="default-tag"]')?.remove()
+    select.value = 'all'
+    document.getElementById('default-tag-input').value = ''
+    vi.clearAllMocks()
+  })
+
+  it('скрыт по умолчанию', () => {
+    const status = document.getElementById('default-tag-status')
+    expect(status.style.display).toBe('none')
+  })
+
+  it('становится видимым после сохранения тега', () => {
+    vi.useFakeTimers()
+    document.getElementById('default-tag-input').value = 'обед'
+    document.getElementById('default-tag-save-btn').click()
+
+    const status = document.getElementById('default-tag-status')
+    expect(status.style.display).toBe('block')
+    expect(status.textContent).toBe('Тег "обед" сохранён')
+    vi.useRealTimers()
+  })
+
+  it('скрывается снова через 2 секунды', () => {
+    vi.useFakeTimers()
+    document.getElementById('default-tag-input').value = 'обед'
+    document.getElementById('default-tag-save-btn').click()
+
+    vi.advanceTimersByTime(2000)
+
+    const status = document.getElementById('default-tag-status')
+    expect(status.style.display).toBe('none')
+    expect(status.textContent).toBe('')
+    vi.useRealTimers()
+  })
+
+  it('становится видимым при удалении тега', () => {
+    vi.useFakeTimers()
+    document.getElementById('default-tag-input').value = 'обед'
+    document.getElementById('default-tag-save-btn').click()
+    vi.advanceTimersByTime(2000)
+
+    document.getElementById('default-tag-input').value = ''
+    document.getElementById('default-tag-save-btn').click()
+
+    const status = document.getElementById('default-tag-status')
+    expect(status.style.display).toBe('block')
+    expect(status.textContent).toBe('Тег по умолчанию удалён')
+    vi.useRealTimers()
   })
 })

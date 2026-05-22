@@ -97,7 +97,8 @@ async function initApp() {
 
     const status = document.getElementById('default-tag-status');
     status.textContent = value ? `Тег "${value}" сохранён` : 'Тег по умолчанию удалён';
-    setTimeout(() => { status.textContent = ''; }, 2000);
+    status.style.display = 'block';
+    setTimeout(() => { status.style.display = 'none'; status.textContent = ''; }, 2000);
   });
 
   // Rename tag
