@@ -55,17 +55,29 @@ async function initApp() {
     document.getElementById('time-input').value = toTimeInputValue(now);
   };
 
-  // Init default tag on input page open
-  if (Storage.getPage() === 'input') {
-    ui.initDefaultTag(Storage.getDefaultTag());
-    applyDefaultRate();
-    applyCurrentDateTime();
-  }
-  document.querySelector('.nav-item[data-page="input"]').addEventListener('click', () => {
+  // Reset button on the transaction form — clear everything and re-apply
+  // the same defaults as after a successful submit
+  document.getElementById('form-reset-btn').addEventListener('click', () => {
+    document.getElementById('transaction-form').reset();
+    document.getElementById('category-suggestion').style.display = 'none';
+    document.getElementById('tag-suggestion').style.display = 'none';
+    ui.clearTags();
+    ui.renderTags();
     ui.initDefaultTag(Storage.getDefaultTag());
     applyDefaultRate();
     applyCurrentDateTime();
   });
+
+  // Reset only the time to the current moment
+  document.getElementById('time-reset-btn').addEventListener('click', () => {
+    document.getElementById('time-input').value = toTimeInputValue(new Date());
+  });
+
+  // Fill the form with defaults once at app load. Navigation must NOT touch
+  // form values — they persist until submit or the reset button.
+  ui.initDefaultTag(Storage.getDefaultTag());
+  applyDefaultRate();
+  applyCurrentDateTime();
 
   // Theme selector
   const themeSelect = document.getElementById('theme-select');

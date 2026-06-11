@@ -155,11 +155,17 @@
             </div>
             <div class="datetime-field">
               <label for="time-input">Время</label>
-              <input type="time" id="time-input" />
+              <div class="time-input-row">
+                <input type="time" id="time-input" />
+                <button type="button" id="time-reset-btn" class="date-step-btn" aria-label="Текущее время">Сейчас</button>
+              </div>
             </div>
           </div>
 
-          <button type="submit">Добавить</button>
+          <div class="form-actions">
+            <button type="submit">Добавить</button>
+            <button type="button" id="form-reset-btn" class="btn-secondary">Сбросить</button>
+          </div>
         </form>
       </div>
     </div>

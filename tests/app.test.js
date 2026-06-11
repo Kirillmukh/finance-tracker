@@ -1,23 +1,28 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 
 let mockTransactionManager
+let mockUI
 
 vi.mock('../js/db.js', () => ({
   Database: vi.fn(() => ({ init: vi.fn(() => Promise.resolve()) }))
 }))
 
 vi.mock('../js/ui.js', () => ({
-  UI: vi.fn(() => ({
-    setupCategoryInput: vi.fn(),
-    setupTagInput: vi.fn(),
-    initDefaultTag: vi.fn(),
-    clearTags: vi.fn(),
-    clearTagsToRemove: vi.fn(),
-    getTags: vi.fn(() => []),
-    getTagsToRemove: vi.fn(() => new Set()),
-    removeTag: vi.fn(),
-    modalRemoveTag: vi.fn(),
-  }))
+  UI: vi.fn(() => {
+    mockUI = {
+      setupCategoryInput: vi.fn(),
+      setupTagInput: vi.fn(),
+      initDefaultTag: vi.fn(),
+      clearTags: vi.fn(),
+      clearTagsToRemove: vi.fn(),
+      renderTags: vi.fn(),
+      getTags: vi.fn(() => []),
+      getTagsToRemove: vi.fn(() => new Set()),
+      removeTag: vi.fn(),
+      modalRemoveTag: vi.fn(),
+    }
+    return mockUI
+  })
 }))
 
 vi.mock('../js/modal.js', () => ({
@@ -79,9 +84,23 @@ function setupDOM() {
       <option value="">—</option>
       <option value="ok">Ок</option>
     </select>
-    <input id="rate-select" />
-    <input id="date-input" type="date" />
-    <input id="time-input" type="time" />
+    <form id="transaction-form">
+      <input type="text" id="description" />
+      <input type="number" id="amount" />
+      <div class="suggestion" id="category-suggestion" style="display: none"></div>
+      <input id="category-input" />
+      <select id="rate-select">
+        <option value="waste">Плохая</option>
+        <option value="ok" selected>Ок</option>
+        <option value="good">Осознанная</option>
+      </select>
+      <div class="suggestion" id="tag-suggestion" style="display: none"></div>
+      <input type="text" id="tag-input" />
+      <input id="date-input" type="date" />
+      <input id="time-input" type="time" />
+      <button id="time-reset-btn" type="button">Сейчас</button>
+      <button id="form-reset-btn" type="button">Сбросить</button>
+    </form>
     <button class="nav-item" data-page="input">Input</button>
     <select id="theme-select">
       <option value="system">Системная</option>
@@ -216,7 +235,7 @@ describe('app.js — кнопка сохранения тега по умолч�
   })
 })
 
-describe('app.js — переход на страницу добавления заполняет дату и время', () => {
+describe('app.js — дата и время заполняются при загрузке, навигация форму не трогает', () => {
   beforeAll(async () => {
     setupDOM()
     vi.resetModules()
@@ -224,15 +243,167 @@ describe('app.js — переход на страницу добавления �
     await new Promise(resolve => setTimeout(resolve, 0))
   })
 
-  it('клик по nav-item "input" ставит текущие дату и время', () => {
-    document.getElementById('date-input').value = ''
-    document.getElementById('time-input').value = ''
-    document.querySelector('.nav-item[data-page="input"]').click()
+  it('инициализация приложения ставит текущие дату и время', () => {
     const now = new Date()
     const pad = (n) => String(n).padStart(2, '0')
     expect(document.getElementById('date-input').value)
       .toBe(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`)
     expect(document.getElementById('time-input').value).toMatch(/^\d{2}:\d{2}$/)
+  })
+
+  it('клик по nav-item "input" не меняет значения формы', () => {
+    document.getElementById('description').value = 'кофе'
+    document.getElementById('date-input').value = '2020-01-01'
+    document.getElementById('time-input').value = '03:15'
+    document.getElementById('rate-select').value = 'waste'
+
+    document.querySelector('.nav-item[data-page="input"]').click()
+
+    expect(document.getElementById('description').value).toBe('кофе')
+    expect(document.getElementById('date-input').value).toBe('2020-01-01')
+    expect(document.getElementById('time-input').value).toBe('03:15')
+    expect(document.getElementById('rate-select').value).toBe('waste')
+  })
+})
+
+describe('app.js — дефолтные тег и оценка применяются один раз при загрузке', () => {
+  beforeAll(async () => {
+    setupDOM()
+    Storage.getDefaultTag.mockReturnValue('обед')
+    Storage.getDefaultRate.mockReturnValue('good')
+    vi.resetModules()
+    await import('../app.js')
+    await new Promise(resolve => setTimeout(resolve, 0))
+  })
+
+  afterAll(() => {
+    Storage.getDefaultTag.mockReturnValue('')
+    Storage.getDefaultRate.mockReturnValue('')
+  })
+
+  it('инициализация добавляет тег по умолчанию в форму', () => {
+    expect(mockUI.initDefaultTag).toHaveBeenCalledWith('обед')
+  })
+
+  it('инициализация ставит оценку по умолчанию в #rate-select', () => {
+    expect(document.getElementById('rate-select').value).toBe('good')
+  })
+})
+
+describe('app.js — кнопка сброса формы транзакции', () => {
+  beforeAll(async () => {
+    setupDOM()
+    vi.resetModules()
+    await import('../app.js')
+    await new Promise(resolve => setTimeout(resolve, 0))
+  })
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('очищает поля формы', () => {
+    document.getElementById('description').value = 'кофе'
+    document.getElementById('amount').value = '250'
+    document.getElementById('category-input').value = 'еда'
+    document.getElementById('tag-input').value = 'утр'
+
+    document.getElementById('form-reset-btn').click()
+
+    expect(document.getElementById('description').value).toBe('')
+    expect(document.getElementById('amount').value).toBe('')
+    expect(document.getElementById('category-input').value).toBe('')
+    expect(document.getElementById('tag-input').value).toBe('')
+  })
+
+  it('скрывает открытые подсказки автокомплита', () => {
+    document.getElementById('category-suggestion').style.display = 'block'
+    document.getElementById('tag-suggestion').style.display = 'block'
+
+    document.getElementById('form-reset-btn').click()
+
+    expect(document.getElementById('category-suggestion').style.display).toBe('none')
+    expect(document.getElementById('tag-suggestion').style.display).toBe('none')
+  })
+
+  it('очищает теги и заново применяет тег по умолчанию', () => {
+    Storage.getDefaultTag.mockReturnValue('обед')
+
+    document.getElementById('form-reset-btn').click()
+
+    expect(mockUI.clearTags).toHaveBeenCalled()
+    expect(mockUI.renderTags).toHaveBeenCalled()
+    expect(mockUI.initDefaultTag).toHaveBeenCalledWith('обед')
+  })
+
+  it('восстанавливает оценку по умолчанию', () => {
+    Storage.getDefaultRate.mockReturnValue('good')
+    document.getElementById('rate-select').value = 'waste'
+
+    document.getElementById('form-reset-btn').click()
+
+    expect(document.getElementById('rate-select').value).toBe('good')
+  })
+
+  it('заполняет дату и время текущим моментом', () => {
+    document.getElementById('date-input').value = '2020-01-01'
+    document.getElementById('time-input').value = '00:00'
+
+    document.getElementById('form-reset-btn').click()
+
+    const now = new Date()
+    const pad = (n) => String(n).padStart(2, '0')
+    expect(document.getElementById('date-input').value)
+      .toBe(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`)
+    expect(document.getElementById('time-input').value).toMatch(/^\d{2}:\d{2}$/)
+  })
+})
+
+describe('app.js — кнопка сброса времени (#time-reset-btn)', () => {
+  beforeAll(async () => {
+    setupDOM()
+    vi.resetModules()
+    await import('../app.js')
+    await new Promise(resolve => setTimeout(resolve, 0))
+  })
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const pad = (n) => String(n).padStart(2, '0')
+  const toHHMM = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
+
+  it('ставит текущее время, не трогая дату', () => {
+    document.getElementById('date-input').value = '2020-01-01'
+    document.getElementById('time-input').value = '03:15'
+
+    const before = new Date()
+    document.getElementById('time-reset-btn').click()
+    const after = new Date()
+
+    // Допуск на смену минуты между before и after
+    expect([toHHMM(before), toHHMM(after)])
+      .toContain(document.getElementById('time-input').value)
+    // Главная проверка: дата осталась нетронутой
+    expect(document.getElementById('date-input').value).toBe('2020-01-01')
+  })
+
+  it('не трогает остальные поля формы', () => {
+    document.getElementById('description').value = 'кофе'
+    document.getElementById('amount').value = '250'
+    document.getElementById('category-input').value = 'еда'
+    document.getElementById('tag-input').value = 'утр'
+    document.getElementById('rate-select').value = 'waste'
+
+    document.getElementById('time-reset-btn').click()
+
+    expect(document.getElementById('description').value).toBe('кофе')
+    expect(document.getElementById('amount').value).toBe('250')
+    expect(document.getElementById('category-input').value).toBe('еда')
+    expect(document.getElementById('tag-input').value).toBe('утр')
+    expect(document.getElementById('rate-select').value).toBe('waste')
+    expect(mockUI.clearTags).not.toHaveBeenCalled()
   })
 })
 
