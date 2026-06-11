@@ -80,6 +80,44 @@ export function getDateRange(period = "day", date = new Date(), customStart = nu
   return result;
 }
 
+export function toDateInputValue(date) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export function toTimeInputValue(date) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export function shiftDateInputValue(value, days, today = new Date()) {
+  let base;
+  if (value) {
+    // new Date("YYYY-MM-DD") парсится как UTC-полночь и может сдвинуть день,
+    // поэтому собираем локальную дату из компонентов
+    const [y, m, d] = value.split("-").map(Number);
+    base = new Date(y, m - 1, d);
+  } else {
+    base = new Date(today);
+  }
+  base.setDate(base.getDate() + days);
+  return toDateInputValue(base);
+}
+
+export function getTransactionTimestamp(dateValue, timeValue, now = new Date()) {
+  if (!dateValue && !timeValue) return now.getTime();
+  const result = new Date(now);
+  if (dateValue) {
+    const [y, m, d] = dateValue.split("-").map(Number);
+    result.setFullYear(y, m - 1, d);
+  }
+  if (timeValue) {
+    const [h, min] = timeValue.split(":").map(Number);
+    result.setHours(h, min, 0, 0);
+  }
+  return result.getTime();
+}
+
 export function groupTransactions(transactions, target) {
   const result = {};
   transactions.forEach((t) => {

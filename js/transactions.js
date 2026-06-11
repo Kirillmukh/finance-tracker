@@ -1,5 +1,5 @@
 // Transactions module - handles transaction operations and rendering
-import { RATES, formatDate, groupTransactions, getDateRange, countMapInc, countMapDec } from './utils.js';
+import { RATES, formatDate, groupTransactions, getDateRange, countMapInc, countMapDec, shiftDateInputValue, getTransactionTimestamp, toDateInputValue, toTimeInputValue } from './utils.js';
 import { updateCharts, updateChartForRates, updateChartForTags, setLegendClickCallback, getHiddenCategories, clearHiddenCategories } from './chart.js';
 import { Storage } from './storage.js';
 
@@ -383,6 +383,16 @@ export class TransactionManager {
   }
 
   setupTransactionForm() {
+    const dateInput = document.getElementById("date-input");
+    const timeInput = document.getElementById("time-input");
+
+    document.getElementById("date-minus").addEventListener("click", () => {
+      dateInput.value = shiftDateInputValue(dateInput.value, -1);
+    });
+    document.getElementById("date-plus").addEventListener("click", () => {
+      dateInput.value = shiftDateInputValue(dateInput.value, 1);
+    });
+
     document.getElementById("transaction-form").addEventListener("submit", (e) => {
       const tagInput = document.getElementById("tag-input");
       if (tagInput.value.trim()) {
@@ -397,7 +407,7 @@ export class TransactionManager {
         category: document.getElementById("category-input").value,
         rate: document.getElementById("rate-select").value,
         tags: [...this.ui.getTags()],
-        date: new Date().getTime(),
+        date: getTransactionTimestamp(dateInput.value, timeInput.value),
       };
 
       this.db.addTransaction(transaction, () => {
@@ -408,6 +418,9 @@ export class TransactionManager {
         this.ui.initDefaultTag(Storage.getDefaultTag());
         const defaultRate = Storage.getDefaultRate();
         if (defaultRate) document.getElementById('rate-select').value = defaultRate;
+        const now = new Date();
+        dateInput.value = toDateInputValue(now);
+        timeInput.value = toTimeInputValue(now);
       });
 
       countMapInc(this.allCategories, transaction.category);

@@ -8,6 +8,7 @@ import { ImportExport } from './js/import-export.js';
 import { Storage } from './js/storage.js';
 import { setupRenameTagUI } from './js/rename-tag.js';
 import { Demo, setupDemoUI } from './js/demo.js';
+import { toDateInputValue, toTimeInputValue } from './js/utils.js';
 
 // Initialize application
 async function initApp() {
@@ -47,14 +48,23 @@ async function initApp() {
     document.getElementById('rate-select').value = Storage.getDefaultRate();
   };
 
+  // Pre-fill date/time inputs with the current moment
+  const applyCurrentDateTime = () => {
+    const now = new Date();
+    document.getElementById('date-input').value = toDateInputValue(now);
+    document.getElementById('time-input').value = toTimeInputValue(now);
+  };
+
   // Init default tag on input page open
   if (Storage.getPage() === 'input') {
     ui.initDefaultTag(Storage.getDefaultTag());
     applyDefaultRate();
+    applyCurrentDateTime();
   }
   document.querySelector('.nav-item[data-page="input"]').addEventListener('click', () => {
     ui.initDefaultTag(Storage.getDefaultTag());
     applyDefaultRate();
+    applyCurrentDateTime();
   });
 
   // Theme selector

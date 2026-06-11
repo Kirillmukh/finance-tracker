@@ -80,6 +80,8 @@ function setupDOM() {
       <option value="ok">Ок</option>
     </select>
     <input id="rate-select" />
+    <input id="date-input" type="date" />
+    <input id="time-input" type="time" />
     <button class="nav-item" data-page="input">Input</button>
     <select id="theme-select">
       <option value="system">Системная</option>
@@ -211,6 +213,26 @@ describe('app.js — кнопка сохранения тега по умолч�
 
     expect(select.value).toBe('default-tag')
     expect(mockTransactionManager.singleLoadTransactionsRender).not.toHaveBeenCalled()
+  })
+})
+
+describe('app.js — переход на страницу добавления заполняет дату и время', () => {
+  beforeAll(async () => {
+    setupDOM()
+    vi.resetModules()
+    await import('../app.js')
+    await new Promise(resolve => setTimeout(resolve, 0))
+  })
+
+  it('клик по nav-item "input" ставит текущие дату и время', () => {
+    document.getElementById('date-input').value = ''
+    document.getElementById('time-input').value = ''
+    document.querySelector('.nav-item[data-page="input"]').click()
+    const now = new Date()
+    const pad = (n) => String(n).padStart(2, '0')
+    expect(document.getElementById('date-input').value)
+      .toBe(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`)
+    expect(document.getElementById('time-input').value).toMatch(/^\d{2}:\d{2}$/)
   })
 })
 

@@ -38,6 +38,7 @@
   --modal-overlay: rgba(15, 23, 42, 0.4);
 
   --select-arrow: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  --input-color-scheme: light;
 }
 
 /* === Тёмная тема (явная) === */
@@ -81,6 +82,7 @@ html[data-theme="dark"] {
   --modal-overlay: rgba(0, 0, 0, 0.6);
 
   --select-arrow: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  --input-color-scheme: dark;
 }
 
 /* === Тёмная тема (системная) === */
@@ -125,6 +127,7 @@ html[data-theme="dark"] {
     --modal-overlay: rgba(0, 0, 0, 0.6);
 
     --select-arrow: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    --input-color-scheme: dark;
   }
 }
 
@@ -178,6 +181,52 @@ body {
   padding: 12px 18px;
   font-size: 20px;
   line-height: 1;
+}
+
+.datetime-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 4px 0;
+}
+
+/* color-scheme управляет цветом нативных иконок календаря/часов */
+input[type="date"],
+input[type="time"] {
+  color-scheme: var(--input-color-scheme);
+}
+
+.datetime-field label {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.date-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.date-input-row #date-input {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.date-input-row .date-step-btn {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.datetime-field #time-input {
+  width: 100%;
+  margin: 0;
 }
 
 .tag {

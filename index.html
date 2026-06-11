@@ -144,6 +144,21 @@
             <div id="tags-container"></div>
           </div>
 
+          <div class="datetime-inputs">
+            <div class="datetime-field">
+              <label for="date-input">Дата</label>
+              <div class="date-input-row">
+                <button type="button" id="date-minus" class="date-step-btn" aria-label="Минус один день">−1</button>
+                <input type="date" id="date-input" />
+                <button type="button" id="date-plus" class="date-step-btn" aria-label="Плюс один день">+1</button>
+              </div>
+            </div>
+            <div class="datetime-field">
+              <label for="time-input">Время</label>
+              <input type="time" id="time-input" />
+            </div>
+          </div>
+
           <button type="submit">Добавить</button>
         </form>
       </div>

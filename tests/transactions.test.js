@@ -559,6 +559,10 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
         <input id="tag-input" value="">
         <div id="tag-suggestion" style="display: none"></div>
         <button id="add-tag">+</button>
+        <button type="button" id="date-minus">−1</button>
+        <input id="date-input" type="date">
+        <button type="button" id="date-plus">+1</button>
+        <input id="time-input" type="time">
       </form>
     `
   }
@@ -651,6 +655,95 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
     document.getElementById('tag-input').value = 'snack'
     document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
     expect(addTagSpy).toHaveBeenCalled()
+  })
+
+  it('при пустых дате и времени транзакция получает текущий момент', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    const before = Date.now()
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+    const after = Date.now()
+    const [tx] = mgr.db.addTransaction.mock.calls[0]
+    expect(tx.date).toBeGreaterThanOrEqual(before)
+    expect(tx.date).toBeLessThanOrEqual(after)
+  })
+
+  it('заполненная дата используется в транзакции (время — текущее)', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('date-input').value = '2026-06-09'
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+    const [tx] = mgr.db.addTransaction.mock.calls[0]
+    const d = new Date(tx.date)
+    expect(d.getFullYear()).toBe(2026)
+    expect(d.getMonth()).toBe(5)
+    expect(d.getDate()).toBe(9)
+  })
+
+  it('заполненные дата и время используются в транзакции', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('date-input').value = '2026-06-09'
+    document.getElementById('time-input').value = '14:30'
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+    const [tx] = mgr.db.addTransaction.mock.calls[0]
+    expect(tx.date).toBe(new Date(2026, 5, 9, 14, 30, 0, 0).getTime())
+  })
+
+  it('заполненное только время даёт сегодняшнюю дату с этим временем', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('time-input').value = '08:15'
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+    const [tx] = mgr.db.addTransaction.mock.calls[0]
+    const d = new Date(tx.date)
+    const today = new Date()
+    expect(d.getDate()).toBe(today.getDate())
+    expect(d.getHours()).toBe(8)
+    expect(d.getMinutes()).toBe(15)
+  })
+
+  it('кнопка −1 при пустой дате ставит вчерашний день', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('date-minus').dispatchEvent(new Event('click'))
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const pad = (n) => String(n).padStart(2, '0')
+    const expected = `${yesterday.getFullYear()}-${pad(yesterday.getMonth() + 1)}-${pad(yesterday.getDate())}`
+    expect(document.getElementById('date-input').value).toBe(expected)
+  })
+
+  it('кнопки −1/+1 сдвигают уже выбранную дату на день', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    const dateInput = document.getElementById('date-input')
+    dateInput.value = '2026-06-01'
+    document.getElementById('date-minus').dispatchEvent(new Event('click'))
+    expect(dateInput.value).toBe('2026-05-31')
+    document.getElementById('date-plus').dispatchEvent(new Event('click'))
+    document.getElementById('date-plus').dispatchEvent(new Event('click'))
+    expect(dateInput.value).toBe('2026-06-02')
+  })
+
+  it('после submit поля даты и времени заполняются текущим моментом', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('date-input').value = '2026-06-09'
+    document.getElementById('time-input').value = '14:30'
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+    const now = new Date()
+    const pad = (n) => String(n).padStart(2, '0')
+    expect(document.getElementById('date-input').value)
+      .toBe(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`)
+    expect(document.getElementById('time-input').value).toMatch(/^\d{2}:\d{2}$/)
   })
 })
 

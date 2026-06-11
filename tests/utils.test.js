@@ -8,6 +8,10 @@ import {
   groupTransactions,
   capitalize,
   unionStart,
+  toDateInputValue,
+  toTimeInputValue,
+  shiftDateInputValue,
+  getTransactionTimestamp,
 } from '../js/utils.js'
 
 describe('RATES', () => {
@@ -253,5 +257,74 @@ describe('unionStart', () => {
   it('чувствителен к регистру', () => {
     expect(unionStart('gr', 'Grocery')).toBe(-1)
     expect(unionStart('Gr', 'Grocery')).toBe(2)
+  })
+})
+
+describe('toDateInputValue', () => {
+  it('форматирует дату как YYYY-MM-DD с ведущими нулями', () => {
+    expect(toDateInputValue(new Date(2026, 5, 9))).toBe('2026-06-09')
+    expect(toDateInputValue(new Date(2026, 11, 31))).toBe('2026-12-31')
+  })
+})
+
+describe('toTimeInputValue', () => {
+  it('форматирует время как HH:MM с ведущими нулями', () => {
+    expect(toTimeInputValue(new Date(2026, 5, 9, 8, 5))).toBe('08:05')
+    expect(toTimeInputValue(new Date(2026, 5, 9, 23, 59))).toBe('23:59')
+  })
+})
+
+describe('shiftDateInputValue', () => {
+  it('сдвигает дату на -1 день', () => {
+    expect(shiftDateInputValue('2026-06-09', -1)).toBe('2026-06-08')
+  })
+
+  it('сдвигает дату на +1 день', () => {
+    expect(shiftDateInputValue('2026-06-09', 1)).toBe('2026-06-10')
+  })
+
+  it('переходит через границу месяца', () => {
+    expect(shiftDateInputValue('2026-06-01', -1)).toBe('2026-05-31')
+    expect(shiftDateInputValue('2026-06-30', 1)).toBe('2026-07-01')
+  })
+
+  it('переходит через границу года', () => {
+    expect(shiftDateInputValue('2026-01-01', -1)).toBe('2025-12-31')
+  })
+
+  it('при пустом значении отталкивается от сегодня', () => {
+    const today = new Date(2026, 5, 12)
+    expect(shiftDateInputValue('', -1, today)).toBe('2026-06-11')
+    expect(shiftDateInputValue('', 1, today)).toBe('2026-06-13')
+  })
+})
+
+describe('getTransactionTimestamp', () => {
+  const now = new Date(2026, 5, 12, 14, 30, 45, 123)
+
+  it('возвращает текущий момент при пустых дате и времени', () => {
+    expect(getTransactionTimestamp('', '', now)).toBe(now.getTime())
+  })
+
+  it('дата без времени: выбранный день, текущее время суток', () => {
+    const ts = getTransactionTimestamp('2026-06-09', '', now)
+    expect(ts).toBe(new Date(2026, 5, 9, 14, 30, 45, 123).getTime())
+  })
+
+  it('время без даты: сегодняшний день, выбранное время', () => {
+    const ts = getTransactionTimestamp('', '08:15', now)
+    expect(ts).toBe(new Date(2026, 5, 12, 8, 15, 0, 0).getTime())
+  })
+
+  it('дата и время вместе', () => {
+    const ts = getTransactionTimestamp('2026-06-09', '08:15', now)
+    expect(ts).toBe(new Date(2026, 5, 9, 8, 15, 0, 0).getTime())
+  })
+
+  it('не сдвигает день из-за часового пояса (локальный разбор даты)', () => {
+    const ts = getTransactionTimestamp('2026-06-09', '00:00', now)
+    const d = new Date(ts)
+    expect(d.getDate()).toBe(9)
+    expect(d.getHours()).toBe(0)
   })
 })
