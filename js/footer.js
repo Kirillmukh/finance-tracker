@@ -1,12 +1,13 @@
 // Footer module — "liquid glass" behaviors for the bottom nav:
 // 1. Sliding indicator pill behind the active tab.
-// 2. Quick flick on the bar switches tabs relative to the swipe direction.
-// 3. Hold & drag: the pill follows the finger; release picks the tab under it.
-// 4. Compact mode: bar shrinks on scroll down, expands on scroll up / touch.
+// 2. Drag on the bar: the pill follows the finger and the page under it
+//    switches LIVE as the pill crosses tabs (no wait for release). A quick
+//    short flick nudges one tab in the finger's direction.
+// 3. Compact mode: bar shrinks on scroll down, expands on scroll up / touch.
 
-// Fraction of one tab slot a flick must travel to commit a switch on release.
+// Fraction of one tab slot a flick must travel to nudge to the adjacent tab.
 const SWIPE_COMMIT_RATIO = 0.3;
-// Gestures shorter than this are flicks (relative); longer are positional drags.
+// Only gestures shorter than this can nudge; longer holds are purely positional.
 const FLICK_MS = 300;
 // Finger travel (px) before a touch is treated as a drag rather than a tap.
 const DRAG_START_PX = 6;
@@ -57,17 +58,14 @@ export function setupFooter(navigation, doc = document, win = window) {
     items.forEach((item, i) => item.classList.toggle('in-bubble', i === index));
   };
 
-  // --- Swipe / hold-drag on the bar to switch tabs ---
+  // --- Drag on the bar: любой контакт задействует слайдер ---
   let startX = null;
   let startTime = 0;
-  let dragging = false;
-  let suppressClick = false;
+  let tracking = false; // палец ушёл дальше DRAG_START_PX — мгновенное слежение
   let lastMoveX = 0;
   let velocity = 0; // сглаженная скорость пальца, px за событие pointermove
 
   const slotWidth = () => nav.clientWidth / items.length || 1;
-  // Swipe left = move to the tab on the right, hence the sign flip.
-  const flickProgress = (e) => -(e.clientX - startX) / slotWidth();
   // Slot offset of the tab currently under the finger (continuous, in slot units).
   const fingerOffset = (clientX) => {
     const rect = nav.getBoundingClientRect();
@@ -75,76 +73,93 @@ export function setupFooter(navigation, doc = document, win = window) {
     return clamp((clientX - rect.left) / slot - 0.5, 0, items.length - 1);
   };
 
+  // Пилюля следует за пальцем, окно под ней переключается живьём,
+  // не дожидаясь отпускания — отпускание лишь финализирует выбор.
+  const followFinger = (clientX, animate, stretch = 1) => {
+    const offset = fingerOffset(clientX);
+    setIndicator(offset, animate, stretch);
+    const nearest = Math.round(offset);
+    setBubbleTarget(nearest);
+    if (nearest !== activeIndex()) {
+      navigation.showPage(pages[nearest]);
+    }
+  };
+
   nav.addEventListener('pointerdown', (e) => {
     startX = e.clientX;
     startTime = Date.now();
-    dragging = false;
-    suppressClick = false;
+    tracking = false;
     lastMoveX = e.clientX;
     velocity = 0;
     nav.classList.remove('compact');
+    nav.classList.add('dragging');
+    // Захват на pointerdown безопасен: указательные клики по бару всё равно
+    // гасятся capture-обработчиком ниже, выбор делают pointer-события.
+    if (nav.setPointerCapture && e.pointerId !== undefined) {
+      try { nav.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+    // Слайдер задействуется с первого касания — пилюля анимированно
+    // подъезжает под палец.
+    followFinger(e.clientX, true);
   });
 
   nav.addEventListener('pointermove', (e) => {
     if (startX === null) return;
-    if (!dragging && Math.abs(e.clientX - startX) < DRAG_START_PX) return;
-    const firstMove = !dragging;
-    if (firstMove && nav.setPointerCapture && e.pointerId !== undefined) {
-      // Захват только с началом драга: захват на pointerdown ретаргетит
-      // последующий click на nav и ломает обычные тапы по вкладкам.
-      try { nav.setPointerCapture(e.pointerId); } catch (_) {}
-    }
-    dragging = true;
-    nav.classList.add('dragging');
+    // До порога — не слежение, а дрожание пальца: не рвём стартовую анимацию.
+    if (!tracking && Math.abs(e.clientX - startX) < DRAG_START_PX) return;
+    tracking = true;
     velocity = 0.7 * velocity + 0.3 * (e.clientX - lastMoveX);
     lastMoveX = e.clientX;
     const stretch = Math.min(MAX_STRETCH, 1 + Math.abs(velocity) * STRETCH_PER_PX);
-    const offset = fingerOffset(e.clientX);
-    // Пилюля позиционно следует за пальцем; первый шаг анимируем,
-    // чтобы она плавно «подъехала» под палец с активной вкладки.
-    setIndicator(offset, firstMove, stretch);
-    setBubbleTarget(Math.round(offset));
+    followFinger(e.clientX, false, stretch);
   });
 
-  const endDrag = (e) => {
+  nav.addEventListener('pointerup', (e) => {
     if (startX === null) return;
-    const progress = flickProgress(e);
+    const dx = e.clientX - startX;
     const elapsed = Date.now() - startTime;
-    const wasDragging = dragging;
     startX = null;
-    dragging = false;
     nav.classList.remove('dragging');
     setBubbleTarget(-1);
-    if (!wasDragging) return;
-
-    suppressClick = true;
-    let target;
-    if (elapsed < FLICK_MS && Math.abs(progress) >= SWIPE_COMMIT_RATIO) {
-      // Быстрый флик — относительный сдвиг от активной вкладки
-      const steps = Math.sign(progress) * Math.max(1, Math.round(Math.abs(progress)));
-      target = clamp(activeIndex() + steps, 0, items.length - 1);
-    } else {
-      // Удержание — вкладка, над которой отпустили палец
-      target = Math.round(fingerOffset(e.clientX));
+    // Коммит всегда совпадает с тем, что видит пользователь: открывается
+    // вкладка, над которой пилюля оказалась в момент отпускания.
+    let target = Math.round(fingerOffset(e.clientX));
+    if (
+      target === activeIndex() &&
+      elapsed < FLICK_MS &&
+      Math.abs(dx) >= slotWidth() * SWIPE_COMMIT_RATIO
+    ) {
+      // Быстрый короткий флик, не дотянувший до соседнего слота, —
+      // дотолкнуть пилюлю на одну вкладку в направлении движения пальца.
+      target = clamp(activeIndex() + Math.sign(dx), 0, items.length - 1);
     }
     if (target !== activeIndex()) {
       navigation.showPage(pages[target]);
     }
     updateIndicator();
-  };
+  });
 
-  nav.addEventListener('pointerup', endDrag);
-  nav.addEventListener('pointercancel', endDrag);
+  // Системная отмена жеста — прибраться без коммита (живое переключение
+  // уже показало актуальное окно, пилюля вернётся на активную вкладку).
+  nav.addEventListener('pointercancel', () => {
+    if (startX === null) return;
+    startX = null;
+    nav.classList.remove('dragging');
+    setBubbleTarget(-1);
+    updateIndicator();
+  });
 
-  // A click fired right after a swipe would re-trigger Navigation's handlers
-  // on whatever item the finger ended over — swallow it in the capture phase.
+  // Указательные клики по бару гасятся всегда: выбор вкладок полностью
+  // обрабатывает слайдер на pointer-событиях, ссылки не должны срабатывать.
+  // Клавиатурная активация (click с detail 0) проходит к обработчикам
+  // Navigation, иначе сломается доступность с клавиатуры.
   nav.addEventListener(
     'click',
     (e) => {
-      if (!suppressClick) return;
-      suppressClick = false;
-      e.preventDefault();
-      e.stopPropagation();
+      if (e.detail > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     },
     true
   );

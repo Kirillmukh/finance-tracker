@@ -85,17 +85,25 @@ describe('setupFooter — инициализация', () => {
 })
 
 describe('setupFooter — свайп по панели', () => {
-  it('пилюля позиционно следует за пальцем: первый шаг с анимацией, дальше без', () => {
+  it('пилюля подъезжает под палец уже на pointerdown, при движении следит без анимации', () => {
     setupFooter(navigation)
     const indicator = nav.querySelector('.nav-indicator')
     pointer(nav, 'pointerdown', 200)
-    pointer(nav, 'pointermove', 150)
-    // палец на x=150 → слот-смещение 150/100 − 0.5 = 1
-    expect(indicator.style.transform).toContain('translateX(100%)')
+    // касание на x=200 → слот-смещение 200/100 − 0.5 = 1.5, анимированно
+    expect(indicator.style.transform).toContain('translateX(150%)')
     expect(indicator.classList.contains('nav-indicator--drag')).toBe(false)
-    pointer(nav, 'pointermove', 175)
-    expect(indicator.style.transform).toContain('translateX(125%)')
+    pointer(nav, 'pointermove', 150)
+    expect(indicator.style.transform).toContain('translateX(100%)')
     expect(indicator.classList.contains('nav-indicator--drag')).toBe(true)
+  })
+
+  it('тап: окно открывается сразу на pointerdown, без клика по ссылке', () => {
+    setupFooter(navigation)
+    pointer(nav, 'pointerdown', 150)
+    expect(navigation.showPage).toHaveBeenCalledWith('export')
+    pointer(nav, 'pointerup', 150)
+    expect(navigation.showPage).toHaveBeenCalledTimes(1)
+    expect(nav.querySelector('.nav-indicator').style.transform).toBe('translateX(100%) scale(1, 1)')
   })
 
   it('пузырь: при движении пилюля растягивается по X и сплющивается по Y', () => {
@@ -132,14 +140,46 @@ describe('setupFooter — свайп по панели', () => {
     expect(document.querySelectorAll('.in-bubble').length).toBe(0)
   })
 
-  it('быстрый флик влево переключает относительно, а не по позиции пальца', () => {
+  it('окно переключается живьём во время драга, до отпускания', () => {
     setupFooter(navigation)
-    // палец остаётся над home (x=60), но сдвиг 0.4 слота влево → следующая вкладка
-    swipe(nav, 100, 60)
+    pointer(nav, 'pointerdown', 50)
+    pointer(nav, 'pointermove', 250)
+    // палец ещё не отпущен, но окно под пилюлей уже открыто
+    expect(navigation.showPage).toHaveBeenCalledWith('input')
+  })
+
+  it('отпускание открывает вкладку под пилюлей, даже при быстром жесте', () => {
+    setupFooter(navigation)
+    // резкий (<300мс) перенос пальца с home на дальнюю вкладку
+    swipe(nav, 50, 250)
+    expect(navigation.showPage).toHaveBeenCalledWith('input')
+  })
+
+  it('резкий свайп влево с последней вкладки открывает вкладку под пилюлей (баг-регресс)', () => {
+    document.querySelector('[data-page="home"]').classList.remove('active')
+    document.querySelector('[data-page="input"]').classList.add('active')
+    setupFooter(navigation)
+    swipe(nav, 250, 60)
+    expect(navigation.showPage).toHaveBeenCalledWith('home')
+  })
+
+  it('короткий флик, не дотянувший до соседа, толкает на вкладку в направлении пальца', () => {
+    setupFooter(navigation)
+    // палец остался над home (round = 0), но сдвиг 35px ≥ 0.3 слота вправо
+    swipe(nav, 10, 45)
     expect(navigation.showPage).toHaveBeenCalledWith('export')
   })
 
-  it('короткий флик (меньше порога) не переключает и возвращает индикатор', () => {
+  it('короткий флик влево со средней вкладки толкает на вкладку слева', () => {
+    document.querySelector('[data-page="home"]').classList.remove('active')
+    document.querySelector('[data-page="export"]').classList.add('active')
+    setupFooter(navigation)
+    // палец остался над export (round(0.85) = 1), сдвиг 35px влево
+    swipe(nav, 170, 135)
+    expect(navigation.showPage).toHaveBeenCalledWith('home')
+  })
+
+  it('совсем короткий флик (меньше порога) не переключает и возвращает индикатор', () => {
     setupFooter(navigation)
     swipe(nav, 60, 40)
     expect(navigation.showPage).not.toHaveBeenCalled()
@@ -148,24 +188,10 @@ describe('setupFooter — свайп по панели', () => {
     expect(indicator.classList.contains('nav-indicator--drag')).toBe(false)
   })
 
-  it('флик вправо на первой вкладке не переключает (clamp)', () => {
+  it('флик влево на первой вкладке не переключает (clamp)', () => {
     setupFooter(navigation)
-    swipe(nav, 100, 160)
+    swipe(nav, 45, 10)
     expect(navigation.showPage).not.toHaveBeenCalled()
-  })
-
-  it('длинный флик перескакивает через вкладку', () => {
-    setupFooter(navigation)
-    swipe(nav, 300, 50)
-    expect(navigation.showPage).toHaveBeenCalledWith('input')
-  })
-
-  it('флик вправо со средней вкладки переключает назад', () => {
-    document.querySelector('[data-page="home"]').classList.remove('active')
-    document.querySelector('[data-page="export"]').classList.add('active')
-    setupFooter(navigation)
-    swipe(nav, 100, 160)
-    expect(navigation.showPage).toHaveBeenCalledWith('home')
   })
 
   it('удержание и перенос пальца на иконку выбирает вкладку под пальцем', () => {
@@ -179,38 +205,47 @@ describe('setupFooter — свайп по панели', () => {
     vi.useRealTimers()
   })
 
-  it('удержание с возвратом пальца на активную вкладку ничего не переключает', () => {
+  it('удержание с возвратом пальца на активную вкладку возвращает исходное окно', () => {
     vi.useFakeTimers()
     setupFooter(navigation)
     pointer(nav, 'pointerdown', 50)
-    pointer(nav, 'pointermove', 150)
+    pointer(nav, 'pointermove', 150) // живьём открылся export
     vi.advanceTimersByTime(400)
-    pointer(nav, 'pointermove', 60)
+    pointer(nav, 'pointermove', 60) // палец вернулся → живьём вернулся home
     pointer(nav, 'pointerup', 60)
-    expect(navigation.showPage).not.toHaveBeenCalled()
+    expect(navigation.showPage).toHaveBeenLastCalledWith('home')
+    expect(document.querySelector('[data-page="home"]').classList.contains('active')).toBe(true)
     expect(nav.querySelector('.nav-indicator').style.transform).toBe('translateX(0%) scale(1, 1)')
     vi.useRealTimers()
   })
 
-  it('после свайпа клик по вкладке гасится', () => {
+  it('указательный клик по ссылке (detail > 0) всегда гасится', () => {
     setupFooter(navigation)
-    swipe(nav, 200, 150)
     const clickSpy = vi.fn()
     const inputItem = document.querySelector('[data-page="input"]')
     inputItem.addEventListener('click', clickSpy)
-    inputItem.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }))
+    inputItem.dispatchEvent(new MouseEvent('click', { detail: 1, bubbles: true, cancelable: true }))
     expect(clickSpy).not.toHaveBeenCalled()
   })
 
-  it('обычный клик (без свайпа) не гасится', () => {
+  it('клавиатурная активация (click с detail 0) проходит к обработчикам', () => {
     setupFooter(navigation)
-    pointer(nav, 'pointerdown', 200)
-    pointer(nav, 'pointerup', 202)
     const clickSpy = vi.fn()
     const inputItem = document.querySelector('[data-page="input"]')
     inputItem.addEventListener('click', clickSpy)
-    inputItem.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }))
+    inputItem.dispatchEvent(new MouseEvent('click', { detail: 0, bubbles: true, cancelable: true }))
     expect(clickSpy).toHaveBeenCalled()
+  })
+
+  it('pointercancel прибирается без коммита', () => {
+    setupFooter(navigation)
+    pointer(nav, 'pointerdown', 50)
+    pointer(nav, 'pointermove', 250) // живьём открылся input
+    pointer(nav, 'pointercancel', 250)
+    expect(nav.classList.contains('dragging')).toBe(false)
+    expect(document.querySelectorAll('.in-bubble').length).toBe(0)
+    // пилюля встала на актуальную (живьём переключённую) вкладку
+    expect(nav.querySelector('.nav-indicator').style.transform).toBe('translateX(200%) scale(1, 1)')
   })
 })
 

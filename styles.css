@@ -329,7 +329,7 @@ input[type="time"] {
 /* «Liquid glass» плавающая капсула. Свайп/индикатор/compact — js/footer.js */
 .bottom-nav {
   position: fixed;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(5px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   width: min(calc(100% - 32px), 380px);
@@ -377,7 +377,7 @@ input[type="time"] {
   width: calc((100% - 12px) / 3);
   border-radius: 22px;
   background: var(--nav-indicator-bg);
-  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
 }
 
@@ -434,7 +434,7 @@ input[type="time"] {
 }
 
 .app {
-  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
 }
 
 
