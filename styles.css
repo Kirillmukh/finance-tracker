@@ -37,6 +37,10 @@
 
   --modal-overlay: rgba(15, 23, 42, 0.4);
 
+  --bg-nav-glass: rgba(255, 255, 255, 0.65);
+  --nav-glass-border: rgba(255, 255, 255, 0.6);
+  --nav-indicator-bg: rgba(79, 70, 229, 0.12);
+
   --select-arrow: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   --input-color-scheme: light;
 }
@@ -80,6 +84,10 @@ html[data-theme="dark"] {
   --btn-disabled-text: #64748b;
 
   --modal-overlay: rgba(0, 0, 0, 0.6);
+
+  --bg-nav-glass: rgba(30, 41, 59, 0.6);
+  --nav-glass-border: rgba(148, 163, 184, 0.18);
+  --nav-indicator-bg: rgba(129, 140, 248, 0.18);
 
   --select-arrow: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   --input-color-scheme: dark;
@@ -125,6 +133,10 @@ html[data-theme="dark"] {
     --btn-disabled-text: #64748b;
 
     --modal-overlay: rgba(0, 0, 0, 0.6);
+
+    --bg-nav-glass: rgba(30, 41, 59, 0.6);
+    --nav-glass-border: rgba(148, 163, 184, 0.18);
+    --nav-indicator-bg: rgba(129, 140, 248, 0.18);
 
     --select-arrow: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
     --input-color-scheme: dark;
@@ -311,20 +323,67 @@ input[type="time"] {
   display: none;
 }
 
+/* «Liquid glass» плавающая капсула. Свайп/индикатор/compact — js/footer.js */
 .bottom-nav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--bg-nav);
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 32px), 380px);
   display: flex;
-  justify-content: space-around;
-  padding: 10px 0;
-  box-shadow: 0 -1px 0 var(--border), 0 -4px 12px rgba(0, 0, 0, 0.04);
+  padding: 6px;
+  box-sizing: border-box;
+  border-radius: 28px;
+  background: var(--bg-nav-glass);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--nav-glass-border);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.16);
   z-index: 1000;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: width 0.25s ease, padding 0.25s ease;
+}
+
+/* Браузеры без backdrop-filter получают непрозрачный фон */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .bottom-nav {
+    background: var(--bg-nav);
+  }
+}
+
+/* Компактная «пилюля» при скролле вниз */
+.bottom-nav.compact {
+  width: min(calc(100% - 80px), 300px);
+  padding: 4px 6px;
+}
+
+.bottom-nav.compact .label {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Скользящая подложка активной вкладки; ширина слота = 100% / 3 вкладки */
+.nav-indicator {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: calc((100% - 12px) / 3);
+  border-radius: 22px;
+  background: var(--nav-indicator-bg);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.nav-indicator--drag {
+  transition: none;
 }
 
 .nav-item {
+  position: relative;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -332,12 +391,23 @@ input[type="time"] {
   color: var(--text-muted);
   font-size: 12px;
   font-weight: 500;
-  padding: 5px;
+  padding: 6px 5px 5px;
   transition: color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-item.active {
   color: #4f46e5;
+}
+
+html[data-theme="dark"] .nav-item.active {
+  color: #a5b4fc;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .nav-item.active {
+    color: #a5b4fc;
+  }
 }
 
 .nav-item .icon {
@@ -345,8 +415,23 @@ input[type="time"] {
   margin-bottom: 3px;
 }
 
+.nav-item .label {
+  max-height: 16px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav,
+  .nav-indicator,
+  .nav-item .label {
+    transition: none;
+  }
+}
+
 .app {
-  padding-bottom: 70px;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
 }
 
 

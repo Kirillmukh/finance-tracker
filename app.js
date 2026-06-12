@@ -8,6 +8,7 @@ import { ImportExport } from './js/import-export.js';
 import { Storage } from './js/storage.js';
 import { setupRenameTagUI } from './js/rename-tag.js';
 import { Demo, setupDemoUI } from './js/demo.js';
+import { setupFooter } from './js/footer.js';
 import { toDateInputValue, toTimeInputValue } from './js/utils.js';
 
 // Initialize application
@@ -35,6 +36,9 @@ async function initApp() {
 
   // Initialize navigation
   navigation.init();
+
+  // Bottom nav: swipe to switch tabs, sliding indicator, compact on scroll
+  setupFooter(navigation);
 
   // Default rate selector
   const defaultRateSelect = document.getElementById('default-rate-select');
