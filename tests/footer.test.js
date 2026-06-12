@@ -70,7 +70,7 @@ describe('setupFooter — инициализация', () => {
     setupFooter(navigation)
     const indicator = nav.querySelector('.nav-indicator')
     expect(indicator).not.toBeNull()
-    expect(indicator.style.transform).toBe('translateX(0%)')
+    expect(indicator.style.transform).toBe('translateX(0%) scale(1, 1)')
   })
 
   it('клик по вкладке передвигает индикатор (active ставит Navigation)', () => {
@@ -80,7 +80,7 @@ describe('setupFooter — инициализация', () => {
     document.querySelector('[data-page="home"]').classList.remove('active')
     exportItem.classList.add('active')
     exportItem.dispatchEvent(new Event('click', { bubbles: true }))
-    expect(nav.querySelector('.nav-indicator').style.transform).toBe('translateX(100%)')
+    expect(nav.querySelector('.nav-indicator').style.transform).toBe('translateX(100%) scale(1, 1)')
   })
 })
 
@@ -91,11 +91,45 @@ describe('setupFooter — свайп по панели', () => {
     pointer(nav, 'pointerdown', 200)
     pointer(nav, 'pointermove', 150)
     // палец на x=150 → слот-смещение 150/100 − 0.5 = 1
-    expect(indicator.style.transform).toBe('translateX(100%)')
+    expect(indicator.style.transform).toContain('translateX(100%)')
     expect(indicator.classList.contains('nav-indicator--drag')).toBe(false)
     pointer(nav, 'pointermove', 175)
-    expect(indicator.style.transform).toBe('translateX(125%)')
+    expect(indicator.style.transform).toContain('translateX(125%)')
     expect(indicator.classList.contains('nav-indicator--drag')).toBe(true)
+  })
+
+  it('пузырь: при движении пилюля растягивается по X и сплющивается по Y', () => {
+    setupFooter(navigation)
+    pointer(nav, 'pointerdown', 200)
+    pointer(nav, 'pointermove', 150)
+    const transform = nav.querySelector('.nav-indicator').style.transform
+    const [, sx, sy] = transform.match(/scale\(([\d.]+), ([\d.]+)\)/)
+    expect(Number(sx)).toBeGreaterThan(1)
+    expect(Number(sx)).toBeLessThanOrEqual(1.25)
+    expect(Number(sx) * Number(sy)).toBeCloseTo(1, 5)
+  })
+
+  it('пузырь: после отпускания масштаб возвращается к 1', () => {
+    setupFooter(navigation)
+    swipe(nav, 200, 150)
+    expect(nav.querySelector('.nav-indicator').style.transform).toContain('scale(1, 1)')
+  })
+
+  it('во время драга подсвечена вкладка под пилюлей, остальные нет', () => {
+    setupFooter(navigation)
+    pointer(nav, 'pointerdown', 50)
+    pointer(nav, 'pointermove', 250)
+    expect(nav.classList.contains('dragging')).toBe(true)
+    expect(document.querySelector('[data-page="input"]').classList.contains('in-bubble')).toBe(true)
+    expect(document.querySelector('[data-page="home"]').classList.contains('in-bubble')).toBe(false)
+    expect(document.querySelector('[data-page="export"]').classList.contains('in-bubble')).toBe(false)
+  })
+
+  it('после отпускания классы dragging и in-bubble снимаются', () => {
+    setupFooter(navigation)
+    swipe(nav, 50, 250)
+    expect(nav.classList.contains('dragging')).toBe(false)
+    expect(document.querySelectorAll('.in-bubble').length).toBe(0)
   })
 
   it('быстрый флик влево переключает относительно, а не по позиции пальца', () => {
@@ -110,7 +144,7 @@ describe('setupFooter — свайп по панели', () => {
     swipe(nav, 60, 40)
     expect(navigation.showPage).not.toHaveBeenCalled()
     const indicator = nav.querySelector('.nav-indicator')
-    expect(indicator.style.transform).toBe('translateX(0%)')
+    expect(indicator.style.transform).toBe('translateX(0%) scale(1, 1)')
     expect(indicator.classList.contains('nav-indicator--drag')).toBe(false)
   })
 
@@ -154,7 +188,7 @@ describe('setupFooter — свайп по панели', () => {
     pointer(nav, 'pointermove', 60)
     pointer(nav, 'pointerup', 60)
     expect(navigation.showPage).not.toHaveBeenCalled()
-    expect(nav.querySelector('.nav-indicator').style.transform).toBe('translateX(0%)')
+    expect(nav.querySelector('.nav-indicator').style.transform).toBe('translateX(0%) scale(1, 1)')
     vi.useRealTimers()
   })
 
