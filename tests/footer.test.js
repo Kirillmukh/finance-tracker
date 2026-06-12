@@ -43,6 +43,7 @@ beforeEach(() => {
   nav = document.querySelector('.bottom-nav')
   // jsdom не делает layout — задаём ширину панели: 3 слота по 100px
   Object.defineProperty(nav, 'clientWidth', { value: 300, configurable: true })
+  nav.getBoundingClientRect = () => ({ left: 0, right: 300, width: 300, top: 0, bottom: 0, height: 0 })
   // Мок Navigation повторяет реальное поведение showPage с классом active
   navigation = {
     showPage: vi.fn((pageId) => {
@@ -84,48 +85,77 @@ describe('setupFooter — инициализация', () => {
 })
 
 describe('setupFooter — свайп по панели', () => {
-  it('индикатор следует за пальцем без анимации', () => {
+  it('пилюля позиционно следует за пальцем: первый шаг с анимацией, дальше без', () => {
     setupFooter(navigation)
+    const indicator = nav.querySelector('.nav-indicator')
     pointer(nav, 'pointerdown', 200)
     pointer(nav, 'pointermove', 150)
-    const indicator = nav.querySelector('.nav-indicator')
+    // палец на x=150 → слот-смещение 150/100 − 0.5 = 1
+    expect(indicator.style.transform).toBe('translateX(100%)')
+    expect(indicator.classList.contains('nav-indicator--drag')).toBe(false)
+    pointer(nav, 'pointermove', 175)
+    expect(indicator.style.transform).toBe('translateX(125%)')
     expect(indicator.classList.contains('nav-indicator--drag')).toBe(true)
-    expect(indicator.style.transform).toBe('translateX(50%)')
   })
 
-  it('свайп влево переключает на следующую вкладку', () => {
+  it('быстрый флик влево переключает относительно, а не по позиции пальца', () => {
     setupFooter(navigation)
-    swipe(nav, 200, 150)
+    // палец остаётся над home (x=60), но сдвиг 0.4 слота влево → следующая вкладка
+    swipe(nav, 100, 60)
     expect(navigation.showPage).toHaveBeenCalledWith('export')
   })
 
-  it('короткий свайп (меньше порога) не переключает и возвращает индикатор', () => {
+  it('короткий флик (меньше порога) не переключает и возвращает индикатор', () => {
     setupFooter(navigation)
-    swipe(nav, 200, 180)
+    swipe(nav, 60, 40)
     expect(navigation.showPage).not.toHaveBeenCalled()
     const indicator = nav.querySelector('.nav-indicator')
     expect(indicator.style.transform).toBe('translateX(0%)')
     expect(indicator.classList.contains('nav-indicator--drag')).toBe(false)
   })
 
-  it('свайп вправо на первой вкладке не переключает (clamp)', () => {
+  it('флик вправо на первой вкладке не переключает (clamp)', () => {
     setupFooter(navigation)
     swipe(nav, 100, 160)
     expect(navigation.showPage).not.toHaveBeenCalled()
   })
 
-  it('длинный свайп перескакивает через вкладку', () => {
+  it('длинный флик перескакивает через вкладку', () => {
     setupFooter(navigation)
     swipe(nav, 300, 50)
     expect(navigation.showPage).toHaveBeenCalledWith('input')
   })
 
-  it('свайп вправо со средней вкладки переключает назад', () => {
+  it('флик вправо со средней вкладки переключает назад', () => {
     document.querySelector('[data-page="home"]').classList.remove('active')
     document.querySelector('[data-page="export"]').classList.add('active')
     setupFooter(navigation)
     swipe(nav, 100, 160)
     expect(navigation.showPage).toHaveBeenCalledWith('home')
+  })
+
+  it('удержание и перенос пальца на иконку выбирает вкладку под пальцем', () => {
+    vi.useFakeTimers()
+    setupFooter(navigation)
+    pointer(nav, 'pointerdown', 50)
+    pointer(nav, 'pointermove', 250)
+    vi.advanceTimersByTime(400)
+    pointer(nav, 'pointerup', 250)
+    expect(navigation.showPage).toHaveBeenCalledWith('input')
+    vi.useRealTimers()
+  })
+
+  it('удержание с возвратом пальца на активную вкладку ничего не переключает', () => {
+    vi.useFakeTimers()
+    setupFooter(navigation)
+    pointer(nav, 'pointerdown', 50)
+    pointer(nav, 'pointermove', 150)
+    vi.advanceTimersByTime(400)
+    pointer(nav, 'pointermove', 60)
+    pointer(nav, 'pointerup', 60)
+    expect(navigation.showPage).not.toHaveBeenCalled()
+    expect(nav.querySelector('.nav-indicator').style.transform).toBe('translateX(0%)')
+    vi.useRealTimers()
   })
 
   it('после свайпа клик по вкладке гасится', () => {

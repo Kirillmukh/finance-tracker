@@ -1,10 +1,13 @@
 // Footer module — "liquid glass" behaviors for the bottom nav:
 // 1. Sliding indicator pill behind the active tab.
-// 2. Horizontal swipe on the bar switches tabs (indicator follows the finger).
-// 3. Compact mode: bar shrinks on scroll down, expands on scroll up / touch.
+// 2. Quick flick on the bar switches tabs relative to the swipe direction.
+// 3. Hold & drag: the pill follows the finger; release picks the tab under it.
+// 4. Compact mode: bar shrinks on scroll down, expands on scroll up / touch.
 
-// Fraction of one tab slot the finger must travel to commit a switch on release.
+// Fraction of one tab slot a flick must travel to commit a switch on release.
 const SWIPE_COMMIT_RATIO = 0.3;
+// Gestures shorter than this are flicks (relative); longer are positional drags.
+const FLICK_MS = 300;
 // Finger travel (px) before a touch is treated as a drag rather than a tap.
 const DRAG_START_PX = 6;
 // Accumulated scroll (px) before compact state toggles — filters out jitter.
@@ -44,17 +47,25 @@ export function setupFooter(navigation, doc = document, win = window) {
   items.forEach((item) => item.addEventListener('click', updateIndicator));
   updateIndicator();
 
-  // --- Swipe on the bar to switch tabs ---
+  // --- Swipe / hold-drag on the bar to switch tabs ---
   let startX = null;
+  let startTime = 0;
   let dragging = false;
   let suppressClick = false;
 
   const slotWidth = () => nav.clientWidth / items.length || 1;
   // Swipe left = move to the tab on the right, hence the sign flip.
-  const dragProgress = (e) => -(e.clientX - startX) / slotWidth();
+  const flickProgress = (e) => -(e.clientX - startX) / slotWidth();
+  // Slot offset of the tab currently under the finger (continuous, in slot units).
+  const fingerOffset = (clientX) => {
+    const rect = nav.getBoundingClientRect();
+    const slot = rect.width / items.length || 1;
+    return clamp((clientX - rect.left) / slot - 0.5, 0, items.length - 1);
+  };
 
   nav.addEventListener('pointerdown', (e) => {
     startX = e.clientX;
+    startTime = Date.now();
     dragging = false;
     suppressClick = false;
     nav.classList.remove('compact');
@@ -63,29 +74,37 @@ export function setupFooter(navigation, doc = document, win = window) {
   nav.addEventListener('pointermove', (e) => {
     if (startX === null) return;
     if (!dragging && Math.abs(e.clientX - startX) < DRAG_START_PX) return;
-    if (!dragging && nav.setPointerCapture && e.pointerId !== undefined) {
+    const firstMove = !dragging;
+    if (firstMove && nav.setPointerCapture && e.pointerId !== undefined) {
       // Захват только с началом драга: захват на pointerdown ретаргетит
       // последующий click на nav и ломает обычные тапы по вкладкам.
       try { nav.setPointerCapture(e.pointerId); } catch (_) {}
     }
     dragging = true;
-    const offset = clamp(activeIndex() + dragProgress(e), 0, items.length - 1);
-    setIndicator(offset, false);
+    // Пилюля позиционно следует за пальцем; первый шаг анимируем,
+    // чтобы она плавно «подъехала» под палец с активной вкладки.
+    setIndicator(fingerOffset(e.clientX), firstMove);
   });
 
   const endDrag = (e) => {
     if (startX === null) return;
-    const progress = dragProgress(e);
+    const progress = flickProgress(e);
+    const elapsed = Date.now() - startTime;
     const wasDragging = dragging;
     startX = null;
     dragging = false;
     if (!wasDragging) return;
 
     suppressClick = true;
-    const steps = Math.abs(progress) < SWIPE_COMMIT_RATIO
-      ? 0
-      : Math.sign(progress) * Math.max(1, Math.round(Math.abs(progress)));
-    const target = clamp(activeIndex() + steps, 0, items.length - 1);
+    let target;
+    if (elapsed < FLICK_MS && Math.abs(progress) >= SWIPE_COMMIT_RATIO) {
+      // Быстрый флик — относительный сдвиг от активной вкладки
+      const steps = Math.sign(progress) * Math.max(1, Math.round(Math.abs(progress)));
+      target = clamp(activeIndex() + steps, 0, items.length - 1);
+    } else {
+      // Удержание — вкладка, над которой отпустили палец
+      target = Math.round(fingerOffset(e.clientX));
+    }
     if (target !== activeIndex()) {
       navigation.showPage(pages[target]);
     }
