@@ -5,6 +5,7 @@ export class Modal {
   constructor() {
     this.modal = document.getElementById("modal");
     this.closeBtn = document.querySelector(".close-btn");
+    this.onClose = null;
     this.setupEventListeners();
   }
 
@@ -26,5 +27,6 @@ export class Modal {
   close() {
     this.modal.classList.remove("show");
     document.body.style.overflow = "auto";
+    if (this.onClose) { const cb = this.onClose; this.onClose = null; cb(); }
   }
 }

@@ -249,6 +249,36 @@ describe('setupFooter — свайп по панели', () => {
   })
 })
 
+describe('setupFooter — синхронизация индикатора при программной навигации (onPageChange)', () => {
+  it('устанавливает navigation.onPageChange после инициализации', () => {
+    setupFooter(navigation)
+    expect(navigation.onPageChange).toBeTypeOf('function')
+  })
+
+  it('вызов onPageChange перемещает индикатор на активную вкладку', () => {
+    setupFooter(navigation)
+    const indicator = nav.querySelector('.nav-indicator')
+    expect(indicator.style.transform).toBe('translateX(0%) scale(1, 1)')
+    // Программно переключаем active на export (index 1) — как делает showPage
+    document.querySelector('[data-page="home"]').classList.remove('active')
+    document.querySelector('[data-page="export"]').classList.add('active')
+    navigation.onPageChange('export')
+    expect(indicator.style.transform).toBe('translateX(100%) scale(1, 1)')
+  })
+
+  it('onPageChange не обновляет индикатор во время драга (pill следует за пальцем)', () => {
+    setupFooter(navigation)
+    const indicator = nav.querySelector('.nav-indicator')
+    // Начинаем drag — pill под input (x=200 → 150%)
+    pointer(nav, 'pointerdown', 200)
+    const transformDuringDrag = indicator.style.transform
+    // Симулируем вызов onPageChange, который происходит при live switching в followFinger
+    navigation.onPageChange('home')
+    // Индикатор не должен был сдвинуться: он следует за пальцем, а не за active
+    expect(indicator.style.transform).toBe(transformDuringDrag)
+  })
+})
+
 describe('setupFooter — компактный режим при скролле', () => {
   it('скролл вниз добавляет .compact', () => {
     setupFooter(navigation)

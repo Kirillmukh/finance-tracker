@@ -189,5 +189,12 @@ export function setupFooter(navigation, doc = document, win = window) {
     { passive: true }
   );
 
+  // Sync the indicator when showPage is called programmatically (e.g., form submit).
+  // Skip during drag: followFinger already positions the pill; snapping it here
+  // would override the physics animation.
+  navigation.onPageChange = () => {
+    if (startX === null) updateIndicator();
+  };
+
   return { updateIndicator };
 }

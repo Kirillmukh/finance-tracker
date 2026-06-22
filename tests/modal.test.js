@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { Modal } from '../js/modal.js'
 
 function setupDOM() {
@@ -53,9 +53,48 @@ describe('Modal.close', () => {
     modal.close()
     expect(document.body.style.overflow).toBe('auto')
   })
+
+  it('по умолчанию onClose равен null и close не бросает ошибку', () => {
+    expect(modal.onClose).toBeNull()
+    expect(() => modal.close()).not.toThrow()
+  })
+
+  it('вызывает onClose при закрытии', () => {
+    const onClose = vi.fn()
+    modal.onClose = onClose
+    modal.close()
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('сбрасывает onClose после вызова — повторный close не вызывает его снова', () => {
+    const onClose = vi.fn()
+    modal.onClose = onClose
+    modal.close()
+    modal.open('t', '')
+    modal.close()
+    expect(onClose).toHaveBeenCalledOnce()
+  })
 })
 
 describe('Modal — события', () => {
+  it('клик по кнопке закрытия вызывает onClose', () => {
+    modal.open('t', '')
+    const onClose = vi.fn()
+    modal.onClose = onClose
+    document.querySelector('.close-btn').click()
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('клик по фону вызывает onClose', () => {
+    modal.open('t', '')
+    const onClose = vi.fn()
+    modal.onClose = onClose
+    const event = new MouseEvent('click', { bubbles: true })
+    Object.defineProperty(event, 'target', { value: document.getElementById('modal') })
+    document.getElementById('modal').dispatchEvent(event)
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
   it('клик по кнопке закрытия закрывает модальное окно', () => {
     modal.open('t', '')
     document.querySelector('.close-btn').click()

@@ -3,6 +3,7 @@ import { Storage } from './storage.js';
 
 export class Navigation {
   constructor() {
+    this.onPageChange = null;
     this.setupEventListeners();
   }
 
@@ -27,6 +28,7 @@ export class Navigation {
       item.classList.remove("active");
     });
     document.querySelector(`.nav-item[data-page="${pageId}"]`).classList.add("active");
+    if (this.onPageChange) this.onPageChange(pageId);
   }
 
   init() {

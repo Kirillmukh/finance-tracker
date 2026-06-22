@@ -365,10 +365,42 @@ describe('TransactionManager.openTransactionModal — открытие мода�
     expect(document.getElementById('modal-rate-select').value).toBe('ok')
   })
 
-  it('открытие модального окна очищает теги формы (предотвращает дублирование дефолтного тега)', () => {
+  it('открытие модального окна очищает теги формы для использования модалкой', () => {
     const mgr = makeManagerForModal()
     mgr.ui.tags.push('дефолт')
     mgr.openTransactionModal(transaction)
+    expect(mgr.ui.tags).toHaveLength(0)
+  })
+
+  it('после открытия устанавливает modal.onClose', () => {
+    const mgr = makeManagerForModal()
+    mgr.openTransactionModal(transaction)
+    expect(mgr.modal.onClose).toBeTypeOf('function')
+  })
+
+  it('вызов modal.onClose восстанавливает теги формы (включая дефолтный тег)', () => {
+    const mgr = makeManagerForModal()
+    mgr.ui.tags.push('дефолт')
+    mgr.openTransactionModal(transaction)
+    // Теги очищены для нужд модалки
+    expect(mgr.ui.tags).toHaveLength(0)
+    // Симулируем закрытие через X-кнопку или клик по фону
+    mgr.modal.onClose()
+    expect(mgr.ui.tags).toEqual(['дефолт'])
+  })
+
+  it('вызов modal.onClose с несколькими тегами восстанавливает все', () => {
+    const mgr = makeManagerForModal()
+    mgr.ui.tags.push('дефолт', 'продукты')
+    mgr.openTransactionModal(transaction)
+    mgr.modal.onClose()
+    expect(mgr.ui.tags).toEqual(['дефолт', 'продукты'])
+  })
+
+  it('вызов modal.onClose без предыдущих тегов оставляет массив пустым', () => {
+    const mgr = makeManagerForModal()
+    mgr.openTransactionModal(transaction)
+    mgr.modal.onClose()
     expect(mgr.ui.tags).toHaveLength(0)
   })
 })

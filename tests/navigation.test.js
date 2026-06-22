@@ -60,6 +60,18 @@ describe('Navigation.showPage', () => {
     nav.showPage('export')
     expect(Storage.setPage).toHaveBeenCalledWith('export')
   })
+
+  it('по умолчанию onPageChange равен null и showPage не бросает ошибку', () => {
+    expect(nav.onPageChange).toBeNull()
+    expect(() => nav.showPage('input')).not.toThrow()
+  })
+
+  it('вызывает onPageChange с id страницы если задан', () => {
+    const onPageChange = vi.fn()
+    nav.onPageChange = onPageChange
+    nav.showPage('export')
+    expect(onPageChange).toHaveBeenCalledWith('export')
+  })
 })
 
 describe('Navigation.init', () => {

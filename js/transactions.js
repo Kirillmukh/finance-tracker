@@ -229,8 +229,20 @@ export class TransactionManager {
     timeInput.value = `${hours}:${minutes}`;
     
     document.getElementById("modal-rate-select").value = transaction.rate;
+
+    // Save the main form's tags so they survive the modal interaction.
+    // openTransactionModal reuses this.ui.tags for modal-specific new tags,
+    // so without this the add-form loses its default tag after any modal opens.
+    const savedFormTags = [...this.ui.tags];
     this.ui.clearTags();
     this.ui.clearTagsToRemove();
+
+    // Restore form tags on every close path: save/delete/duplicate buttons AND X/backdrop.
+    this.modal.onClose = () => {
+      this.ui.clearTags();
+      this.ui.clearTagsToRemove();
+      savedFormTags.forEach(t => this.ui.tags.push(t));
+    };
 
     this.ui.setupModalAutocomplete(this.allCategories, this.allTags, transaction);
     this.ui.setupModalTagHandling(transaction);
