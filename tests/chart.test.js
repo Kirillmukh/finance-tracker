@@ -91,6 +91,32 @@ describe('updateCharts', () => {
     expect(config.data.labels).toEqual(['Food', 'Transport'])
   })
 
+  it('сортирует данные по убыванию суммы', () => {
+    updateCharts({ Transport: 50, Food: 100, Cafe: 75 })
+    const config = global.Chart.mock.calls[0][1]
+    expect(config.data.labels).toEqual(['Food', 'Cafe', 'Transport'])
+    expect(config.data.datasets[0].data).toEqual([100, 75, 50])
+  })
+
+  it('легенда рендерит название, сумму и процент', () => {
+    updateCharts({ Food: 100, Transport: 50 })
+    const items = document.querySelectorAll('.legend-item')
+    expect(items.length).toBe(2)
+    expect(items[0].querySelector('.legend-text').textContent).toBe('Food')
+    expect(items[0].querySelector('.legend-amount').textContent).toBe('100 ₽')
+    expect(items[0].querySelector('.legend-percent').textContent).toBe('66.7%')
+    expect(items[1].querySelector('.legend-percent').textContent).toBe('33.3%')
+  })
+
+  it('пересчитывает проценты при скрытии категории', () => {
+    updateCharts({ Food: 100, Transport: 50 })
+    const items = document.querySelectorAll('.legend-item')
+    items[0].click() // скрыть Food
+
+    expect(items[0].querySelector('.legend-percent').textContent).toBe('')
+    expect(items[1].querySelector('.legend-percent').textContent).toBe('100.0%')
+  })
+
   it('уничтожает существующий чарт перед созданием нового', () => {
     const existing = { destroy: vi.fn() }
     global.Chart.getChart = vi.fn(() => existing)
@@ -133,6 +159,13 @@ describe('updateChartForRates', () => {
     const chartObj = { waste: 100 }
     updateChartForRates(chartObj)
     expect(mockChartInstance.data.datasets[0].backgroundColor).toContain('#f43f5e')
+  })
+
+  it('сортирует дольки по убыванию суммы', () => {
+    global.Chart.getChart = vi.fn(() => mockChartInstance)
+    updateChartForRates({ waste: 100, ok: 200, good: 50 })
+    expect(mockChartInstance.data.labels).toEqual(['Ок', 'Плохая', 'Осознанная'])
+    expect(mockChartInstance.data.datasets[0].data).toEqual([200, 100, 50])
   })
 
   it('вызывает chart.update()', () => {

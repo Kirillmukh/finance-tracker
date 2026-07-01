@@ -28,6 +28,17 @@ function setLegendToggleVisible(visible) {
   if (btn) btn.style.display = visible ? '' : 'none';
 }
 
+function updateLegendPercents(container, values, meta) {
+  let total = 0;
+  values.forEach((value, i) => {
+    if (!(meta.data[i] && meta.data[i].hidden)) total += value;
+  });
+  container.querySelectorAll('.legend-percent').forEach((el, i) => {
+    const isHidden = meta.data[i] && meta.data[i].hidden;
+    el.textContent = isHidden || total <= 0 ? '' : `${((values[i] / total) * 100).toFixed(1)}%`;
+  });
+}
+
 function renderCustomLegend(chart) {
   const container = document.getElementById("chart-legend");
   if (!container) return;
@@ -35,6 +46,7 @@ function renderCustomLegend(chart) {
   container.innerHTML = '';
 
   const labels = chart.data.labels;
+  const values = chart.data.datasets[0].data;
   const bgColors = chart.data.datasets[0].backgroundColor;
   const meta = chart.getDatasetMeta(0);
 
@@ -44,7 +56,7 @@ function renderCustomLegend(chart) {
 
     const item = document.createElement('div');
     item.className = 'legend-item' + (isHidden ? ' legend-item--hidden' : '');
-    item.innerHTML = `<span class="legend-swatch" style="background:${color}"></span><span class="legend-text">${label}</span>`;
+    item.innerHTML = `<span class="legend-name"><span class="legend-swatch" style="background:${color}"></span><span class="legend-text">${label}</span></span><span class="legend-amount">${values[i]} ₽</span><span class="legend-percent"></span>`;
     item.addEventListener('click', () => {
       meta.data[i].hidden = !meta.data[i].hidden;
       if (meta.data[i].hidden) {
@@ -55,18 +67,22 @@ function renderCustomLegend(chart) {
         item.classList.remove('legend-item--hidden');
       }
       chart.update();
+      updateLegendPercents(container, values, meta);
       if (onLegendClickCallback) onLegendClickCallback();
     });
     container.appendChild(item);
   });
+
+  updateLegendPercents(container, values, meta);
 }
 
 export function updateCharts(object, type = "pie") {
   const existing = Chart.getChart("chart");
   if (existing) existing.destroy();
 
-  const labels = Object.keys(object);
-  const values = Object.values(object);
+  const entries = Object.entries(object).sort((a, b) => b[1] - a[1]);
+  const labels = entries.map(([label]) => label);
+  const values = entries.map(([, value]) => value);
   const colors = labels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
 
   const chart = new Chart(document.getElementById("chart"), {
@@ -103,15 +119,11 @@ export function updateCharts(object, type = "pie") {
 }
 
 export function updateChartForRates(chartObject) {
-  let colors = [];
-  for (const key in chartObject) {
-    colors.push(RATES.get(key)[1]);
-    chartObject[RATES.get(key)[0]] = chartObject[key];
-    delete chartObject[key];
-  }
+  const entries = Object.entries(chartObject).sort((a, b) => b[1] - a[1]);
   const pieChart = Chart.getChart("chart");
-  pieChart.data.labels = Object.keys(chartObject);
-  pieChart.data.datasets[0].backgroundColor = colors;
+  pieChart.data.labels = entries.map(([key]) => RATES.get(key)[0]);
+  pieChart.data.datasets[0].data = entries.map(([, value]) => value);
+  pieChart.data.datasets[0].backgroundColor = entries.map(([key]) => RATES.get(key)[1]);
   pieChart.update();
   const container = document.getElementById("chart-legend");
   if (container) container.classList.remove('legend-hidden');
