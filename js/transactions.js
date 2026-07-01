@@ -1,6 +1,6 @@
 // Transactions module - handles transaction operations and rendering
 import { RATES, formatDate, groupTransactions, getDateRange, countMapInc, countMapDec, shiftDateInputValue, shiftTimeInputValue, getTransactionTimestamp, toDateInputValue, toTimeInputValue } from './utils.js';
-import { updateCharts, updateChartForRates, updateChartForTags, setLegendClickCallback, getHiddenCategories, clearHiddenCategories } from './chart.js';
+import { updateCharts, updateChartForRates, updateChartForTags, setLegendClickCallback, setSliceClickCallback, getHiddenCategories, clearHiddenCategories } from './chart.js';
 import { Storage } from './storage.js';
 
 export class TransactionManager {
@@ -14,6 +14,7 @@ export class TransactionManager {
     this.limit = Storage.getLimit();
     this.chartTarget = Storage.getChartTarget();
     this.currentTransactions = [];
+    this.categoryFilter = null;
   }
 
   async init() {
@@ -23,7 +24,12 @@ export class TransactionManager {
     setLegendClickCallback(() => {
       this.updateBalanceWithHiddenCategories();
     });
-    
+
+    // Clicking a pie slice filters the list to that category (category target only)
+    setSliceClickCallback((label) => {
+      this.toggleCategoryFilter(label);
+    });
+
     this.singleLoadTransactionsRender();
     
     // Wait for categories and tags to load before continuing
@@ -69,6 +75,28 @@ export class TransactionManager {
 
   loadTransactions(transactions) {
     this.currentTransactions = transactions;
+    this.categoryFilter = null;
+    this.updateCategoryFilterIndicator();
+    this.renderTransactionsList(transactions);
+
+    // Clear hidden categories when loading new data
+    clearHiddenCategories();
+
+    const chartObject = groupTransactions(transactions, this.chartTarget);
+
+    if (this.chartTarget === "tags") {
+      updateCharts(chartObject, "bar");
+      updateChartForTags();
+    } else {
+      updateCharts(chartObject);
+    }
+
+    if (this.chartTarget === "rate") {
+      updateChartForRates(chartObject);
+    }
+  }
+
+  renderTransactionsList(transactions) {
     const list = document.getElementById("transactions");
     const balanceElement = document.getElementById("balance");
 
@@ -156,21 +184,31 @@ export class TransactionManager {
     });
 
     balanceElement.textContent = balance;
-    
-    // Clear hidden categories when loading new data
-    clearHiddenCategories();
-    
-    const chartObject = groupTransactions(transactions, this.chartTarget);
-    
-    if (this.chartTarget === "tags") {
-      updateCharts(chartObject, "bar");
-      updateChartForTags();
+  }
+
+  getVisibleTransactions() {
+    if (!this.categoryFilter) return this.currentTransactions;
+    return this.currentTransactions.filter(t => t.category === this.categoryFilter);
+  }
+
+  toggleCategoryFilter(category) {
+    if (this.chartTarget !== "category") return;
+    const next = category !== null && category !== this.categoryFilter ? category : null;
+    if (next === this.categoryFilter) return;
+    this.categoryFilter = next;
+    this.updateCategoryFilterIndicator();
+    this.renderTransactionsList(this.getVisibleTransactions());
+  }
+
+  updateCategoryFilterIndicator() {
+    const indicator = document.getElementById("category-filter-indicator");
+    if (!indicator) return;
+    if (this.categoryFilter) {
+      document.getElementById("category-filter-label").textContent = this.categoryFilter;
+      document.getElementById("category-filter-clear").onclick = () => this.toggleCategoryFilter(this.categoryFilter);
+      indicator.style.display = "";
     } else {
-      updateCharts(chartObject);
-    }
-    
-    if (this.chartTarget === "rate") {
-      updateChartForRates(chartObject);
+      indicator.style.display = "none";
     }
   }
 
@@ -180,7 +218,7 @@ export class TransactionManager {
     
     let balance = 0;
     
-    this.currentTransactions.forEach((transaction) => {
+    this.getVisibleTransactions().forEach((transaction) => {
       // Determine which field to check based on chartTarget
       let shouldInclude = true;
       

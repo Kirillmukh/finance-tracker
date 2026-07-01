@@ -10,9 +10,14 @@ const CHART_COLORS = [
 
 let hiddenCategories = new Set();
 let onLegendClickCallback = null;
+let onSliceClickCallback = null;
 
 export function setLegendClickCallback(callback) {
   onLegendClickCallback = callback;
+}
+
+export function setSliceClickCallback(callback) {
+  onSliceClickCallback = callback;
 }
 
 export function getHiddenCategories() {
@@ -92,6 +97,11 @@ export function updateCharts(object, type = "pie") {
       datasets: [{ data: values, backgroundColor: colors }],
     },
     options: {
+      onClick: (event, elements, clickedChart) => {
+        if (!onSliceClickCallback) return;
+        // Click past the slices reports null so the caller can clear its filter
+        onSliceClickCallback(elements.length > 0 ? clickedChart.data.labels[elements[0].index] : null);
+      },
       plugins: {
         legend: { display: false },
         tooltip: {

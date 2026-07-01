@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   setLegendClickCallback,
+  setSliceClickCallback,
   getHiddenCategories,
   clearHiddenCategories,
   updateCharts,
@@ -41,6 +42,7 @@ function setupChartMock(existingChart = null) {
 beforeEach(() => {
   clearHiddenCategories()
   setLegendClickCallback(null)
+  setSliceClickCallback(null)
   setupChartMock()
 })
 
@@ -68,6 +70,35 @@ describe('setLegendClickCallback', () => {
     legendItem.click()
 
     expect(cb).toHaveBeenCalled()
+  })
+})
+
+describe('setSliceClickCallback — клик по сегменту графика', () => {
+  function getOnClick() {
+    updateCharts({ Food: 100, Transport: 50 })
+    return global.Chart.mock.calls[0][1].options.onClick
+  }
+
+  it('передаёт label кликнутого сегмента в callback', () => {
+    const cb = vi.fn()
+    setSliceClickCallback(cb)
+    const onClick = getOnClick()
+    const chart = { data: { labels: ['Food', 'Transport'] } }
+    onClick({}, [{ index: 1 }], chart)
+    expect(cb).toHaveBeenCalledWith('Transport')
+  })
+
+  it('передаёт null при клике мимо сегментов', () => {
+    const cb = vi.fn()
+    setSliceClickCallback(cb)
+    const onClick = getOnClick()
+    onClick({}, [], { data: { labels: ['Food', 'Transport'] } })
+    expect(cb).toHaveBeenCalledWith(null)
+  })
+
+  it('не падает если callback не установлен', () => {
+    const onClick = getOnClick()
+    expect(() => onClick({}, [{ index: 0 }], { data: { labels: ['Food'] } })).not.toThrow()
   })
 })
 

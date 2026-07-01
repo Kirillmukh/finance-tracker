@@ -18,6 +18,7 @@ vi.mock('../js/storage.js', () => ({
 
 vi.mock('../js/chart.js', () => ({
   setLegendClickCallback: vi.fn(),
+  setSliceClickCallback: vi.fn(),
   getHiddenCategories: vi.fn(() => new Set()),
   clearHiddenCategories: vi.fn(),
   updateCharts: vi.fn(),
@@ -307,6 +308,143 @@ describe('TransactionManager.loadTransactions — DOM рендеринг', () =>
     const sep = document.querySelector('.date-separator')
     expect(sep.children.length).toBe(2)
     expect(sep.children[1].classList.contains('date-separator-sum')).toBe(true)
+  })
+})
+
+describe('TransactionManager.toggleCategoryFilter — фильтр по клику на сегмент графика', () => {
+  function setupFilterDOM() {
+    document.body.innerHTML = `
+      <ul id="transactions"></ul>
+      <span id="balance"></span>
+      <canvas id="chart"></canvas>
+      <div id="category-filter-indicator" style="display: none">
+        <span id="category-filter-label"></span>
+        <button id="category-filter-clear"></button>
+      </div>
+    `
+  }
+
+  function makeLoadedManager() {
+    setupFilterDOM()
+    const mgr = makeManager()
+    mgr.loadTransactions([...sampleTransactions])
+    return mgr
+  }
+
+  it('init регистрирует callback клика по сегменту', async () => {
+    const { setSliceClickCallback } = await import('../js/chart.js')
+    const mgr = makeManager()
+    mgr.db.readOnlyTransaction = vi.fn((fns, done) => {
+      fns.forEach((fn) => fn([]))
+      done && done()
+    })
+    vi.spyOn(mgr, 'singleLoadTransactionsRender').mockImplementation(() => {})
+    await mgr.init()
+    expect(setSliceClickCallback).toHaveBeenCalledWith(expect.any(Function))
+    // Зарегистрированный callback прокидывает label в toggleCategoryFilter
+    const toggle = vi.spyOn(mgr, 'toggleCategoryFilter').mockImplementation(() => {})
+    setSliceClickCallback.mock.calls.at(-1)[0]('Food')
+    expect(toggle).toHaveBeenCalledWith('Food')
+  })
+
+  it('показывает только транзакции выбранной категории и их баланс', () => {
+    const mgr = makeLoadedManager()
+    mgr.toggleCategoryFilter('Food')
+    expect(document.querySelectorAll('.transaction-li').length).toBe(2)
+    expect(document.getElementById('balance').textContent).toBe('300')
+  })
+
+  it('показывает индикатор фильтра с названием категории', () => {
+    const mgr = makeLoadedManager()
+    mgr.toggleCategoryFilter('Food')
+    expect(document.getElementById('category-filter-indicator').style.display).not.toBe('none')
+    expect(document.getElementById('category-filter-label').textContent).toBe('Food')
+  })
+
+  it('повторный клик по той же категории снимает фильтр', () => {
+    const mgr = makeLoadedManager()
+    mgr.toggleCategoryFilter('Food')
+    mgr.toggleCategoryFilter('Food')
+    expect(document.querySelectorAll('.transaction-li').length).toBe(3)
+    expect(document.getElementById('balance').textContent).toBe('350')
+    expect(document.getElementById('category-filter-indicator').style.display).toBe('none')
+  })
+
+  it('клик по другой категории заменяет фильтр', () => {
+    const mgr = makeLoadedManager()
+    mgr.toggleCategoryFilter('Food')
+    mgr.toggleCategoryFilter('Transport')
+    expect(document.querySelectorAll('.transaction-li').length).toBe(1)
+    expect(document.getElementById('category-filter-label').textContent).toBe('Transport')
+  })
+
+  it('клик мимо сегментов (null) снимает активный фильтр', () => {
+    const mgr = makeLoadedManager()
+    mgr.toggleCategoryFilter('Food')
+    mgr.toggleCategoryFilter(null)
+    expect(document.querySelectorAll('.transaction-li').length).toBe(3)
+    expect(document.getElementById('category-filter-indicator').style.display).toBe('none')
+  })
+
+  it('клик мимо сегментов без активного фильтра не перерисовывает список', () => {
+    const mgr = makeLoadedManager()
+    const render = vi.spyOn(mgr, 'renderTransactionsList')
+    mgr.toggleCategoryFilter(null)
+    expect(render).not.toHaveBeenCalled()
+  })
+
+  it('кнопка × в индикаторе снимает фильтр', () => {
+    const mgr = makeLoadedManager()
+    mgr.toggleCategoryFilter('Food')
+    document.getElementById('category-filter-clear').click()
+    expect(mgr.categoryFilter).toBe(null)
+    expect(document.querySelectorAll('.transaction-li').length).toBe(3)
+  })
+
+  it('не фильтрует при chartTarget !== "category"', () => {
+    const mgr = makeLoadedManager()
+    mgr.chartTarget = 'rate'
+    mgr.toggleCategoryFilter('Food')
+    expect(mgr.categoryFilter).toBe(null)
+    expect(document.querySelectorAll('.transaction-li').length).toBe(3)
+  })
+
+  it('фильтрация не перестраивает график', async () => {
+    const { updateCharts } = await import('../js/chart.js')
+    const mgr = makeLoadedManager()
+    updateCharts.mockClear()
+    mgr.toggleCategoryFilter('Food')
+    expect(updateCharts).not.toHaveBeenCalled()
+  })
+
+  it('loadTransactions сбрасывает активный фильтр', () => {
+    const mgr = makeLoadedManager()
+    mgr.toggleCategoryFilter('Food')
+    mgr.loadTransactions([...sampleTransactions])
+    expect(mgr.categoryFilter).toBe(null)
+    expect(document.querySelectorAll('.transaction-li').length).toBe(3)
+    expect(document.getElementById('category-filter-indicator').style.display).toBe('none')
+  })
+
+  it('updateBalanceWithHiddenCategories учитывает активный фильтр', () => {
+    const mgr = makeLoadedManager()
+    mgr.toggleCategoryFilter('Food')
+    getHiddenCategories.mockReturnValue(new Set(['Transport']))
+    mgr.updateBalanceWithHiddenCategories()
+    // Фильтр по Food (100+200), скрытая Transport и так не входит
+    expect(document.getElementById('balance').textContent).toBe('300')
+  })
+
+  it('работает без элемента индикатора в DOM', () => {
+    document.body.innerHTML = `
+      <ul id="transactions"></ul>
+      <span id="balance"></span>
+      <canvas id="chart"></canvas>
+    `
+    const mgr = makeManager()
+    mgr.loadTransactions([...sampleTransactions])
+    expect(() => mgr.toggleCategoryFilter('Food')).not.toThrow()
+    expect(document.querySelectorAll('.transaction-li').length).toBe(2)
   })
 })
 

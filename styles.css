@@ -763,6 +763,48 @@ input[type="time"] {
   vertical-align: -1px;
 }
 
+.category-filter-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 8px auto 4px;
+  padding: 4px 6px 4px 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+.category-filter-text {
+  user-select: none;
+}
+
+#category-filter-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.category-filter-clear {
+  background: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  border: none;
+  border-radius: 50%;
+  box-shadow: none;
+  transform: none;
+}
+
+.category-filter-clear:hover {
+  color: var(--text-primary);
+  background-color: var(--border);
+  box-shadow: none;
+  transform: none;
+}
+
 /* Общие стили для всех полей ввода */
 input,
 select {
