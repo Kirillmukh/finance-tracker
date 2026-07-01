@@ -571,6 +571,10 @@ input[type="time"] {
   word-break: break-all;
 }
 
+#export-filtered-btn {
+  display: block;
+}
+
 #import-btn,
 #export-btn {
   background: #4f46e5;

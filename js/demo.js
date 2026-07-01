@@ -1,6 +1,26 @@
 // Demo module - loads/clears demo data and manages demo banner UI
 import { Storage } from './storage.js';
 
+// Сдвигает даты транзакций на целое число дней так, чтобы самая свежая
+// запись попала на «сегодня» (день `now`), сохраняя интервалы между записями.
+// Сдвиг по календарным дням через компоненты даты, а не по миллисекундам,
+// чтобы переход через DST не уносил полночь на предыдущий день.
+export function shiftDemoDates(transactions, now = new Date()) {
+  if (!transactions.length) return transactions;
+  const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const maxDate = new Date(Math.max(...transactions.map((t) => t.date)));
+  const offsetDays = Math.round((dayStart(now) - dayStart(maxDate)) / 86400000);
+  if (offsetDays === 0) return transactions;
+  return transactions.map((t) => {
+    const d = new Date(t.date);
+    const shifted = new Date(
+      d.getFullYear(), d.getMonth(), d.getDate() + offsetDays,
+      d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()
+    );
+    return { ...t, date: shifted.getTime() };
+  });
+}
+
 export class Demo {
   constructor(db, transactionManager) {
     this.db = db;
@@ -27,7 +47,7 @@ export class Demo {
           this.db.clearAllTransactions(() => {
             Storage.clearTags();
             Storage.clearCategories();
-            const stripped = transactions.map(({ id, ...rest }) => rest);
+            const stripped = shiftDemoDates(transactions).map(({ id, ...rest }) => rest);
             this.db.bulkAddTransactions(stripped, () => {
               Storage.setDemoMode(true);
               this.transactionManager.singleLoadTransactionsRender();

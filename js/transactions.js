@@ -403,12 +403,12 @@ export class TransactionManager {
     this.modal.close();
   }
 
-  singleLoadTransactionsRender() {
+  readTransactionsForCurrentLimit(callback) {
     if (this.limit === "default-tag") {
       const defaultTag = Storage.getDefaultTag();
       if (defaultTag) {
         this.db.readOnlyTransaction([(transactions) => {
-          this.loadTransactions(transactions.filter(t => t.tags && t.tags.includes(defaultTag)));
+          callback(transactions.filter(t => t.tags && t.tags.includes(defaultTag)));
         }]);
         return;
       }
@@ -432,13 +432,17 @@ export class TransactionManager {
 
     const period = getDateRange(this.limit, new Date(), customStart, customEnd);
     if (period.start.getTime() === period.end.getTime()) {
-      this.db.readOnlyTransaction([(transactions) => this.loadTransactions(transactions)]);
+      this.db.readOnlyTransaction([(transactions) => callback(transactions)]);
     } else {
       this.db.readOnlyTransactionByDate(
-        [(transactions) => this.loadTransactions(transactions)],
+        [(transactions) => callback(transactions)],
         IDBKeyRange.bound(period.start.getTime(), period.end.getTime(), true, true)
       );
     }
+  }
+
+  singleLoadTransactionsRender() {
+    this.readTransactionsForCurrentLimit((transactions) => this.loadTransactions(transactions));
   }
 
   setupTransactionForm() {

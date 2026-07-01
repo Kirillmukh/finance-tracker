@@ -42,6 +42,7 @@ global.FileReader = MockFileReader
 function setupDOM() {
   document.body.innerHTML = `
     <button id="export-btn">Экспорт</button>
+    <button id="export-filtered-btn">Экспорт по фильтру</button>
     <button id="import-btn">Импорт</button>
     <input id="input-json" type="file" />
     <div id="file-upload-zone"></div>
@@ -81,11 +82,15 @@ function makeDB(transactions = []) {
   }
 }
 
-function makeTransactionManager() {
+function makeTransactionManager(filteredTransactions = [], limit = 'all') {
   return {
+    limit,
     singleLoadTransactionsRender: vi.fn(),
     loadAllCategories: vi.fn(),
     loadAllTags: vi.fn(),
+    readTransactionsForCurrentLimit: vi.fn(function (cb) {
+      cb(filteredTransactions)
+    }),
   }
 }
 
@@ -188,6 +193,88 @@ describe('ImportExport.exportData', () => {
     global.Blob = origBlob
     const parsed = JSON.parse(captured)
     expect(parsed.settings).toEqual({ defaultTag: 'work', defaultRate: 'good', theme: 'dark' })
+  })
+})
+
+describe('ImportExport.exportFilteredData', () => {
+  function captureDownloadName() {
+    const captured = { name: '' }
+    const origCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const el = origCreateElement(tag)
+      if (tag === 'a') {
+        Object.defineProperty(el, 'download', {
+          get: () => captured.name,
+          set: (v) => { captured.name = v },
+          configurable: true,
+        })
+      }
+      return el
+    })
+    return captured
+  }
+
+  it('читает транзакции через readTransactionsForCurrentLimit, а не всю базу', () => {
+    ie.exportFilteredData()
+    expect(manager.readTransactionsForCurrentLimit).toHaveBeenCalled()
+    expect(db.readOnlyTransaction).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['day', 'day'],
+    ['week', 'week'],
+    ['month', 'month'],
+    ['year', 'year'],
+    ['custom', 'custom'],
+    ['all', 'all'],
+    ['default-tag', 'default_tag'],
+  ])('limit=%s — имя файла оканчивается на -%s.json', (limit, suffix) => {
+    manager = makeTransactionManager([], limit)
+    ie = new ImportExport(db, manager)
+    const captured = captureDownloadName()
+    ie.exportFilteredData()
+    expect(captured.name).toMatch(new RegExp(`^\\d{2}\\.\\d{2}\\.\\d{4}-${suffix}\\.json$`))
+  })
+
+  it('суффикс берётся из limit ПОСЛЕ выборки (сброс default-tag → all)', () => {
+    manager = makeTransactionManager()
+    manager.limit = 'default-tag'
+    manager.readTransactionsForCurrentLimit = vi.fn(function (cb) {
+      // реальный метод сбрасывает исчезнувший default-tag на all до колбэка
+      manager.limit = 'all'
+      cb([])
+    })
+    ie = new ImportExport(db, manager)
+    const captured = captureDownloadName()
+    ie.exportFilteredData()
+    expect(captured.name).toMatch(/-all\.json$/)
+  })
+
+  it('экспортирует отфильтрованные транзакции в формате { transactions, settings }', () => {
+    const txs = [{ id: 1, description: 'X', amount: 10, category: 'A', rate: 'ok', tags: [], date: 1 }]
+    manager = makeTransactionManager(txs, 'day')
+    ie = new ImportExport(db, manager)
+    let captured = null
+    const origBlob = global.Blob
+    global.Blob = vi.fn(function (parts) {
+      captured = parts[0]
+      return new origBlob(parts)
+    })
+    ie.exportFilteredData()
+    global.Blob = origBlob
+    const parsed = JSON.parse(captured)
+    expect(parsed).toMatchObject({ transactions: txs })
+    expect(parsed.settings).toEqual({ defaultTag: '', defaultRate: 'ok', theme: 'system' })
+  })
+
+  it('устанавливает статус после экспорта', () => {
+    ie.exportFilteredData()
+    expect(document.getElementById('export-status').textContent).toBe('Успешно экспортировано!')
+  })
+
+  it('клик по #export-filtered-btn вызывает экспорт по фильтру', () => {
+    document.getElementById('export-filtered-btn').dispatchEvent(new Event('click'))
+    expect(manager.readTransactionsForCurrentLimit).toHaveBeenCalled()
   })
 })
 
