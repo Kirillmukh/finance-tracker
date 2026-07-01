@@ -158,14 +158,14 @@
       .feature-icon { font-size: 20px; }
       .feature-text { color: var(--lnd-text-sub); font-size: 14px; }
 
-      .install-ios {
+      .install-card {
         background: var(--lnd-card);
         border: 1px solid var(--lnd-border);
         border-radius: 12px;
         padding: 28px;
         margin: 40px 0;
       }
-      .install-ios h2 {
+      .install-card h2 {
         text-align: center;
         font-size: 22px;
         margin: 0 0 8px;
@@ -310,7 +310,11 @@
         <ul>
           <li>
             <span class="feature-title"><span class="feature-icon">🎯</span>Оценка трат</span>
-            <span class="feature-text">Каждый расход помечается как Осознанная, Ок или Плохая. Графики и фильтры показывают, на что уходят деньги и какие из этих трат вы потом одобряете.</span>
+            <span class="feature-text">Каждый расход помечается как Осознанная, Ок или Плохая — со временем видно, какие траты вы на самом деле одобряете.</span>
+          </li>
+          <li>
+            <span class="feature-title"><span class="feature-icon">📊</span>Диаграммы и фильтры</span>
+            <span class="feature-text">Диаграммы по категориям, оценкам и тегам. Клик по сектору фильтрует список трат, период — от дня до года или свой диапазон дат.</span>
           </li>
           <li>
             <span class="feature-title"><span class="feature-icon">⚡</span>Всё на вашем устройстве</span>
@@ -323,6 +327,10 @@
           <li>
             <span class="feature-title"><span class="feature-icon">📥</span>Импорт и экспорт</span>
             <span class="feature-text">В любой момент можно выгрузить все транзакции в JSON для бэкапа или переноса между устройствами.</span>
+          </li>
+          <li>
+            <span class="feature-title"><span class="feature-icon">🌙</span>Тёмная тема</span>
+            <span class="feature-text">Светлая, тёмная или системная — на ваш выбор. Настройка общая для приложения и этой страницы.</span>
           </li>
         </ul>
       </section>
@@ -387,7 +395,7 @@
         </div>
       </section>
 
-      <section class="install-ios" aria-labelledby="install-ios-title">
+      <section class="install-card" aria-labelledby="install-ios-title">
         <h2 id="install-ios-title">Установить на iPhone или iPad</h2>
         <p class="install-intro">Чтобы пользоваться трекером как обычным приложением — с иконкой на экране Домой, без адресной строки и полностью офлайн:</p>
         <ol class="install-steps">
@@ -414,6 +422,40 @@
           <li>
             <span class="step-num">4</span>
             <span class="step-text">Нажмите <strong>«Добавить»</strong> в правом верхнем углу — иконка появится на главном экране.</span>
+          </li>
+        </ol>
+      </section>
+
+      <section class="install-card" aria-labelledby="install-android-title">
+        <h2 id="install-android-title">Установить на Android</h2>
+        <p class="install-intro">В Chrome (и других браузерах на Chromium) трекер устанавливается как обычное приложение:</p>
+        <ol class="install-steps">
+          <li>
+            <span class="step-num">1</span>
+            <span class="step-text">Откройте сайт в <strong>Chrome</strong>.</span>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <span class="step-text">Нажмите меню <strong>⋮</strong> в правом верхнем углу.</span>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <span class="step-text">Выберите <strong>«Добавить на главный экран»</strong> (или «Установить приложение») и подтвердите — иконка появится на главном экране.</span>
+          </li>
+        </ol>
+      </section>
+
+      <section class="install-card" aria-labelledby="install-desktop-title">
+        <h2 id="install-desktop-title">Установить на компьютер</h2>
+        <p class="install-intro">В Chrome, Edge и других браузерах на Chromium приложение ставится в пару кликов:</p>
+        <ol class="install-steps">
+          <li>
+            <span class="step-num">1</span>
+            <span class="step-text">Откройте сайт и найдите <strong>иконку установки</strong> в правой части адресной строки (монитор со стрелкой).</span>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <span class="step-text">Нажмите её и подтвердите <strong>«Установить»</strong> — трекер откроется в отдельном окне и появится среди приложений. Если иконки нет, пункт «Установить…» есть в меню браузера.</span>
           </li>
         </ol>
       </section>
