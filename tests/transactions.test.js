@@ -215,6 +215,35 @@ describe('TransactionManager.loadTransactions — DOM рендеринг', () =>
     expect(document.getElementById('empty-state-demo-btn')).toBeNull()
   })
 
+  it('при пустом списке с фильтром по периоду НЕ показывает кнопку демо (в базе могут быть данные)', () => {
+    setupListDOM()
+    Storage.getDemoMode.mockReturnValue(false)
+    const mgr = makeManager()
+    mgr.limit = 'day'
+    mgr.loadTransactions([])
+    expect(document.getElementById('empty-state-demo-btn')).toBeNull()
+    expect(document.querySelector('.empty-state').textContent).toContain('Нет записей по выбранному фильтру')
+  })
+
+  it('при пустом списке с фильтром по дефолтному тегу НЕ показывает кнопку демо', () => {
+    setupListDOM()
+    Storage.getDemoMode.mockReturnValue(false)
+    const mgr = makeManager()
+    mgr.limit = 'default-tag'
+    mgr.loadTransactions([])
+    expect(document.getElementById('empty-state-demo-btn')).toBeNull()
+  })
+
+  it('при пустом списке с активным фильтром по категории НЕ показывает кнопку демо', () => {
+    setupListDOM()
+    Storage.getDemoMode.mockReturnValue(false)
+    const mgr = makeManager()
+    mgr.categoryFilter = 'Food'
+    mgr.renderTransactionsList([])
+    expect(document.getElementById('empty-state-demo-btn')).toBeNull()
+    expect(document.querySelector('.empty-state').textContent).toContain('Нет записей по выбранному фильтру')
+  })
+
   it('клик по кнопке демо вызывает window.loadDemo', () => {
     setupListDOM()
     Storage.getDemoMode.mockReturnValue(false)
