@@ -1214,6 +1214,56 @@ describe('TransactionManager.singleLoadTransactionsRender — фильтр по 
   })
 })
 
+describe('TransactionManager.readTransactionsForCurrentLimit — выборка без рендера', () => {
+  function makeManager(limit, defaultTag = '') {
+    Storage.getLimit.mockReturnValue(limit)
+    Storage.getDefaultTag.mockReturnValue(defaultTag)
+    const db = {
+      init: vi.fn(() => Promise.resolve()),
+      readOnlyTransaction: vi.fn((callbacks) => { callbacks[0](sampleTransactions) }),
+      readOnlyTransactionByDate: vi.fn((callbacks) => { callbacks[0](sampleTransactions) }),
+    }
+    const mgr = new TransactionManager(db, {}, { open: vi.fn(), close: vi.fn() }, { showPage: vi.fn() })
+    vi.spyOn(mgr, 'loadTransactions').mockImplementation(() => {})
+    return mgr
+  }
+
+  it('передаёт транзакции в колбэк и НЕ вызывает loadTransactions', () => {
+    const mgr = makeManager('all')
+    const cb = vi.fn()
+    mgr.readTransactionsForCurrentLimit(cb)
+    expect(cb).toHaveBeenCalledWith(sampleTransactions)
+    expect(mgr.loadTransactions).not.toHaveBeenCalled()
+  })
+
+  it('при лимите-периоде читает через readOnlyTransactionByDate', () => {
+    vi.stubGlobal('IDBKeyRange', { bound: vi.fn(() => ({})) })
+    const mgr = makeManager('day')
+    const cb = vi.fn()
+    mgr.readTransactionsForCurrentLimit(cb)
+    expect(mgr.db.readOnlyTransactionByDate).toHaveBeenCalled()
+    expect(cb).toHaveBeenCalledWith(sampleTransactions)
+    vi.unstubAllGlobals()
+  })
+
+  it('при лимите "default-tag" фильтрует по тегу', () => {
+    const mgr = makeManager('default-tag', 'lunch')
+    const cb = vi.fn()
+    mgr.readTransactionsForCurrentLimit(cb)
+    const [filtered] = cb.mock.calls[0]
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0].id).toBe(1)
+  })
+
+  it('при лимите "default-tag" без тега сбрасывает лимит на "all" до вызова колбэка', () => {
+    const mgr = makeManager('default-tag', '')
+    let limitInCallback = null
+    mgr.readTransactionsForCurrentLimit(() => { limitInCallback = mgr.limit })
+    expect(limitInCallback).toBe('all')
+    expect(Storage.setLimit).toHaveBeenCalledWith('all')
+  })
+})
+
 describe('TransactionManager.getTagStats — статистика по тегу', () => {
   const statsTransactions = [
     { id: 1, description: 'A', amount: 100, category: 'Food', rate: 'ok', tags: ['lunch', 'cafe'], date: 1000 },

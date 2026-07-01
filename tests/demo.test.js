@@ -9,7 +9,7 @@ vi.mock('../js/storage.js', () => ({
   },
 }))
 
-import { Demo, setupDemoUI } from '../js/demo.js'
+import { Demo, setupDemoUI, shiftDemoDates } from '../js/demo.js'
 import { Storage } from '../js/storage.js'
 
 const sampleDemo = [
@@ -94,6 +94,15 @@ describe('Demo.loadDemoData', () => {
     added.forEach((t) => expect(t).not.toHaveProperty('id'))
   })
 
+  it('сдвигает даты так, чтобы самая свежая транзакция была сегодня', async () => {
+    const db = makeDB()
+    const demo = new Demo(db, makeManager())
+    await demo.loadDemoData()
+    const [added] = db.bulkAddTransactions.mock.calls[0]
+    const maxDate = new Date(Math.max(...added.map((t) => t.date)))
+    expect(maxDate.toDateString()).toBe(new Date().toDateString())
+  })
+
   it('очищает закэшированные категории и теги', async () => {
     const demo = new Demo(makeDB(), makeManager())
     await demo.loadDemoData()
@@ -148,6 +157,69 @@ describe('Demo.loadDemoData', () => {
     expect(added).toHaveLength(2)
     expect(added[0].description).toBe('A')
     added.forEach((t) => expect(t).not.toHaveProperty('id'))
+  })
+})
+
+describe('shiftDemoDates', () => {
+  const ts = (y, m, d, h = 0, min = 0) => new Date(y, m, d, h, min).getTime()
+
+  it('сдвигает самую свежую транзакцию на день `now`', () => {
+    const txs = [
+      { date: ts(2025, 0, 1) },
+      { date: ts(2025, 0, 10) },
+    ]
+    const now = new Date(2026, 5, 15, 14, 30)
+    const shifted = shiftDemoDates(txs, now)
+    expect(new Date(shifted[1].date).toDateString()).toBe(now.toDateString())
+  })
+
+  it('сохраняет интервалы в днях между транзакциями', () => {
+    const txs = [
+      { date: ts(2025, 0, 1) },
+      { date: ts(2025, 0, 4) },
+      { date: ts(2025, 0, 10) },
+    ]
+    const now = new Date(2026, 5, 15)
+    const [a, b, c] = shiftDemoDates(txs, now)
+    const days = (x, y) => Math.round((y - x) / 86400000)
+    expect(days(a.date, b.date)).toBe(3)
+    expect(days(b.date, c.date)).toBe(6)
+  })
+
+  it('сохраняет время суток транзакции', () => {
+    const txs = [{ date: ts(2025, 0, 1, 9, 45) }]
+    const now = new Date(2026, 5, 15)
+    const [shifted] = shiftDemoDates(txs, now)
+    const d = new Date(shifted.date)
+    expect(d.getHours()).toBe(9)
+    expect(d.getMinutes()).toBe(45)
+  })
+
+  it('не меняет даты, если самая свежая уже сегодня', () => {
+    const now = new Date(2026, 5, 15, 12, 0)
+    const txs = [
+      { date: ts(2026, 5, 10) },
+      { date: ts(2026, 5, 15, 8, 0) },
+    ]
+    expect(shiftDemoDates(txs, now)).toEqual(txs)
+  })
+
+  it('сдвигает и будущие даты назад к `now`', () => {
+    const txs = [{ date: ts(2027, 0, 1) }]
+    const now = new Date(2026, 5, 15)
+    const [shifted] = shiftDemoDates(txs, now)
+    expect(new Date(shifted.date).toDateString()).toBe(now.toDateString())
+  })
+
+  it('возвращает пустой массив как есть', () => {
+    expect(shiftDemoDates([])).toEqual([])
+  })
+
+  it('не мутирует исходные объекты', () => {
+    const txs = [{ date: ts(2025, 0, 1), description: 'A' }]
+    const copy = JSON.parse(JSON.stringify(txs))
+    shiftDemoDates(txs, new Date(2026, 5, 15))
+    expect(txs).toEqual(copy)
   })
 })
 

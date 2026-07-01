@@ -57,6 +57,10 @@ export class ImportExport {
       this.exportData();
     });
 
+    document.getElementById("export-filtered-btn").addEventListener("click", () => {
+      this.exportFilteredData();
+    });
+
     document.getElementById("import-btn").addEventListener("click", () => {
       this.importData();
     });
@@ -75,23 +79,37 @@ export class ImportExport {
     });
   }
 
+  downloadTransactionsJson(transactions, filename) {
+    const settings = {
+      defaultTag: Storage.getDefaultTag(),
+      defaultRate: Storage.getDefaultRate(),
+      theme: Storage.getTheme(),
+    };
+    const json = JSON.stringify({ transactions, settings });
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+  }
+
   exportData() {
     this.db.readOnlyTransaction([
       (transactions) => {
-        const settings = {
-          defaultTag: Storage.getDefaultTag(),
-          defaultRate: Storage.getDefaultRate(),
-          theme: Storage.getTheme(),
-        };
-        const json = JSON.stringify({ transactions, settings });
-        const blob = new Blob([json], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${formatDate(new Date())}.json`;
-        a.click();
+        this.downloadTransactionsJson(transactions, `${formatDate(new Date())}.json`);
       },
     ]);
+    document.getElementById("export-status").textContent = "Успешно экспортировано!";
+  }
+
+  exportFilteredData() {
+    this.transactionManager.readTransactionsForCurrentLimit((transactions) => {
+      // limit читается внутри колбэка: readTransactionsForCurrentLimit может
+      // сбросить исчезнувший default-tag на all до вызова колбэка
+      const suffix = this.transactionManager.limit.replace(/-/g, "_");
+      this.downloadTransactionsJson(transactions, `${formatDate(new Date())}-${suffix}.json`);
+    });
     document.getElementById("export-status").textContent = "Успешно экспортировано!";
   }
 
