@@ -455,6 +455,16 @@ describe('TransactionManager.toggleCategoryFilter — фильтр по клик
     expect(document.getElementById('category-filter-indicator').style.display).toBe('none')
   })
 
+  it('снятие фильтра не возвращает скрытые в легенде категории в баланс', () => {
+    const mgr = makeLoadedManager()
+    getHiddenCategories.mockReturnValue(new Set(['Transport']))
+    mgr.toggleCategoryFilter('Food')
+    mgr.toggleCategoryFilter('Food')
+    // Список показывает всё, но баланс исключает скрытую Transport (50)
+    expect(document.querySelectorAll('.transaction-li').length).toBe(3)
+    expect(document.getElementById('balance').textContent).toBe('300')
+  })
+
   it('updateBalanceWithHiddenCategories учитывает активный фильтр', () => {
     const mgr = makeLoadedManager()
     mgr.toggleCategoryFilter('Food')

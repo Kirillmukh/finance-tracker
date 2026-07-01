@@ -206,6 +206,7 @@ export class TransactionManager {
     this.categoryFilter = next;
     this.updateCategoryFilterIndicator();
     this.renderTransactionsList(this.getVisibleTransactions());
+    this.updateBalanceWithHiddenCategories();
   }
 
   updateCategoryFilterIndicator() {
