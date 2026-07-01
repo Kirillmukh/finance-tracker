@@ -1,5 +1,5 @@
 // Transactions module - handles transaction operations and rendering
-import { RATES, formatDate, groupTransactions, getDateRange, countMapInc, countMapDec, shiftDateInputValue, getTransactionTimestamp, toDateInputValue, toTimeInputValue } from './utils.js';
+import { RATES, formatDate, groupTransactions, getDateRange, countMapInc, countMapDec, shiftDateInputValue, shiftTimeInputValue, getTransactionTimestamp, toDateInputValue, toTimeInputValue } from './utils.js';
 import { updateCharts, updateChartForRates, updateChartForTags, setLegendClickCallback, getHiddenCategories, clearHiddenCategories } from './chart.js';
 import { Storage } from './storage.js';
 
@@ -403,6 +403,13 @@ export class TransactionManager {
     });
     document.getElementById("date-plus").addEventListener("click", () => {
       dateInput.value = shiftDateInputValue(dateInput.value, 1);
+    });
+
+    document.getElementById("time-minus").addEventListener("click", () => {
+      timeInput.value = shiftTimeInputValue(timeInput.value, -1);
+    });
+    document.getElementById("time-plus").addEventListener("click", () => {
+      timeInput.value = shiftTimeInputValue(timeInput.value, 1);
     });
 
     document.getElementById("transaction-form").addEventListener("submit", (e) => {

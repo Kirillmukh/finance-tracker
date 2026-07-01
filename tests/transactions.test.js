@@ -594,7 +594,9 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
         <button type="button" id="date-minus">−1</button>
         <input id="date-input" type="date">
         <button type="button" id="date-plus">+1</button>
+        <button type="button" id="time-minus">−1</button>
         <input id="time-input" type="time">
+        <button type="button" id="time-plus">+1</button>
       </form>
     `
   }
@@ -762,6 +764,41 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
     document.getElementById('date-plus').dispatchEvent(new Event('click'))
     document.getElementById('date-plus').dispatchEvent(new Event('click'))
     expect(dateInput.value).toBe('2026-06-02')
+  })
+
+  it('кнопки −1/+1 сдвигают уже выбранное время на час, не трогая дату', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    const timeInput = document.getElementById('time-input')
+    document.getElementById('date-input').value = '2026-06-09'
+    timeInput.value = '14:30'
+    document.getElementById('time-minus').dispatchEvent(new Event('click'))
+    expect(timeInput.value).toBe('13:30')
+    document.getElementById('time-plus').dispatchEvent(new Event('click'))
+    document.getElementById('time-plus').dispatchEvent(new Event('click'))
+    expect(timeInput.value).toBe('15:30')
+    expect(document.getElementById('date-input').value).toBe('2026-06-09')
+  })
+
+  it('кнопки времени через полночь не меняют дату', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    const timeInput = document.getElementById('time-input')
+    document.getElementById('date-input').value = '2026-06-09'
+    timeInput.value = '23:45'
+    document.getElementById('time-plus').dispatchEvent(new Event('click'))
+    expect(timeInput.value).toBe('00:45')
+    expect(document.getElementById('date-input').value).toBe('2026-06-09')
+  })
+
+  it('кнопка −1 времени при пустом значении отталкивается от текущего момента', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('time-minus').dispatchEvent(new Event('click'))
+    expect(document.getElementById('time-input').value).toMatch(/^\d{2}:\d{2}$/)
   })
 
   it('после submit поля даты и времени заполняются текущим моментом', () => {

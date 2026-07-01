@@ -98,7 +98,6 @@ function setupDOM() {
       <input type="text" id="tag-input" />
       <input id="date-input" type="date" />
       <input id="time-input" type="time" />
-      <button id="time-reset-btn" type="button">Сейчас</button>
       <button id="form-reset-btn" type="button">Сбросить</button>
     </form>
     <button class="nav-item" data-page="input">Input</button>
@@ -356,54 +355,6 @@ describe('app.js — кнопка сброса формы транзакции',
     expect(document.getElementById('date-input').value)
       .toBe(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`)
     expect(document.getElementById('time-input').value).toMatch(/^\d{2}:\d{2}$/)
-  })
-})
-
-describe('app.js — кнопка сброса времени (#time-reset-btn)', () => {
-  beforeAll(async () => {
-    setupDOM()
-    vi.resetModules()
-    await import('../app.js')
-    await new Promise(resolve => setTimeout(resolve, 0))
-  })
-
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  const pad = (n) => String(n).padStart(2, '0')
-  const toHHMM = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
-
-  it('ставит текущее время, не трогая дату', () => {
-    document.getElementById('date-input').value = '2020-01-01'
-    document.getElementById('time-input').value = '03:15'
-
-    const before = new Date()
-    document.getElementById('time-reset-btn').click()
-    const after = new Date()
-
-    // Допуск на смену минуты между before и after
-    expect([toHHMM(before), toHHMM(after)])
-      .toContain(document.getElementById('time-input').value)
-    // Главная проверка: дата осталась нетронутой
-    expect(document.getElementById('date-input').value).toBe('2020-01-01')
-  })
-
-  it('не трогает остальные поля формы', () => {
-    document.getElementById('description').value = 'кофе'
-    document.getElementById('amount').value = '250'
-    document.getElementById('category-input').value = 'еда'
-    document.getElementById('tag-input').value = 'утр'
-    document.getElementById('rate-select').value = 'waste'
-
-    document.getElementById('time-reset-btn').click()
-
-    expect(document.getElementById('description').value).toBe('кофе')
-    expect(document.getElementById('amount').value).toBe('250')
-    expect(document.getElementById('category-input').value).toBe('еда')
-    expect(document.getElementById('tag-input').value).toBe('утр')
-    expect(document.getElementById('rate-select').value).toBe('waste')
-    expect(mockUI.clearTags).not.toHaveBeenCalled()
   })
 })
 

@@ -72,11 +72,6 @@ async function initApp() {
     applyCurrentDateTime();
   });
 
-  // Reset only the time to the current moment
-  document.getElementById('time-reset-btn').addEventListener('click', () => {
-    document.getElementById('time-input').value = toTimeInputValue(new Date());
-  });
-
   // Fill the form with defaults once at app load. Navigation must NOT touch
   // form values — they persist until submit or the reset button.
   ui.initDefaultTag(Storage.getDefaultTag());

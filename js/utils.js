@@ -104,6 +104,20 @@ export function shiftDateInputValue(value, days, today = new Date()) {
   return toDateInputValue(base);
 }
 
+export function shiftTimeInputValue(value, hours, now = new Date()) {
+  let h, min;
+  if (value) {
+    [h, min] = value.split(":").map(Number);
+  } else {
+    h = now.getHours();
+    min = now.getMinutes();
+  }
+  // Часы циклически в пределах суток: дата остаётся нетронутой
+  h = (((h + hours) % 24) + 24) % 24;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(h)}:${pad(min)}`;
+}
+
 export function getTransactionTimestamp(dateValue, timeValue, now = new Date()) {
   if (!dateValue && !timeValue) return now.getTime();
   const result = new Date(now);

@@ -11,6 +11,7 @@ import {
   toDateInputValue,
   toTimeInputValue,
   shiftDateInputValue,
+  shiftTimeInputValue,
   getTransactionTimestamp,
 } from '../js/utils.js'
 
@@ -296,6 +297,31 @@ describe('shiftDateInputValue', () => {
     const today = new Date(2026, 5, 12)
     expect(shiftDateInputValue('', -1, today)).toBe('2026-06-11')
     expect(shiftDateInputValue('', 1, today)).toBe('2026-06-13')
+  })
+})
+
+describe('shiftTimeInputValue', () => {
+  it('сдвигает время на -1 час, сохраняя минуты', () => {
+    expect(shiftTimeInputValue('14:30', -1)).toBe('13:30')
+  })
+
+  it('сдвигает время на +1 час, сохраняя минуты', () => {
+    expect(shiftTimeInputValue('14:30', 1)).toBe('15:30')
+  })
+
+  it('циклически переходит через полночь, не выходя за сутки', () => {
+    expect(shiftTimeInputValue('00:15', -1)).toBe('23:15')
+    expect(shiftTimeInputValue('23:45', 1)).toBe('00:45')
+  })
+
+  it('добавляет ведущие нули', () => {
+    expect(shiftTimeInputValue('10:05', -1)).toBe('09:05')
+  })
+
+  it('при пустом значении отталкивается от текущего момента', () => {
+    const now = new Date(2026, 5, 12, 14, 30)
+    expect(shiftTimeInputValue('', -1, now)).toBe('13:30')
+    expect(shiftTimeInputValue('', 1, now)).toBe('15:30')
   })
 })
 
