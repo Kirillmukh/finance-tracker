@@ -329,7 +329,7 @@ export class TransactionManager {
   }
 
   saveTransaction(transaction) {
-    const newDescription = document.getElementById("modal-description-input").value;
+    const newDescription = document.getElementById("modal-description-input").value.trim();
     if (transaction.description !== newDescription) {
       countMapDec(this.allDescriptions, transaction.description);
       transaction.description = newDescription;
@@ -337,10 +337,10 @@ export class TransactionManager {
       Storage.saveDescriptions(this.allDescriptions);
     }
 
-    const modalCategoryInput = document.getElementById("modal-category-input");
-    if (transaction.category !== modalCategoryInput.value) {
+    const newCategory = document.getElementById("modal-category-input").value.trim();
+    if (transaction.category !== newCategory) {
       countMapDec(this.allCategories, transaction.category);
-      transaction.category = modalCategoryInput.value;
+      transaction.category = newCategory;
       countMapInc(this.allCategories, transaction.category);
       Storage.saveCategories(this.allCategories);
     }
@@ -501,9 +501,9 @@ export class TransactionManager {
       e.preventDefault();
 
       const transaction = {
-        description: document.getElementById("description").value,
+        description: document.getElementById("description").value.trim(),
         amount: +document.getElementById("amount").value,
-        category: document.getElementById("category-input").value,
+        category: document.getElementById("category-input").value.trim(),
         rate: document.getElementById("rate-select").value,
         tags: [...this.ui.getTags()],
         date: getTransactionTimestamp(dateInput.value, timeInput.value),

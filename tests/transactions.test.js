@@ -697,6 +697,31 @@ describe('TransactionManager.saveTransaction — сохранение измен
     expect(mgr.allDescriptions.get('Кофе')).toBe(1)
     expect(Storage.saveDescriptions).not.toHaveBeenCalled()
   })
+
+  it('обрезает пробелы в описании и категории при сохранении', () => {
+    setupSaveDOM(transaction)
+    document.getElementById('modal-description-input').value = '  Чай  '
+    document.getElementById('modal-category-input').value = ' Cafe '
+    const mgr = makeManagerForSave()
+    mgr.saveTransaction({ ...transaction })
+    const [tx] = mgr.db.updateTransaction.mock.calls[0]
+    expect(tx.description).toBe('Чай')
+    expect(tx.category).toBe('Cafe')
+    expect(mgr.allDescriptions.get('Чай')).toBe(1)
+    expect(mgr.allCategories.get('Cafe')).toBe(1)
+  })
+
+  it('значение, отличающееся только пробелами, не считается изменением', () => {
+    setupSaveDOM(transaction)
+    document.getElementById('modal-description-input').value = '  Кофе  '
+    document.getElementById('modal-category-input').value = ' Food '
+    const mgr = makeManagerForSave()
+    mgr.saveTransaction({ ...transaction })
+    expect(mgr.allDescriptions.get('Кофе')).toBe(1)
+    expect(mgr.allCategories.get('Food')).toBe(2)
+    expect(Storage.saveDescriptions).not.toHaveBeenCalled()
+    expect(Storage.saveCategories).not.toHaveBeenCalled()
+  })
 })
 
 describe('TransactionManager.deleteTransaction — удаление транзакции', () => {
@@ -876,6 +901,20 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
     expect(tx.description).toBe('Кофе')
     expect(tx.amount).toBe(150)
     expect(tx.category).toBe('Food')
+  })
+
+  it('submit обрезает пробелы в описании и категории', () => {
+    setupFormDOM()
+    document.getElementById('description').value = '  Кофе  '
+    document.getElementById('category-input').value = ' Food '
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+    const [tx] = mgr.db.addTransaction.mock.calls[0]
+    expect(tx.description).toBe('Кофе')
+    expect(tx.category).toBe('Food')
+    expect(mgr.allDescriptions.get('Кофе')).toBe(1)
+    expect(mgr.allCategories.get('Food')).toBe(1)
   })
 
   it('после submit происходит переход на главную страницу', () => {
