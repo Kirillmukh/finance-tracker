@@ -81,8 +81,8 @@ export class ImportExport {
 
   downloadTransactionsJson(transactions, filename) {
     const settings = {
-      defaultTag: Storage.getDefaultTag(),
-      defaultRate: Storage.getDefaultRate(),
+      default_tag: Storage.getDefaultTag(),
+      default_rate: Storage.getDefaultRate(),
       theme: Storage.getTheme(),
     };
     const json = JSON.stringify({ transactions, settings });
@@ -168,19 +168,22 @@ export class ImportExport {
         Storage.clearDescriptions();
 
         if (settings && typeof settings === 'object' && !Array.isArray(settings)) {
-          if (typeof settings.defaultTag === 'string') {
-            Storage.setDefaultTag(settings.defaultTag);
+          // Экспорт пишет snake_case; camelCase принимается для старых файлов
+          const defaultTag = 'default_tag' in settings ? settings.default_tag : settings.defaultTag;
+          const defaultRate = 'default_rate' in settings ? settings.default_rate : settings.defaultRate;
+          if (typeof defaultTag === 'string') {
+            Storage.setDefaultTag(defaultTag);
             const tagInput = document.getElementById('default-tag-input');
-            if (tagInput) tagInput.value = settings.defaultTag;
+            if (tagInput) tagInput.value = defaultTag;
             const limitSelect = document.getElementById('transactions-limit');
             if (limitSelect) {
               const existing = limitSelect.querySelector('option[value="default-tag"]');
               const wasSelected = limitSelect.value === 'default-tag';
               if (existing) existing.remove();
-              if (settings.defaultTag) {
+              if (defaultTag) {
                 const opt = document.createElement('option');
                 opt.value = 'default-tag';
-                opt.textContent = settings.defaultTag;
+                opt.textContent = defaultTag;
                 limitSelect.insertBefore(opt, limitSelect.querySelector('option[value="custom"]'));
               } else if (wasSelected) {
                 limitSelect.value = 'all';
@@ -188,10 +191,10 @@ export class ImportExport {
               }
             }
           }
-          if (['waste', 'ok', 'good'].includes(settings.defaultRate)) {
-            Storage.setDefaultRate(settings.defaultRate);
+          if (['waste', 'ok', 'good'].includes(defaultRate)) {
+            Storage.setDefaultRate(defaultRate);
             const rateSelect = document.getElementById('default-rate-select');
-            if (rateSelect) rateSelect.value = settings.defaultRate;
+            if (rateSelect) rateSelect.value = defaultRate;
           }
           if (['system', 'light', 'dark'].includes(settings.theme)) {
             Storage.setTheme(settings.theme);

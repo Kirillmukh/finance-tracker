@@ -174,7 +174,7 @@ describe('ImportExport.exportData', () => {
     global.Blob = origBlob
     const parsed = JSON.parse(captured)
     expect(parsed).toMatchObject({ transactions: txs })
-    expect(parsed.settings).toEqual({ defaultTag: '', defaultRate: 'ok', theme: 'system' })
+    expect(parsed.settings).toEqual({ default_tag: '', default_rate: 'ok', theme: 'system' })
   })
 
   it('экспортирует settings с текущими значениями из localStorage', () => {
@@ -193,7 +193,7 @@ describe('ImportExport.exportData', () => {
     ie.exportData()
     global.Blob = origBlob
     const parsed = JSON.parse(captured)
-    expect(parsed.settings).toEqual({ defaultTag: 'work', defaultRate: 'good', theme: 'dark' })
+    expect(parsed.settings).toEqual({ default_tag: 'work', default_rate: 'good', theme: 'dark' })
   })
 })
 
@@ -265,7 +265,7 @@ describe('ImportExport.exportFilteredData', () => {
     global.Blob = origBlob
     const parsed = JSON.parse(captured)
     expect(parsed).toMatchObject({ transactions: txs })
-    expect(parsed.settings).toEqual({ defaultTag: '', defaultRate: 'ok', theme: 'system' })
+    expect(parsed.settings).toEqual({ default_tag: '', default_rate: 'ok', theme: 'system' })
   })
 
   it('устанавливает статус после экспорта', () => {
@@ -806,8 +806,8 @@ describe('ImportExport.importData', () => {
         expect(document.getElementById('import-status').textContent).toBe('Успешно импортировано!')
       })
 
-      it('settings с defaultTag сохраняет тег в localStorage и обновляет UI', async () => {
-        await importPayload({ transactions: [], settings: { defaultTag: 'work' } })
+      it('settings с default_tag сохраняет тег в localStorage и обновляет UI', async () => {
+        await importPayload({ transactions: [], settings: { default_tag: 'work' } })
         expect(localStorage.defaultTag).toBe('work')
         expect(document.getElementById('default-tag-input').value).toBe('work')
         const opt = document.querySelector('#transactions-limit option[value="default-tag"]')
@@ -815,36 +815,36 @@ describe('ImportExport.importData', () => {
         expect(opt.textContent).toBe('work')
       })
 
-      it('settings с пустым defaultTag убирает опцию default-tag из #transactions-limit', async () => {
+      it('settings с пустым default_tag убирает опцию default-tag из #transactions-limit', async () => {
         const limitSelect = document.getElementById('transactions-limit')
         const opt = document.createElement('option')
         opt.value = 'default-tag'
         opt.textContent = 'old'
         limitSelect.insertBefore(opt, limitSelect.querySelector('option[value="custom"]'))
-        await importPayload({ transactions: [], settings: { defaultTag: '' } })
+        await importPayload({ transactions: [], settings: { default_tag: '' } })
         expect(document.querySelector('#transactions-limit option[value="default-tag"]')).toBeNull()
       })
 
-      it('settings с пустым defaultTag при активном default-tag сбрасывает лимит на all', async () => {
+      it('settings с пустым default_tag при активном default-tag сбрасывает лимит на all', async () => {
         const limitSelect = document.getElementById('transactions-limit')
         const opt = document.createElement('option')
         opt.value = 'default-tag'
         opt.textContent = 'old'
         limitSelect.insertBefore(opt, limitSelect.querySelector('option[value="custom"]'))
         limitSelect.value = 'default-tag'
-        await importPayload({ transactions: [], settings: { defaultTag: '' } })
+        await importPayload({ transactions: [], settings: { default_tag: '' } })
         expect(limitSelect.value).toBe('all')
       })
 
-      it('settings с defaultRate сохраняет rate в localStorage и обновляет #default-rate-select', async () => {
-        await importPayload({ transactions: [], settings: { defaultRate: 'good' } })
+      it('settings с default_rate сохраняет rate в localStorage и обновляет #default-rate-select', async () => {
+        await importPayload({ transactions: [], settings: { default_rate: 'good' } })
         expect(localStorage.defaultRate).toBe('good')
         expect(document.getElementById('default-rate-select').value).toBe('good')
       })
 
-      it('settings с defaultRate="" игнорируется', async () => {
+      it('settings с default_rate="" игнорируется', async () => {
         localStorage.defaultRate = 'waste'
-        await importPayload({ transactions: [], settings: { defaultRate: '' } })
+        await importPayload({ transactions: [], settings: { default_rate: '' } })
         expect(localStorage.defaultRate).toBe('waste')
       })
 
@@ -874,13 +874,13 @@ describe('ImportExport.importData', () => {
         expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
       })
 
-      it('settings с неизвестным defaultRate игнорируется', async () => {
-        await importPayload({ transactions: [], settings: { defaultRate: 'unknown' } })
+      it('settings с неизвестным default_rate игнорируется', async () => {
+        await importPayload({ transactions: [], settings: { default_rate: 'unknown' } })
         expect(localStorage.defaultRate).toBeUndefined()
       })
 
-      it('settings с defaultTag не строкой игнорируется', async () => {
-        await importPayload({ transactions: [], settings: { defaultTag: 123 } })
+      it('settings с default_tag не строкой игнорируется', async () => {
+        await importPayload({ transactions: [], settings: { default_tag: 123 } })
         expect(localStorage.defaultTag).toBeUndefined()
       })
 
@@ -898,11 +898,57 @@ describe('ImportExport.importData', () => {
       it('все три поля settings применяются вместе', async () => {
         await importPayload({
           transactions: [],
-          settings: { defaultTag: 'home', defaultRate: 'waste', theme: 'dark' },
+          settings: { default_tag: 'home', default_rate: 'waste', theme: 'dark' },
         })
         expect(localStorage.defaultTag).toBe('home')
         expect(localStorage.defaultRate).toBe('waste')
         expect(localStorage.theme).toBe('dark')
+      })
+    })
+
+    describe('импорт settings — обратная совместимость с camelCase', () => {
+      it('legacy defaultTag применяется как default_tag', async () => {
+        await importPayload({ transactions: [], settings: { defaultTag: 'work' } })
+        expect(localStorage.defaultTag).toBe('work')
+        expect(document.getElementById('default-tag-input').value).toBe('work')
+        const opt = document.querySelector('#transactions-limit option[value="default-tag"]')
+        expect(opt).not.toBeNull()
+        expect(opt.textContent).toBe('work')
+      })
+
+      it('legacy defaultRate применяется как default_rate', async () => {
+        await importPayload({ transactions: [], settings: { defaultRate: 'good' } })
+        expect(localStorage.defaultRate).toBe('good')
+        expect(document.getElementById('default-rate-select').value).toBe('good')
+      })
+
+      it('legacy пустой defaultTag при активном default-tag сбрасывает лимит на all', async () => {
+        const limitSelect = document.getElementById('transactions-limit')
+        const opt = document.createElement('option')
+        opt.value = 'default-tag'
+        opt.textContent = 'old'
+        limitSelect.insertBefore(opt, limitSelect.querySelector('option[value="custom"]'))
+        limitSelect.value = 'default-tag'
+        await importPayload({ transactions: [], settings: { defaultTag: '' } })
+        expect(limitSelect.value).toBe('all')
+      })
+
+      it('при обоих вариантах ключа приоритет у snake_case', async () => {
+        await importPayload({
+          transactions: [],
+          settings: { default_tag: 'new', defaultTag: 'old', default_rate: 'good', defaultRate: 'waste' },
+        })
+        expect(localStorage.defaultTag).toBe('new')
+        expect(localStorage.defaultRate).toBe('good')
+      })
+
+      it('невалидный snake_case не подменяется валидным camelCase', async () => {
+        await importPayload({
+          transactions: [],
+          settings: { default_tag: 123, defaultTag: 'old', default_rate: 'unknown', defaultRate: 'good' },
+        })
+        expect(localStorage.defaultTag).toBeUndefined()
+        expect(localStorage.defaultRate).toBeUndefined()
       })
     })
 
