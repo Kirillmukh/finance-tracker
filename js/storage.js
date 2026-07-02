@@ -22,6 +22,17 @@ export class Storage {
     return null;
   }
 
+  static saveDescriptions(allDescriptions) {
+    localStorage.descriptions = JSON.stringify(Object.fromEntries(allDescriptions));
+  }
+
+  static loadDescriptions() {
+    if (localStorage.descriptions) {
+      return new Map(Object.entries(JSON.parse(localStorage.descriptions)));
+    }
+    return null;
+  }
+
   static getLimit() {
     return localStorage.limit ? localStorage.limit : "all";
   }
@@ -52,6 +63,10 @@ export class Storage {
 
   static clearTags() {
     delete localStorage.tags;
+  }
+
+  static clearDescriptions() {
+    delete localStorage.descriptions;
   }
 
   static getDefaultTag() {

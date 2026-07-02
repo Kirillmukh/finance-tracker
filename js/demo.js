@@ -47,6 +47,7 @@ export class Demo {
           this.db.clearAllTransactions(() => {
             Storage.clearTags();
             Storage.clearCategories();
+            Storage.clearDescriptions();
             const stripped = shiftDemoDates(transactions).map(({ id, ...rest }) => rest);
             this.db.bulkAddTransactions(stripped, () => {
               Storage.setDemoMode(true);
@@ -54,6 +55,7 @@ export class Demo {
               this.db.readOnlyTransaction([
                 (txs) => this.transactionManager.loadAllCategories(txs),
                 (txs) => this.transactionManager.loadAllTags(txs),
+                (txs) => this.transactionManager.loadAllDescriptions(txs),
               ], resolve);
             });
           });
@@ -66,11 +68,13 @@ export class Demo {
       this.db.clearAllTransactions(() => {
         Storage.clearTags();
         Storage.clearCategories();
+        Storage.clearDescriptions();
         Storage.setDemoMode(false);
         this.transactionManager.singleLoadTransactionsRender();
         this.db.readOnlyTransaction([
           (txs) => this.transactionManager.loadAllCategories(txs),
           (txs) => this.transactionManager.loadAllTags(txs),
+          (txs) => this.transactionManager.loadAllDescriptions(txs),
         ], resolve);
       });
     });

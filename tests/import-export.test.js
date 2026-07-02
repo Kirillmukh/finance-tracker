@@ -88,6 +88,7 @@ function makeTransactionManager(filteredTransactions = [], limit = 'all') {
     singleLoadTransactionsRender: vi.fn(),
     loadAllCategories: vi.fn(),
     loadAllTags: vi.fn(),
+    loadAllDescriptions: vi.fn(),
     readTransactionsForCurrentLimit: vi.fn(function (cb) {
       cb(filteredTransactions)
     }),

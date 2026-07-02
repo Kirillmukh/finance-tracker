@@ -67,6 +67,27 @@ describe('Storage — теги', () => {
   })
 })
 
+describe('Storage — описания', () => {
+  it('saveDescriptions/loadDescriptions: сохраняет и загружает Map', () => {
+    const map = new Map([['Кофе', 7], ['Обед', 2]])
+    Storage.saveDescriptions(map)
+    const loaded = Storage.loadDescriptions()
+    expect(loaded).toBeInstanceOf(Map)
+    expect(loaded.get('Кофе')).toBe(7)
+    expect(loaded.get('Обед')).toBe(2)
+  })
+
+  it('loadDescriptions возвращает null если нет сохранённых данных', () => {
+    expect(Storage.loadDescriptions()).toBeNull()
+  })
+
+  it('clearDescriptions удаляет данные описаний', () => {
+    Storage.saveDescriptions(new Map([['Кофе', 1]]))
+    Storage.clearDescriptions()
+    expect(Storage.loadDescriptions()).toBeNull()
+  })
+})
+
 describe('Storage — лимит транзакций', () => {
   it('getLimit возвращает "all" по умолчанию', () => {
     expect(Storage.getLimit()).toBe('all')

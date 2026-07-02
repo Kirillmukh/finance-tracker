@@ -6,6 +6,7 @@ vi.mock('../js/storage.js', () => ({
     getDemoMode: vi.fn(() => false),
     clearTags: vi.fn(),
     clearCategories: vi.fn(),
+    clearDescriptions: vi.fn(),
   },
 }))
 
@@ -33,6 +34,7 @@ function makeManager() {
     singleLoadTransactionsRender: vi.fn(),
     loadAllCategories: vi.fn(),
     loadAllTags: vi.fn(),
+    loadAllDescriptions: vi.fn(),
   }
 }
 
@@ -103,11 +105,12 @@ describe('Demo.loadDemoData', () => {
     expect(maxDate.toDateString()).toBe(new Date().toDateString())
   })
 
-  it('очищает закэшированные категории и теги', async () => {
+  it('очищает закэшированные категории, теги и описания', async () => {
     const demo = new Demo(makeDB(), makeManager())
     await demo.loadDemoData()
     expect(Storage.clearCategories).toHaveBeenCalled()
     expect(Storage.clearTags).toHaveBeenCalled()
+    expect(Storage.clearDescriptions).toHaveBeenCalled()
   })
 
   it('включает режим демо', async () => {
@@ -123,12 +126,13 @@ describe('Demo.loadDemoData', () => {
     expect(mgr.singleLoadTransactionsRender).toHaveBeenCalled()
   })
 
-  it('перезагружает категории и теги в памяти менеджера', async () => {
+  it('перезагружает категории, теги и описания в памяти менеджера', async () => {
     const mgr = makeManager()
     const demo = new Demo(makeDB(), mgr)
     await demo.loadDemoData()
     expect(mgr.loadAllCategories).toHaveBeenCalled()
     expect(mgr.loadAllTags).toHaveBeenCalled()
+    expect(mgr.loadAllDescriptions).toHaveBeenCalled()
   })
 
   it('бросает ошибку, если ответ не ok', async () => {
@@ -231,11 +235,12 @@ describe('Demo.clearDemoData', () => {
     expect(db.clearAllTransactions).toHaveBeenCalled()
   })
 
-  it('очищает закэшированные категории и теги', async () => {
+  it('очищает закэшированные категории, теги и описания', async () => {
     const demo = new Demo(makeDB(), makeManager())
     await demo.clearDemoData()
     expect(Storage.clearCategories).toHaveBeenCalled()
     expect(Storage.clearTags).toHaveBeenCalled()
+    expect(Storage.clearDescriptions).toHaveBeenCalled()
   })
 
   it('выключает режим демо', async () => {

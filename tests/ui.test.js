@@ -9,6 +9,8 @@ function setupDOM() {
     <button id="add-tag">+</button>
     <input id="category-input" />
     <div id="category-suggestion" style="display: none"></div>
+    <input id="description" />
+    <div id="description-suggestion" style="display: none"></div>
   `
 }
 
@@ -297,6 +299,46 @@ describe('UI.setupCategoryInput — взаимодействие пользов�
     categoryInput.value = 'Fo  '
     categoryInput.dispatchEvent(new Event('input'))
     expect(categoryInput.value).toBe('Food')
+  })
+})
+
+describe('UI.setupDescriptionInput — взаимодействие пользователя', () => {
+  it('при вводе совпадающего текста показывает подсказку', () => {
+    const allDescriptions = new Map([['Кофе', 5], ['Обед', 2]])
+    ui.setupDescriptionInput(allDescriptions)
+    const descriptionInput = document.getElementById('description')
+    descriptionInput.value = 'Ко'
+    descriptionInput.dispatchEvent(new Event('input'))
+    expect(document.getElementById('description-suggestion').style.display).toBe('block')
+    expect(document.getElementById('description-suggestion').textContent).toBe('Кофе')
+  })
+
+  it('при вводе несовпадающего текста скрывает подсказку', () => {
+    const allDescriptions = new Map([['Кофе', 5]])
+    ui.setupDescriptionInput(allDescriptions)
+    const descriptionInput = document.getElementById('description')
+    descriptionInput.value = 'xyz'
+    descriptionInput.dispatchEvent(new Event('input'))
+    expect(document.getElementById('description-suggestion').style.display).toBe('none')
+  })
+
+  it('клик по подсказке подставляет описание в поле ввода', () => {
+    const allDescriptions = new Map([['Кофе', 5]])
+    ui.setupDescriptionInput(allDescriptions)
+    const descriptionInput = document.getElementById('description')
+    descriptionInput.value = 'Ко'
+    descriptionInput.dispatchEvent(new Event('input'))
+    document.getElementById('description-suggestion').click()
+    expect(descriptionInput.value).toBe('Кофе')
+  })
+
+  it('двойной пробел в конце ввода применяет подсказку', () => {
+    const allDescriptions = new Map([['Кофе', 5]])
+    ui.setupDescriptionInput(allDescriptions)
+    const descriptionInput = document.getElementById('description')
+    descriptionInput.value = 'Ко  '
+    descriptionInput.dispatchEvent(new Event('input'))
+    expect(descriptionInput.value).toBe('Кофе')
   })
 })
 

@@ -11,6 +11,7 @@ export class TransactionManager {
     this.navigation = navigation;
     this.allCategories = null;
     this.allTags = null;
+    this.allDescriptions = null;
     this.limit = Storage.getLimit();
     this.chartTarget = Storage.getChartTarget();
     this.currentTransactions = [];
@@ -36,7 +37,8 @@ export class TransactionManager {
     await new Promise((resolve) => {
       this.db.readOnlyTransaction([
         (transactions) => this.loadAllCategories(transactions),
-        (transactions) => this.loadAllTags(transactions)
+        (transactions) => this.loadAllTags(transactions),
+        (transactions) => this.loadAllDescriptions(transactions)
       ], resolve);
     });
   }
@@ -71,6 +73,21 @@ export class TransactionManager {
       });
 
     Storage.saveTags(this.allTags);
+  }
+
+  loadAllDescriptions(transactions) {
+    const stored = Storage.loadDescriptions();
+    if (stored) {
+      this.allDescriptions = stored;
+      return;
+    }
+
+    this.allDescriptions = new Map();
+    transactions.forEach((t) => {
+      countMapInc(this.allDescriptions, t.description);
+    });
+
+    Storage.saveDescriptions(this.allDescriptions);
   }
 
   loadTransactions(transactions) {
@@ -312,7 +329,13 @@ export class TransactionManager {
   }
 
   saveTransaction(transaction) {
-    transaction.description = document.getElementById("modal-description-input").value;
+    const newDescription = document.getElementById("modal-description-input").value;
+    if (transaction.description !== newDescription) {
+      countMapDec(this.allDescriptions, transaction.description);
+      transaction.description = newDescription;
+      countMapInc(this.allDescriptions, transaction.description);
+      Storage.saveDescriptions(this.allDescriptions);
+    }
 
     const modalCategoryInput = document.getElementById("modal-category-input");
     if (transaction.category !== modalCategoryInput.value) {
@@ -376,6 +399,9 @@ export class TransactionManager {
     });
     Storage.saveTags(this.allTags);
 
+    countMapDec(this.allDescriptions, transaction.description);
+    Storage.saveDescriptions(this.allDescriptions);
+
     this.ui.clearTags();
     this.ui.clearTagsToRemove();
     this.modal.close();
@@ -393,7 +419,10 @@ export class TransactionManager {
       countMapInc(this.allTags, tag);
     });
     Storage.saveTags(this.allTags);
-    
+
+    countMapInc(this.allDescriptions, toAdd.description);
+    Storage.saveDescriptions(this.allDescriptions);
+
     this.db.addTransaction(toAdd, () => {
       this.singleLoadTransactionsRender();
     });
@@ -500,6 +529,9 @@ export class TransactionManager {
         countMapInc(this.allTags, tag);
       });
       Storage.saveTags(this.allTags);
+
+      countMapInc(this.allDescriptions, transaction.description);
+      Storage.saveDescriptions(this.allDescriptions);
 
       this.navigation.showPage("home");
     });
@@ -613,5 +645,9 @@ export class TransactionManager {
 
   getAllTags() {
     return this.allTags;
+  }
+
+  getAllDescriptions() {
+    return this.allDescriptions;
   }
 }

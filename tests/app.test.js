@@ -12,6 +12,7 @@ vi.mock('../js/ui.js', () => ({
     mockUI = {
       setupCategoryInput: vi.fn(),
       setupTagInput: vi.fn(),
+      setupDescriptionInput: vi.fn(),
       initDefaultTag: vi.fn(),
       clearTags: vi.fn(),
       clearTagsToRemove: vi.fn(),
@@ -39,6 +40,7 @@ vi.mock('../js/transactions.js', () => ({
       init: vi.fn(() => Promise.resolve()),
       getAllCategories: vi.fn(() => new Map()),
       getAllTags: vi.fn(() => new Map()),
+      getAllDescriptions: vi.fn(() => new Map()),
       setupTransactionForm: vi.fn(),
       setupLimitSelect: vi.fn(),
       setupChartTargetSelect: vi.fn(),
@@ -85,6 +87,7 @@ function setupDOM() {
       <option value="ok">Ок</option>
     </select>
     <form id="transaction-form">
+      <div class="suggestion" id="description-suggestion" style="display: none"></div>
       <input type="text" id="description" />
       <input type="number" id="amount" />
       <div class="suggestion" id="category-suggestion" style="display: none"></div>
@@ -316,11 +319,13 @@ describe('app.js — кнопка сброса формы транзакции',
   })
 
   it('скрывает открытые подсказки автокомплита', () => {
+    document.getElementById('description-suggestion').style.display = 'block'
     document.getElementById('category-suggestion').style.display = 'block'
     document.getElementById('tag-suggestion').style.display = 'block'
 
     document.getElementById('form-reset-btn').click()
 
+    expect(document.getElementById('description-suggestion').style.display).toBe('none')
     expect(document.getElementById('category-suggestion').style.display).toBe('none')
     expect(document.getElementById('tag-suggestion').style.display).toBe('none')
   })

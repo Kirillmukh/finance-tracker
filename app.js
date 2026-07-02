@@ -28,6 +28,7 @@ async function initApp() {
   // Setup UI components - data is now guaranteed to be loaded
   ui.setupCategoryInput(transactionManager.getAllCategories());
   ui.setupTagInput(transactionManager.getAllTags());
+  ui.setupDescriptionInput(transactionManager.getAllDescriptions());
 
   // Setup transaction form
   transactionManager.setupTransactionForm();
@@ -63,6 +64,7 @@ async function initApp() {
   // the same defaults as after a successful submit
   document.getElementById('form-reset-btn').addEventListener('click', () => {
     document.getElementById('transaction-form').reset();
+    document.getElementById('description-suggestion').style.display = 'none';
     document.getElementById('category-suggestion').style.display = 'none';
     document.getElementById('tag-suggestion').style.display = 'none';
     ui.clearTags();

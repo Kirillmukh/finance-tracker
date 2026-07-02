@@ -9,6 +9,7 @@ export class UI {
     this.tagsToRemove = new Set();
     this.suggestedCategory = "";
     this.suggestedTag = "";
+    this.suggestedDescription = "";
   }
 
   renderTags() {
@@ -88,6 +89,33 @@ export class UI {
 
       if (value.endsWith("  ")) {
         applySuggestion(categoryInput, categorySuggestionDiv, this.suggestedCategory);
+      }
+    });
+  }
+
+  setupDescriptionInput(allDescriptions) {
+    const descriptionInput = document.getElementById("description");
+    const descriptionSuggestionDiv = document.getElementById("description-suggestion");
+
+    descriptionSuggestionDiv.addEventListener("click", () =>
+      applySuggestion(descriptionInput, descriptionSuggestionDiv, this.suggestedDescription)
+    );
+
+    descriptionInput.addEventListener("input", (event) => {
+      const value = event.target.value;
+
+      this.suggestedDescription = suggestAutocomplete(allDescriptions, value);
+
+      if (!this.suggestedDescription) {
+        descriptionSuggestionDiv.style.display = "none";
+        return;
+      }
+
+      descriptionSuggestionDiv.textContent = this.suggestedDescription;
+      descriptionSuggestionDiv.style.display = "block";
+
+      if (value.endsWith("  ")) {
+        applySuggestion(descriptionInput, descriptionSuggestionDiv, this.suggestedDescription);
       }
     });
   }

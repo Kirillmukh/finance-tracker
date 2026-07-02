@@ -4,8 +4,10 @@ vi.mock('../js/storage.js', () => ({
   Storage: {
     loadCategories: vi.fn(() => null),
     loadTags: vi.fn(() => null),
+    loadDescriptions: vi.fn(() => null),
     saveCategories: vi.fn(),
     saveTags: vi.fn(),
+    saveDescriptions: vi.fn(),
     getLimit: vi.fn(() => 'all'),
     getChartTarget: vi.fn(() => 'category'),
     setLimit: vi.fn(),
@@ -49,6 +51,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   Storage.loadCategories.mockReturnValue(null)
   Storage.loadTags.mockReturnValue(null)
+  Storage.loadDescriptions.mockReturnValue(null)
   getHiddenCategories.mockReturnValue(new Set())
 })
 
@@ -73,6 +76,32 @@ describe('TransactionManager.loadAllCategories', () => {
     mgr.loadAllCategories(sampleTransactions)
     expect(mgr.allCategories).toBe(stored)
     expect(Storage.saveCategories).not.toHaveBeenCalled()
+  })
+})
+
+describe('TransactionManager.loadAllDescriptions', () => {
+  it('строит Map описаний из транзакций', () => {
+    const mgr = makeManager()
+    const txs = [...sampleTransactions, { id: 4, description: 'A', amount: 10, category: 'Food', rate: 'ok', tags: [], date: 4000 }]
+    mgr.loadAllDescriptions(txs)
+    expect(mgr.allDescriptions.get('A')).toBe(2)
+    expect(mgr.allDescriptions.get('B')).toBe(1)
+    expect(mgr.allDescriptions.get('C')).toBe(1)
+  })
+
+  it('сохраняет описания в Storage', () => {
+    const mgr = makeManager()
+    mgr.loadAllDescriptions(sampleTransactions)
+    expect(Storage.saveDescriptions).toHaveBeenCalledWith(mgr.allDescriptions)
+  })
+
+  it('использует сохранённые описания если они есть', () => {
+    const stored = new Map([['A', 99]])
+    Storage.loadDescriptions.mockReturnValue(stored)
+    const mgr = makeManager()
+    mgr.loadAllDescriptions(sampleTransactions)
+    expect(mgr.allDescriptions).toBe(stored)
+    expect(Storage.saveDescriptions).not.toHaveBeenCalled()
   })
 })
 
@@ -511,6 +540,7 @@ describe('TransactionManager.openTransactionModal — открытие мода�
     const mgr = new TransactionManager(db, realUI, modal, navigation)
     mgr.allCategories = new Map()
     mgr.allTags = new Map()
+    mgr.allDescriptions = new Map()
     return mgr
   }
 
@@ -624,6 +654,7 @@ describe('TransactionManager.saveTransaction — сохранение измен
     const mgr = new TransactionManager(db, ui, modal, navigation)
     mgr.allCategories = new Map([['Food', 2]])
     mgr.allTags = new Map()
+    mgr.allDescriptions = new Map([['Кофе', 1]])
     vi.spyOn(mgr, 'singleLoadTransactionsRender').mockImplementation(() => {})
     return mgr
   }
@@ -647,6 +678,24 @@ describe('TransactionManager.saveTransaction — сохранение измен
     const mgr = makeManagerForSave()
     mgr.saveTransaction({ ...transaction })
     expect(mgr.singleLoadTransactionsRender).toHaveBeenCalled()
+  })
+
+  it('изменение описания обновляет кэш описаний', () => {
+    setupSaveDOM(transaction)
+    document.getElementById('modal-description-input').value = 'Чай'
+    const mgr = makeManagerForSave()
+    mgr.saveTransaction({ ...transaction })
+    expect(mgr.allDescriptions.has('Кофе')).toBe(false)
+    expect(mgr.allDescriptions.get('Чай')).toBe(1)
+    expect(Storage.saveDescriptions).toHaveBeenCalledWith(mgr.allDescriptions)
+  })
+
+  it('без изменения описания кэш описаний не сохраняется заново', () => {
+    setupSaveDOM(transaction)
+    const mgr = makeManagerForSave()
+    mgr.saveTransaction({ ...transaction })
+    expect(mgr.allDescriptions.get('Кофе')).toBe(1)
+    expect(Storage.saveDescriptions).not.toHaveBeenCalled()
   })
 })
 
@@ -676,6 +725,7 @@ describe('TransactionManager.deleteTransaction — удаление транза
     const mgr = new TransactionManager(db, ui, modal, navigation)
     mgr.allCategories = new Map([['Food', 2]])
     mgr.allTags = new Map([['lunch', 1]])
+    mgr.allDescriptions = new Map([['Обед', 1]])
     vi.spyOn(mgr, 'singleLoadTransactionsRender').mockImplementation(() => {})
     return mgr
   }
@@ -696,6 +746,13 @@ describe('TransactionManager.deleteTransaction — удаление транза
     const mgr = makeManagerForDelete()
     mgr.deleteTransaction(transaction)
     expect(mgr.singleLoadTransactionsRender).toHaveBeenCalled()
+  })
+
+  it('уменьшает счётчик описания в кэше', () => {
+    const mgr = makeManagerForDelete()
+    mgr.deleteTransaction(transaction)
+    expect(mgr.allDescriptions.has('Обед')).toBe(false)
+    expect(Storage.saveDescriptions).toHaveBeenCalledWith(mgr.allDescriptions)
   })
 })
 
@@ -725,6 +782,7 @@ describe('TransactionManager.duplicateTransaction — дублирование �
     const mgr = new TransactionManager(db, ui, modal, navigation)
     mgr.allCategories = new Map([['Food', 1]])
     mgr.allTags = new Map([['breakfast', 1]])
+    mgr.allDescriptions = new Map([['Завтрак', 1]])
     vi.spyOn(mgr, 'singleLoadTransactionsRender').mockImplementation(() => {})
     return mgr
   }
@@ -749,6 +807,13 @@ describe('TransactionManager.duplicateTransaction — дублирование �
     const mgr = makeManagerForDuplicate()
     mgr.duplicateTransaction(transaction)
     expect(mgr.modal.close).toHaveBeenCalled()
+  })
+
+  it('увеличивает счётчик описания в кэше', () => {
+    const mgr = makeManagerForDuplicate()
+    mgr.duplicateTransaction(transaction)
+    expect(mgr.allDescriptions.get('Завтрак')).toBe(2)
+    expect(Storage.saveDescriptions).toHaveBeenCalledWith(mgr.allDescriptions)
   })
 })
 
@@ -796,6 +861,7 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
     const mgr = new TransactionManager(db, ui, modal, navigation)
     mgr.allCategories = new Map()
     mgr.allTags = new Map()
+    mgr.allDescriptions = new Map()
     vi.spyOn(mgr, 'singleLoadTransactionsRender').mockImplementation(() => {})
     return mgr
   }
@@ -818,6 +884,15 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
     mgr.setupTransactionForm()
     document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
     expect(mgr.navigation.showPage).toHaveBeenCalledWith('home')
+  })
+
+  it('submit увеличивает счётчик описания в кэше', () => {
+    setupFormDOM()
+    const mgr = makeManagerForForm()
+    mgr.setupTransactionForm()
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+    expect(mgr.allDescriptions.get('Кофе')).toBe(1)
+    expect(Storage.saveDescriptions).toHaveBeenCalledWith(mgr.allDescriptions)
   })
 
   it('после submit очищаются теги', () => {

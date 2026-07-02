@@ -165,6 +165,7 @@ export class ImportExport {
       this.db.clearAllTransactions(() => {
         Storage.clearTags();
         Storage.clearCategories();
+        Storage.clearDescriptions();
 
         if (settings && typeof settings === 'object' && !Array.isArray(settings)) {
           if (typeof settings.defaultTag === 'string') {
@@ -208,7 +209,8 @@ export class ImportExport {
           this.transactionManager.singleLoadTransactionsRender();
           this.db.readOnlyTransaction([
             (txs) => this.transactionManager.loadAllCategories(txs),
-            (txs) => this.transactionManager.loadAllTags(txs)
+            (txs) => this.transactionManager.loadAllTags(txs),
+            (txs) => this.transactionManager.loadAllDescriptions(txs)
           ]);
           setSuccess("Успешно импортировано!");
           document.getElementById("file-name-display").textContent = "";
