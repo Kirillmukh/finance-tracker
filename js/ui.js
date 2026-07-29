@@ -93,13 +93,25 @@ export class UI {
     });
   }
 
-  setupDescriptionInput(allDescriptions) {
+  setupDescriptionInput(allDescriptions, getCategoryForDescription = () => "") {
     const descriptionInput = document.getElementById("description");
     const descriptionSuggestionDiv = document.getElementById("description-suggestion");
 
-    descriptionSuggestionDiv.addEventListener("click", () =>
-      applySuggestion(descriptionInput, descriptionSuggestionDiv, this.suggestedDescription)
-    );
+    const applyDescriptionSuggestion = () => {
+      applySuggestion(descriptionInput, descriptionSuggestionDiv, this.suggestedDescription);
+
+      const category = getCategoryForDescription(this.suggestedDescription);
+      if (!category) return;
+
+      document.getElementById("category-input").value = category;
+      document.getElementById("category-suggestion").style.display = "none";
+      if (!this.tags.includes(category)) {
+        this.tags.push(category);
+        this.renderTags();
+      }
+    };
+
+    descriptionSuggestionDiv.addEventListener("click", applyDescriptionSuggestion);
 
     descriptionInput.addEventListener("input", (event) => {
       const value = event.target.value;
@@ -115,7 +127,7 @@ export class UI {
       descriptionSuggestionDiv.style.display = "block";
 
       if (value.endsWith("  ")) {
-        applySuggestion(descriptionInput, descriptionSuggestionDiv, this.suggestedDescription);
+        applyDescriptionSuggestion();
       }
     });
   }

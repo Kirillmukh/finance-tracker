@@ -103,6 +103,18 @@ describe('TransactionManager.loadAllDescriptions', () => {
     expect(mgr.allDescriptions).toBe(stored)
     expect(Storage.saveDescriptions).not.toHaveBeenCalled()
   })
+
+  it('возвращает наиболее частую категорию для описания', () => {
+    const mgr = makeManager()
+    mgr.loadAllDescriptions([
+      { description: 'Кофе', category: 'Продукты' },
+      { description: 'Кофе', category: 'Кафе' },
+      { description: 'Кофе', category: 'Кафе' }
+    ])
+
+    expect(mgr.getCategoryForDescription('Кофе')).toBe('Кафе')
+    expect(mgr.getCategoryForDescription('Неизвестно')).toBe('')
+  })
 })
 
 describe('TransactionManager.loadAllTags', () => {

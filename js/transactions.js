@@ -12,6 +12,7 @@ export class TransactionManager {
     this.allCategories = null;
     this.allTags = null;
     this.allDescriptions = null;
+    this.descriptionCategoryCounts = new Map();
     this.limit = Storage.getLimit();
     this.chartTarget = Storage.getChartTarget();
     this.currentTransactions = [];
@@ -76,6 +77,11 @@ export class TransactionManager {
   }
 
   loadAllDescriptions(transactions) {
+    this.descriptionCategoryCounts = new Map();
+    transactions.forEach((t) => {
+      this.incrementDescriptionCategory(t.description, t.category);
+    });
+
     const stored = Storage.loadDescriptions();
     if (stored) {
       this.allDescriptions = stored;
@@ -88,6 +94,21 @@ export class TransactionManager {
     });
 
     Storage.saveDescriptions(this.allDescriptions);
+  }
+
+  incrementDescriptionCategory(description, category) {
+    if (!description || !category) return;
+    if (!this.descriptionCategoryCounts.has(description)) {
+      this.descriptionCategoryCounts.set(description, new Map());
+    }
+    countMapInc(this.descriptionCategoryCounts.get(description), category);
+  }
+
+  decrementDescriptionCategory(description, category) {
+    const categories = this.descriptionCategoryCounts.get(description);
+    if (!categories) return;
+    countMapDec(categories, category);
+    if (categories.size === 0) this.descriptionCategoryCounts.delete(description);
   }
 
   loadTransactions(transactions) {
@@ -329,6 +350,8 @@ export class TransactionManager {
   }
 
   saveTransaction(transaction) {
+    const oldDescription = transaction.description;
+    const oldCategory = transaction.category;
     const newDescription = document.getElementById("modal-description-input").value.trim();
     if (transaction.description !== newDescription) {
       countMapDec(this.allDescriptions, transaction.description);
@@ -343,6 +366,10 @@ export class TransactionManager {
       transaction.category = newCategory;
       countMapInc(this.allCategories, transaction.category);
       Storage.saveCategories(this.allCategories);
+    }
+    if (oldDescription !== transaction.description || oldCategory !== transaction.category) {
+      this.decrementDescriptionCategory(oldDescription, oldCategory);
+      this.incrementDescriptionCategory(transaction.description, transaction.category);
     }
 
     transaction.amount = +document.getElementById("modal-amount-input").value;
@@ -401,6 +428,7 @@ export class TransactionManager {
 
     countMapDec(this.allDescriptions, transaction.description);
     Storage.saveDescriptions(this.allDescriptions);
+    this.decrementDescriptionCategory(transaction.description, transaction.category);
 
     this.ui.clearTags();
     this.ui.clearTagsToRemove();
@@ -422,6 +450,7 @@ export class TransactionManager {
 
     countMapInc(this.allDescriptions, toAdd.description);
     Storage.saveDescriptions(this.allDescriptions);
+    this.incrementDescriptionCategory(toAdd.description, toAdd.category);
 
     this.db.addTransaction(toAdd, () => {
       this.singleLoadTransactionsRender();
@@ -532,6 +561,7 @@ export class TransactionManager {
 
       countMapInc(this.allDescriptions, transaction.description);
       Storage.saveDescriptions(this.allDescriptions);
+      this.incrementDescriptionCategory(transaction.description, transaction.category);
 
       this.navigation.showPage("home");
     });
@@ -649,5 +679,20 @@ export class TransactionManager {
 
   getAllDescriptions() {
     return this.allDescriptions;
+  }
+
+  getCategoryForDescription(description) {
+    const categories = this.descriptionCategoryCounts.get(description);
+    if (!categories) return "";
+
+    let result = "";
+    let maxCount = 0;
+    categories.forEach((count, category) => {
+      if (count > maxCount) {
+        result = category;
+        maxCount = count;
+      }
+    });
+    return result;
   }
 }

@@ -28,7 +28,10 @@ async function initApp() {
   // Setup UI components - data is now guaranteed to be loaded
   ui.setupCategoryInput(transactionManager.getAllCategories());
   ui.setupTagInput(transactionManager.getAllTags());
-  ui.setupDescriptionInput(transactionManager.getAllDescriptions());
+  ui.setupDescriptionInput(
+    transactionManager.getAllDescriptions(),
+    (description) => transactionManager.getCategoryForDescription(description)
+  );
 
   // Setup transaction form
   transactionManager.setupTransactionForm();

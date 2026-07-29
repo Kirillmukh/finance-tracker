@@ -1,3 +1,5 @@
+.agents
 .claude
+.codex
 node_modules
 coverage

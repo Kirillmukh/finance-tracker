@@ -340,6 +340,29 @@ describe('UI.setupDescriptionInput — взаимодействие пользо
     descriptionInput.dispatchEvent(new Event('input'))
     expect(descriptionInput.value).toBe('Кофе')
   })
+
+  it('при применении подсказки заполняет категорию и добавляет одноимённый тег', () => {
+    const allDescriptions = new Map([['Кофе', 5]])
+    ui.setupDescriptionInput(allDescriptions, () => 'Кафе')
+    const descriptionInput = document.getElementById('description')
+    descriptionInput.value = 'Ко'
+    descriptionInput.dispatchEvent(new Event('input'))
+    document.getElementById('description-suggestion').click()
+
+    expect(document.getElementById('category-input').value).toBe('Кафе')
+    expect(ui.getTags()).toContain('Кафе')
+    expect(document.getElementById('tags-container').textContent).toContain('Кафе')
+  })
+
+  it('не добавляет тег категории повторно', () => {
+    ui.tags.push('Кафе')
+    ui.setupDescriptionInput(new Map([['Кофе', 5]]), () => 'Кафе')
+    const descriptionInput = document.getElementById('description')
+    descriptionInput.value = 'Ко  '
+    descriptionInput.dispatchEvent(new Event('input'))
+
+    expect(ui.getTags()).toEqual(['Кафе'])
+  })
 })
 
 describe('UI.setupModalTagHandling — взаимодействие пользователя', () => {
