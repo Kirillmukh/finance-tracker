@@ -69,10 +69,16 @@ export class UI {
   setupCategoryInput(allCategories) {
     const categoryInput = document.getElementById("category-input");
     const categorySuggestionDiv = document.getElementById("category-suggestion");
-    
-    categorySuggestionDiv.addEventListener("click", () =>
-      applySuggestion(categoryInput, categorySuggestionDiv, this.suggestedCategory)
-    );
+
+    const applyCategorySuggestion = () => {
+      applySuggestion(categoryInput, categorySuggestionDiv, this.suggestedCategory);
+      if (!this.tags.includes(this.suggestedCategory)) {
+        this.tags.push(this.suggestedCategory);
+        this.renderTags();
+      }
+    };
+
+    categorySuggestionDiv.addEventListener("click", applyCategorySuggestion);
 
     categoryInput.addEventListener("input", (event) => {
       const value = event.target.value;
@@ -88,7 +94,7 @@ export class UI {
       categorySuggestionDiv.style.display = "block";
 
       if (value.endsWith("  ")) {
-        applySuggestion(categoryInput, categorySuggestionDiv, this.suggestedCategory);
+        applyCategorySuggestion();
       }
     });
   }

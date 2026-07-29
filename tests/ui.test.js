@@ -300,6 +300,27 @@ describe('UI.setupCategoryInput — взаимодействие пользов�
     categoryInput.dispatchEvent(new Event('input'))
     expect(categoryInput.value).toBe('Food')
   })
+
+  it('при применении подсказки добавляет одноимённый тег', () => {
+    ui.setupCategoryInput(new Map([['Food', 5]]))
+    const categoryInput = document.getElementById('category-input')
+    categoryInput.value = 'Fo'
+    categoryInput.dispatchEvent(new Event('input'))
+    document.getElementById('category-suggestion').click()
+
+    expect(ui.getTags()).toContain('Food')
+    expect(document.getElementById('tags-container').textContent).toContain('Food')
+  })
+
+  it('не добавляет тег категории повторно', () => {
+    ui.tags.push('Food')
+    ui.setupCategoryInput(new Map([['Food', 5]]))
+    const categoryInput = document.getElementById('category-input')
+    categoryInput.value = 'Fo  '
+    categoryInput.dispatchEvent(new Event('input'))
+
+    expect(ui.getTags()).toEqual(['Food'])
+  })
 })
 
 describe('UI.setupDescriptionInput — взаимодействие пользователя', () => {
