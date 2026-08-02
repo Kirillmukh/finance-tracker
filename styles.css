@@ -50,6 +50,11 @@
   --input-color-scheme: light;
 }
 
+html {
+  /* Keep scrolling and pinch zoom available, but never zoom on double tap. */
+  touch-action: manipulation;
+}
+
 /* === Тёмная тема (явная) === */
 html[data-theme="dark"] {
   --bg-body: #0f172a;

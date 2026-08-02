@@ -96,6 +96,23 @@ async function initApp() {
     }
   });
 
+  // Double-tap zoom is always disabled by CSS. Pinch zoom is optional and is
+  // controlled by the viewport meta tag (off by default).
+  const pinchZoomSelect = document.getElementById('pinch-zoom-select');
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+  const applyPinchZoom = (enabled) => {
+    viewportMeta.content = enabled
+      ? 'width=device-width, initial-scale=1, viewport-fit=cover'
+      : 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
+  };
+  pinchZoomSelect.value = Storage.getPinchZoom() ? 'on' : 'off';
+  applyPinchZoom(Storage.getPinchZoom());
+  pinchZoomSelect.addEventListener('change', () => {
+    const enabled = pinchZoomSelect.value === 'on';
+    Storage.setPinchZoom(enabled);
+    applyPinchZoom(enabled);
+  });
+
   // Load saved default tag into settings input
   document.getElementById('default-tag-input').value = Storage.getDefaultTag();
 

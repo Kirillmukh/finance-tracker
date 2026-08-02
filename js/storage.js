@@ -112,4 +112,12 @@ export class Storage {
   static setTheme(theme) {
     localStorage.theme = theme;
   }
+
+  static getPinchZoom() {
+    return localStorage.pinchZoom === "true";
+  }
+
+  static setPinchZoom(enabled) {
+    localStorage.pinchZoom = enabled ? "true" : "false";
+  }
 }

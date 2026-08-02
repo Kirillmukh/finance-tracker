@@ -206,6 +206,19 @@ describe('Storage — тема', () => {
   })
 })
 
+describe('Storage — масштабирование двумя пальцами', () => {
+  it('по умолчанию выключено', () => {
+    expect(Storage.getPinchZoom()).toBe(false)
+  })
+
+  it('сохраняет включённое и выключенное состояние', () => {
+    Storage.setPinchZoom(true)
+    expect(Storage.getPinchZoom()).toBe(true)
+    Storage.setPinchZoom(false)
+    expect(Storage.getPinchZoom()).toBe(false)
+  })
+})
+
 describe('Storage — режим демо', () => {
   it('getDemoMode возвращает false по умолчанию', () => {
     expect(Storage.getDemoMode()).toBe(false)

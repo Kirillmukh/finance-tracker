@@ -2,7 +2,7 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script>
       try {
         if (!localStorage.getItem('hasVisited') && localStorage.length === 0 && !location.search) {
@@ -12,6 +12,12 @@
       try {
         var t = localStorage.getItem('theme');
         if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+      } catch (_) {}
+      try {
+        if (localStorage.getItem('pinchZoom') === 'true') {
+          document.querySelector('meta[name="viewport"]').content =
+            'width=device-width, initial-scale=1, viewport-fit=cover';
+        }
       } catch (_) {}
     </script>
     <meta name="description" content="Трекер осознанных финансов: учёт расходов с оценкой, тегами и графиками. Работает офлайн, данные хранятся локально." />
@@ -93,11 +99,11 @@
         </div>
         <div id="settings-section">
           <h4>Настройки</h4>
-          <label for="theme-select">Тема оформления:</label>
-          <select id="theme-select">
-            <option value="system">Системная</option>
-            <option value="light">Светлая</option>
-            <option value="dark">Тёмная</option>
+          <label for="default-rate-select">Трата по умолчанию:</label>
+          <select id="default-rate-select">
+            <option value="waste">Плохая</option>
+            <option value="ok" selected>Ок</option>
+            <option value="good">Осознанная</option>
           </select>
           <label for="default-tag-input">Тег по умолчанию:</label>
           <div class="rename-tag-field rename-tag-to-row">
@@ -105,11 +111,16 @@
             <button id="default-tag-save-btn">Сохранить</button>
           </div>
           <p id="default-tag-status" style="display:none"></p>
-          <label for="default-rate-select">Трата по умолчанию:</label>
-          <select id="default-rate-select">
-            <option value="waste">Плохая</option>
-            <option value="ok" selected>Ок</option>
-            <option value="good">Осознанная</option>
+          <label for="theme-select">Тема оформления:</label>
+          <select id="theme-select">
+            <option value="system">Системная</option>
+            <option value="light">Светлая</option>
+            <option value="dark">Тёмная</option>
+          </select>
+          <label for="pinch-zoom-select">Масштабирование двумя пальцами:</label>
+          <select id="pinch-zoom-select">
+            <option value="off">Выключено</option>
+            <option value="on">Включено</option>
           </select>
         </div>
         <div id="rename-tag-section">
@@ -128,7 +139,7 @@
           <div id="rename-tag-warning" style="display:none"></div>
           <p id="rename-tag-status"></p>
         </div>
-        <p id="app-version">v1.3.3</p>
+        <p id="app-version">v1.3.4</p>
       </div>
       <div id="input-page" class="page">
         <form id="transaction-form">

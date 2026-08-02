@@ -61,11 +61,13 @@ vi.mock('../js/storage.js', () => ({
     getDefaultTag: vi.fn(() => ''),
     getPage: vi.fn(() => 'home'),
     getTheme: vi.fn(() => 'system'),
+    getPinchZoom: vi.fn(() => false),
     getLimit: vi.fn(() => 'all'),
     setDefaultTag: vi.fn(),
     setLimit: vi.fn(),
     setDefaultRate: vi.fn(),
     setTheme: vi.fn(),
+    setPinchZoom: vi.fn(),
   }
 }))
 
@@ -81,6 +83,7 @@ vi.mock('../js/demo.js', () => ({
 import { Storage } from '../js/storage.js'
 
 function setupDOM() {
+  document.head.innerHTML = '<meta name="viewport" content="width=device-width, initial-scale=1">'
   document.body.innerHTML = `
     <select id="default-rate-select">
       <option value="">—</option>
@@ -106,6 +109,10 @@ function setupDOM() {
     <button class="nav-item" data-page="input">Input</button>
     <select id="theme-select">
       <option value="system">Системная</option>
+    </select>
+    <select id="pinch-zoom-select">
+      <option value="off">Выключено</option>
+      <option value="on">Включено</option>
     </select>
     <input id="default-tag-input" />
     <button id="default-tag-save-btn">Сохранить</button>
