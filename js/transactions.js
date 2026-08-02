@@ -17,6 +17,7 @@ export class TransactionManager {
     this.chartTarget = Storage.getChartTarget();
     this.currentTransactions = [];
     this.categoryFilter = null;
+    this.tagFilter = null;
   }
 
   async init() {
@@ -27,9 +28,10 @@ export class TransactionManager {
       this.updateBalanceWithHiddenCategories();
     });
 
-    // Clicking a pie slice filters the list to that category (category target only)
+    // Clicking a chart item filters the list by category or tag.
     setSliceClickCallback((label) => {
-      this.toggleCategoryFilter(label);
+      if (this.chartTarget === "category") this.toggleCategoryFilter(label);
+      if (this.chartTarget === "tags") this.toggleTagFilter(label);
     });
 
     this.singleLoadTransactionsRender();
@@ -114,6 +116,7 @@ export class TransactionManager {
   loadTransactions(transactions) {
     this.currentTransactions = transactions;
     this.categoryFilter = null;
+    this.tagFilter = null;
     this.updateCategoryFilterIndicator();
     this.renderTransactionsList(transactions);
 
@@ -121,6 +124,9 @@ export class TransactionManager {
     clearHiddenCategories();
 
     const chartObject = groupTransactions(transactions, this.chartTarget);
+    if (this.chartTarget === "tags" && this.limit === "default-tag") {
+      delete chartObject[Storage.getDefaultTag()];
+    }
 
     if (this.chartTarget === "tags") {
       updateCharts(chartObject, "bar");
@@ -148,7 +154,7 @@ export class TransactionManager {
       emptyLi.className = "empty-state";
       // The demo button clears the whole DB on load, so it may only appear
       // when the DB is truly empty — an empty *filtered* view doesn't count.
-      const isFiltered = this.limit !== "all" || this.categoryFilter !== null;
+      const isFiltered = this.limit !== "all" || this.categoryFilter !== null || this.tagFilter !== null;
       if (isFiltered) {
         emptyLi.innerHTML = `<span class="empty-state-icon">📋</span><span>Нет записей по выбранному фильтру</span>`;
         list.appendChild(emptyLi);
@@ -233,8 +239,9 @@ export class TransactionManager {
   }
 
   getVisibleTransactions() {
-    if (!this.categoryFilter) return this.currentTransactions;
-    return this.currentTransactions.filter(t => t.category === this.categoryFilter);
+    if (this.categoryFilter) return this.currentTransactions.filter(t => t.category === this.categoryFilter);
+    if (this.tagFilter) return this.currentTransactions.filter(t => t.tags.includes(this.tagFilter));
+    return this.currentTransactions;
   }
 
   toggleCategoryFilter(category) {
@@ -247,12 +254,28 @@ export class TransactionManager {
     this.updateBalanceWithHiddenCategories();
   }
 
+  toggleTagFilter(tag) {
+    if (this.chartTarget !== "tags") return;
+    const next = tag !== null && tag !== this.tagFilter ? tag : null;
+    if (next === this.tagFilter) return;
+    this.tagFilter = next;
+    this.updateCategoryFilterIndicator();
+    this.renderTransactionsList(this.getVisibleTransactions());
+    this.updateBalanceWithHiddenCategories();
+  }
+
   updateCategoryFilterIndicator() {
     const indicator = document.getElementById("category-filter-indicator");
     if (!indicator) return;
-    if (this.categoryFilter) {
-      document.getElementById("category-filter-label").textContent = this.categoryFilter;
-      document.getElementById("category-filter-clear").onclick = () => this.toggleCategoryFilter(this.categoryFilter);
+    const value = this.categoryFilter || this.tagFilter;
+    if (value) {
+      const type = document.getElementById("category-filter-type");
+      if (type) type.textContent = this.tagFilter ? "Тег" : "Категория";
+      document.getElementById("category-filter-label").textContent = value;
+      document.getElementById("category-filter-clear").onclick = () => {
+        if (this.tagFilter) this.toggleTagFilter(this.tagFilter);
+        else this.toggleCategoryFilter(this.categoryFilter);
+      };
       indicator.style.display = "";
     } else {
       indicator.style.display = "none";

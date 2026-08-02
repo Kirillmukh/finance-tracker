@@ -169,7 +169,8 @@ async function initApp() {
     const legend = document.getElementById('chart-legend');
     const btn = document.getElementById('legend-toggle');
     const isHidden = legend.classList.toggle('legend-hidden');
-    btn.textContent = isHidden ? 'Категории ▾' : 'Категории ▴';
+    const label = btn.textContent.startsWith('Теги') ? 'Теги' : 'Категории';
+    btn.textContent = `${label} ${isHidden ? '▾' : '▴'}`;
   });
 
   // Expose functions to global scope for onclick handlers

@@ -50,9 +50,12 @@ function renderCustomLegend(chart) {
   setLegendToggleVisible(true);
   container.innerHTML = '';
 
-  const labels = chart.data.labels;
-  const values = chart.data.datasets[0].data;
-  const bgColors = chart.data.datasets[0].backgroundColor;
+  const labels = [...chart.data.labels];
+  // Keep the original values: bar charts temporarily replace hidden values
+  // with a compact list so hidden columns leave no gaps.
+  const values = [...chart.data.datasets[0].data];
+  const rawBgColors = chart.data.datasets[0].backgroundColor;
+  const bgColors = Array.isArray(rawBgColors) ? [...rawBgColors] : rawBgColors;
   const meta = chart.getDatasetMeta(0);
 
   labels.forEach((label, i) => {
@@ -63,7 +66,44 @@ function renderCustomLegend(chart) {
     item.className = 'legend-item' + (isHidden ? ' legend-item--hidden' : '');
     item.innerHTML = `<span class="legend-name"><span class="legend-swatch" style="background:${color}"></span><span class="legend-text">${label}</span></span><span class="legend-amount">${values[i]} ₽</span><span class="legend-percent"></span>`;
     item.addEventListener('click', () => {
-      meta.data[i].hidden = !meta.data[i].hidden;
+      if (chart.$financeChartType === 'bar') {
+        const willHide = !hiddenCategories.has(label);
+        if (willHide) {
+          hiddenCategories.add(label);
+          item.classList.add('legend-item--hidden');
+        } else {
+          hiddenCategories.delete(label);
+          item.classList.remove('legend-item--hidden');
+        }
+
+        const visibleIndexes = labels
+          .map((currentLabel, index) => ({ currentLabel, index }))
+          .filter(({ currentLabel }) => !hiddenCategories.has(currentLabel));
+        chart.data.labels = visibleIndexes.map(({ currentLabel }) => currentLabel);
+        chart.data.datasets[0].data = visibleIndexes.map(({ index }) => values[index]);
+        if (Array.isArray(bgColors)) {
+          chart.data.datasets[0].backgroundColor = visibleIndexes.map(({ index }) => bgColors[index]);
+        }
+        chart.update();
+
+        const total = visibleIndexes.reduce((sum, { index }) => sum + values[index], 0);
+        container.querySelectorAll('.legend-percent').forEach((el, index) => {
+          el.textContent = hiddenCategories.has(labels[index]) || total <= 0
+            ? ''
+            : `${((values[index] / total) * 100).toFixed(1)}%`;
+        });
+        if (onLegendClickCallback) onLegendClickCallback();
+        return;
+      }
+
+      if (typeof chart.toggleDataVisibility === 'function') {
+        chart.toggleDataVisibility(i);
+        meta.data[i].hidden = typeof chart.getDataVisibility === 'function'
+          ? !chart.getDataVisibility(i)
+          : !meta.data[i].hidden;
+      } else {
+        meta.data[i].hidden = !meta.data[i].hidden;
+      }
       if (meta.data[i].hidden) {
         hiddenCategories.add(label);
         item.classList.add('legend-item--hidden');
@@ -124,8 +164,11 @@ export function updateCharts(object, type = "pie") {
       }
     }
   });
+  chart.$financeChartType = type;
 
   renderCustomLegend(chart);
+  const toggle = document.getElementById("legend-toggle");
+  if (toggle) toggle.textContent = "Категории ▾";
 }
 
 export function updateChartForRates(chartObject) {
@@ -145,7 +188,14 @@ export function updateChartForTags() {
   const barChart = Chart.getChart("chart");
   barChart.data.datasets[0].label = "Сумма транзакций по тегам";
   barChart.options = {
-    scales: { y: { beginAtZero: true } },
+    onClick: (event, elements, clickedChart) => {
+      if (!onSliceClickCallback) return;
+      onSliceClickCallback(elements.length > 0 ? clickedChart.data.labels[elements[0].index] : null);
+    },
+    scales: {
+      x: { ticks: { display: false } },
+      y: { beginAtZero: true },
+    },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -160,7 +210,9 @@ export function updateChartForTags() {
     }
   };
   barChart.update();
-  setLegendToggleVisible(false);
   const container = document.getElementById("chart-legend");
-  if (container) container.innerHTML = '';
+  if (container) container.classList.add('legend-hidden');
+  renderCustomLegend(barChart);
+  const toggle = document.getElementById("legend-toggle");
+  if (toggle) toggle.textContent = "Теги ▾";
 }

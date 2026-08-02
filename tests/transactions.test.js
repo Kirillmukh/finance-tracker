@@ -528,6 +528,48 @@ describe('TransactionManager.toggleCategoryFilter — фильтр по клик
   })
 })
 
+describe('TransactionManager.toggleTagFilter — фильтр по клику на столбец тега', () => {
+  function makeLoadedManager() {
+    document.body.innerHTML = `
+      <ul id="transactions"></ul><span id="balance"></span><canvas id="chart"></canvas>
+      <div id="category-filter-indicator" style="display:none">
+        <span id="category-filter-type"></span><span id="category-filter-label"></span>
+        <button id="category-filter-clear"></button>
+      </div>`
+    const mgr = makeManager()
+    mgr.chartTarget = 'tags'
+    mgr.loadTransactions([...sampleTransactions])
+    return mgr
+  }
+
+  it('показывает только транзакции с выбранным тегом', () => {
+    const mgr = makeLoadedManager()
+    mgr.toggleTagFilter('lunch')
+    expect(document.querySelectorAll('.transaction-li')).toHaveLength(1)
+    expect(document.getElementById('balance').textContent).toBe('100')
+    expect(document.getElementById('category-filter-type').textContent).toBe('Тег')
+    expect(document.getElementById('category-filter-label').textContent).toBe('lunch')
+  })
+
+  it('повторный клик и кнопка сброса снимают фильтр', () => {
+    const mgr = makeLoadedManager()
+    mgr.toggleTagFilter('lunch')
+    document.getElementById('category-filter-clear').click()
+    expect(mgr.tagFilter).toBe(null)
+    expect(document.querySelectorAll('.transaction-li')).toHaveLength(3)
+  })
+
+  it('убирает тег по умолчанию из данных графика при соответствующем фильтре', async () => {
+    const { updateCharts } = await import('../js/chart.js')
+    Storage.getDefaultTag.mockReturnValue('lunch')
+    const mgr = makeLoadedManager()
+    updateCharts.mockClear()
+    mgr.limit = 'default-tag'
+    mgr.loadTransactions([...sampleTransactions])
+    expect(updateCharts).toHaveBeenCalledWith({ cafe: 100, dinner: 200 }, 'bar')
+  })
+})
+
 describe('TransactionManager.openTransactionModal — открытие модального окна', () => {
   const transaction = {
     id: 1,

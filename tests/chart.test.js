@@ -13,6 +13,7 @@ import {
 let mockChartInstance
 
 function setupChartMock(existingChart = null) {
+  const dataVisibility = [true, true]
   mockChartInstance = {
     destroy: vi.fn(),
     update: vi.fn(),
@@ -21,6 +22,8 @@ function setupChartMock(existingChart = null) {
       datasets: [{ data: [100, 50], backgroundColor: [], label: '' }],
     },
     options: {},
+    toggleDataVisibility: vi.fn((i) => { dataVisibility[i] = !dataVisibility[i] }),
+    getDataVisibility: vi.fn((i) => dataVisibility[i]),
     getDatasetMeta: vi.fn(() => ({
       data: [{ hidden: false }, { hidden: false }],
       controller: {
@@ -164,6 +167,24 @@ describe('updateCharts', () => {
     expect(getHiddenCategories().has('Food')).toBe(true)
   })
 
+  it('переключает видимость данных через Chart.js для пересчёта масштаба', () => {
+    updateCharts({ Food: 100, Transport: 50 })
+    document.querySelector('.legend-item').click()
+    expect(mockChartInstance.toggleDataVisibility).toHaveBeenCalledWith(0)
+    expect(mockChartInstance.update).toHaveBeenCalled()
+  })
+
+  it('удаляет скрытый столбец без пустого места и восстанавливает его', () => {
+    updateCharts({ large: 1000, small: 10 }, 'bar')
+    const item = document.querySelector('.legend-item')
+    item.click()
+    expect(mockChartInstance.data.labels).toEqual(['Transport'])
+    expect(mockChartInstance.data.datasets[0].data).toEqual([50])
+    item.click()
+    expect(mockChartInstance.data.labels).toEqual(['Food', 'Transport'])
+    expect(mockChartInstance.data.datasets[0].data).toEqual([100, 50])
+  })
+
   it('легенда удаляет категорию из hiddenCategories при показе', () => {
     updateCharts({ Food: 100 })
 
@@ -219,9 +240,34 @@ describe('updateChartForTags', () => {
     expect(mockChartInstance.options.scales.y.beginAtZero).toBe(true)
   })
 
+  it('скрывает названия тегов на оси X', () => {
+    global.Chart.getChart = vi.fn(() => mockChartInstance)
+    updateChartForTags()
+    expect(mockChartInstance.options.scales.x.ticks.display).toBe(false)
+  })
+
   it('вызывает chart.update()', () => {
     global.Chart.getChart = vi.fn(() => mockChartInstance)
     updateChartForTags()
     expect(mockChartInstance.update).toHaveBeenCalled()
+  })
+
+  it('рендерит список тегов с суммами и процентами', () => {
+    global.Chart.getChart = vi.fn(() => mockChartInstance)
+    updateChartForTags()
+    const items = document.querySelectorAll('.legend-item')
+    expect(items).toHaveLength(2)
+    expect(items[0].querySelector('.legend-text').textContent).toBe('Food')
+    expect(items[0].querySelector('.legend-amount').textContent).toBe('100 ₽')
+    expect(items[0].querySelector('.legend-percent').textContent).toBe('66.7%')
+  })
+
+  it('передаёт кликнутый тег в callback', () => {
+    const cb = vi.fn()
+    setSliceClickCallback(cb)
+    global.Chart.getChart = vi.fn(() => mockChartInstance)
+    updateChartForTags()
+    mockChartInstance.options.onClick({}, [{ index: 1 }], mockChartInstance)
+    expect(cb).toHaveBeenCalledWith('Transport')
   })
 })
