@@ -929,6 +929,33 @@ describe('TransactionManager.setupTransactionForm — форма добавле�
     expect(mgr.allCategories.get('Food')).toBe(1)
   })
 
+  it('показывает уведомление при совпадении категории и суммы с последней транзакцией', () => {
+    setupFormDOM()
+    document.body.insertAdjacentHTML('beforeend', '<div id="similar-transaction-notice"><span class="intent-notice-message"></span></div>')
+    const mgr = makeManagerForForm()
+    mgr.db.readLatestTransaction = vi.fn((cb) => cb({ category: 'Food', amount: 150 }))
+    mgr.setupTransactionForm()
+
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+
+    expect(document.getElementById('similar-transaction-notice').classList.contains('is-visible')).toBe(true)
+    expect(document.querySelector('.intent-notice-message').textContent).toBe(
+      'Добавленная транзакция похожа на предыдущую: совпадают категория «Food» и сумма 150 ₽.'
+    )
+  })
+
+  it('не показывает уведомление, если категория или сумма отличаются', () => {
+    setupFormDOM()
+    document.body.insertAdjacentHTML('beforeend', '<div id="similar-transaction-notice"></div>')
+    const mgr = makeManagerForForm()
+    mgr.db.readLatestTransaction = vi.fn((cb) => cb({ category: 'Food', amount: 151 }))
+    mgr.setupTransactionForm()
+
+    document.getElementById('transaction-form').dispatchEvent(new Event('submit', { cancelable: true }))
+
+    expect(document.getElementById('similar-transaction-notice').classList.contains('is-visible')).toBe(false)
+  })
+
   it('после submit происходит переход на главную страницу', () => {
     setupFormDOM()
     const mgr = makeManagerForForm()

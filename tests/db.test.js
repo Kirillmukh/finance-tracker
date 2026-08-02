@@ -21,6 +21,9 @@ const dbReadByDate = (database, range) =>
     database.readOnlyTransactionByDate([(txs) => { data = txs }], range, () => resolve(data))
   })
 
+const dbReadLatest = (database) =>
+  new Promise((resolve) => database.readLatestTransaction(resolve))
+
 const dbUpdate = (database, tx) =>
   new Promise((resolve) => database.updateTransaction(tx, resolve))
 
@@ -66,6 +69,16 @@ describe('Database CRUD', () => {
     await dbAdd(db, { ...sample, description: 'B', date: 2000 })
     const result = await dbRead(db)
     expect(result).toHaveLength(2)
+  })
+
+  it('readLatestTransaction возвращает последнюю добавленную запись', async () => {
+    await dbAdd(db, { ...sample, description: 'A', date: 3000 })
+    await dbAdd(db, { ...sample, description: 'B', date: 1000 })
+    expect((await dbReadLatest(db)).description).toBe('B')
+  })
+
+  it('readLatestTransaction возвращает null для пустой базы', async () => {
+    expect(await dbReadLatest(db)).toBeNull()
   })
 
   it('updateTransaction: обновляет поля записи', async () => {

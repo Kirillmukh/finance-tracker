@@ -35,6 +35,10 @@
   --btn-disabled-bg: #e2e8f0;
   --btn-disabled-text: #94a3b8;
 
+  --warning-bg: #fffbeb;
+  --warning-border: #f59e0b;
+  --warning-text: #92400e;
+
   --modal-overlay: rgba(15, 23, 42, 0.4);
 
   --bg-nav-glass: rgba(255, 255, 255, 0.65);
@@ -83,6 +87,10 @@ html[data-theme="dark"] {
 
   --btn-disabled-bg: #334155;
   --btn-disabled-text: #64748b;
+
+  --warning-bg: #422006;
+  --warning-border: #f59e0b;
+  --warning-text: #fde68a;
 
   --modal-overlay: rgba(0, 0, 0, 0.6);
 
@@ -133,6 +141,10 @@ html[data-theme="dark"] {
 
     --btn-disabled-bg: #334155;
     --btn-disabled-text: #64748b;
+
+    --warning-bg: #422006;
+    --warning-border: #f59e0b;
+    --warning-text: #fde68a;
 
     --modal-overlay: rgba(0, 0, 0, 0.6);
 
@@ -257,6 +269,55 @@ input[type="time"] {
 
 .form-actions .btn-secondary {
   flex-shrink: 0;
+}
+
+.intent-notice {
+  position: fixed;
+  z-index: 1100;
+  left: 50%;
+  bottom: calc(82px + env(safe-area-inset-bottom));
+  width: calc(100% - 16px);
+  max-width: 460px;
+  box-sizing: border-box;
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--warning-border);
+  border-radius: 12px;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  box-shadow: 0 6px 20px rgba(146, 64, 14, 0.2);
+  font-size: 12px;
+  line-height: 1.25;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.intent-notice-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+@media (max-width: 380px) {
+  .intent-notice {
+    gap: 5px;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .intent-notice-icon {
+    font-size: 12px;
+  }
+}
+
+.intent-notice.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .btn-secondary {

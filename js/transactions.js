@@ -538,33 +538,60 @@ export class TransactionManager {
         date: getTransactionTimestamp(dateInput.value, timeInput.value),
       };
 
-      this.db.addTransaction(transaction, () => {
-        this.singleLoadTransactionsRender();
-        e.target.reset();
-        this.ui.clearTags();
-        this.ui.renderTags();
-        this.ui.initDefaultTag(Storage.getDefaultTag());
-        const defaultRate = Storage.getDefaultRate();
-        if (defaultRate) document.getElementById('rate-select').value = defaultRate;
-        const now = new Date();
-        dateInput.value = toDateInputValue(now);
-        timeInput.value = toTimeInputValue(now);
-      });
+      const saveTransaction = (latestTransaction) => {
+        const isSimilarToLatest = latestTransaction !== null
+          && latestTransaction.category === transaction.category
+          && latestTransaction.amount === transaction.amount;
 
-      countMapInc(this.allCategories, transaction.category);
-      Storage.saveCategories(this.allCategories);
-      
-      transaction.tags.forEach((tag) => {
-        countMapInc(this.allTags, tag);
-      });
-      Storage.saveTags(this.allTags);
+        this.db.addTransaction(transaction, () => {
+          this.singleLoadTransactionsRender();
+          e.target.reset();
+          this.ui.clearTags();
+          this.ui.renderTags();
+          this.ui.initDefaultTag(Storage.getDefaultTag());
+          const defaultRate = Storage.getDefaultRate();
+          if (defaultRate) document.getElementById('rate-select').value = defaultRate;
+          const now = new Date();
+          dateInput.value = toDateInputValue(now);
+          timeInput.value = toTimeInputValue(now);
+          if (isSimilarToLatest) this.showSimilarTransactionNotice(transaction);
+        });
 
-      countMapInc(this.allDescriptions, transaction.description);
-      Storage.saveDescriptions(this.allDescriptions);
-      this.incrementDescriptionCategory(transaction.description, transaction.category);
+        countMapInc(this.allCategories, transaction.category);
+        Storage.saveCategories(this.allCategories);
 
-      this.navigation.showPage("home");
+        transaction.tags.forEach((tag) => {
+          countMapInc(this.allTags, tag);
+        });
+        Storage.saveTags(this.allTags);
+
+        countMapInc(this.allDescriptions, transaction.description);
+        Storage.saveDescriptions(this.allDescriptions);
+        this.incrementDescriptionCategory(transaction.description, transaction.category);
+
+        this.navigation.showPage("home");
+      };
+
+      if (typeof this.db.readLatestTransaction === "function") {
+        this.db.readLatestTransaction(saveTransaction);
+      } else {
+        saveTransaction(null);
+      }
     });
+  }
+
+  showSimilarTransactionNotice(transaction) {
+    const notice = document.getElementById("similar-transaction-notice");
+    if (!notice) return;
+    const message = notice.querySelector(".intent-notice-message");
+    if (message) {
+      message.textContent = `Добавленная транзакция похожа на предыдущую: совпадают категория «${transaction.category}» и сумма ${transaction.amount} ₽.`;
+    }
+    notice.classList.add("is-visible");
+    clearTimeout(this.similarTransactionNoticeTimer);
+    this.similarTransactionNoticeTimer = setTimeout(() => {
+      notice.classList.remove("is-visible");
+    }, 3000);
   }
 
   setupLimitSelect() {

@@ -93,6 +93,21 @@ export class Database {
     }
   }
 
+  readLatestTransaction(onResult) {
+    const tx = this.db.transaction("transactions", "readonly");
+    const store = tx.objectStore("transactions");
+    const request = store.openCursor(null, "prev");
+
+    request.onsuccess = () => {
+      onResult(request.result ? request.result.value : null);
+    };
+
+    request.onerror = () => {
+      console.error("error occured while reading latest transaction");
+      onResult(null);
+    };
+  }
+
   updateTransaction(transaction, onComplete) {
     const tx = this.db.transaction("transactions", "readwrite");
     const store = tx.objectStore("transactions");
